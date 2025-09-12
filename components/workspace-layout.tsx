@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useAppSelector, useAppDispatch } from "@/lib/store"
+import { setSidebarOpen, setCommentsPanelOpen, setCurrentView } from "@/lib/store/slices/uiSlice"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { DocumentView } from "@/components/document-view"
@@ -16,35 +17,34 @@ import { IndSubmissionView } from "@/components/ind-submission-view"
 import { DesignSystemView } from "@/components/design-system-view"
 
 export function WorkspaceLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [commentsPanelOpen, setCommentsPanelOpen] = useState(true)
-  const [currentView, setCurrentView] = useState<
-    | "workspace"
-    | "projects"
-    | "teams"
-    | "calendar"
-    | "submission"
-    | "post-submission"
-    | "gap-scoring"
-    | "review-center"
-    | "gap-analysis"
-    | "ind-submission"
-    | "design-system"
-  >("workspace")
+  const dispatch = useAppDispatch()
+  const { sidebarOpen, commentsPanelOpen, currentView } = useAppSelector((state) => state.ui)
+
+  const handleToggleSidebar = () => {
+    dispatch(setSidebarOpen(!sidebarOpen))
+  }
+
+  const handleToggleComments = () => {
+    dispatch(setCommentsPanelOpen(!commentsPanelOpen))
+  }
+
+  const handleViewChange = (view: typeof currentView) => {
+    dispatch(setCurrentView(view))
+  }
 
   return (
     <div className="flex h-screen bg-background">
       <Sidebar
         isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        onToggle={handleToggleSidebar}
         currentView={currentView}
-        onViewChange={setCurrentView}
+        onViewChange={handleViewChange}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Header
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          onToggleComments={() => setCommentsPanelOpen(!commentsPanelOpen)}
+          onToggleSidebar={handleToggleSidebar}
+          onToggleComments={handleToggleComments}
           currentView={currentView}
         />
 
@@ -62,15 +62,15 @@ export function WorkspaceLayout() {
           ) : currentView === "gap-scoring" ? (
             <GapScoringView />
           ) : currentView === "review-center" ? (
-            <ReviewCenterView onViewChange={setCurrentView} />
+            <ReviewCenterView onViewChange={handleViewChange} />
           ) : currentView === "gap-analysis" ? (
-            <GapAnalysisView onViewChange={setCurrentView} />
+            <GapAnalysisView onViewChange={handleViewChange} />
           ) : currentView === "ind-submission" ? (
             <IndSubmissionView />
           ) : currentView === "design-system" ? (
             <DesignSystemView />
           ) : (
-            <DocumentView onViewChange={setCurrentView} />
+            <DocumentView onViewChange={handleViewChange} />
           )}
         </div>
       </div>

@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Menu, Search, Bell, MessageSquare, ChevronDown } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LoginDialog } from "@/components/auth/login-dialog"
+import { UserMenu } from "@/components/auth/user-menu"
+import { createClient } from "@/lib/supabase/client"
+import { useEffect, useState } from "react"
+import type { User } from "@supabase/supabase-js"
 
 interface HeaderProps {
   onToggleSidebar: () => void
@@ -21,6 +26,29 @@ interface HeaderProps {
 }
 
 export function Header({ onToggleSidebar, onToggleComments, currentView }: HeaderProps) {
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Get initial user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+      setIsLoading(false)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   const getBreadcrumbText = () => {
     switch (currentView) {
       case "projects":
@@ -117,9 +145,13 @@ export function Header({ onToggleSidebar, onToggleComments, currentView }: Heade
 
           <ThemeToggle />
 
-          <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-            <span className="text-xs font-medium text-accent-foreground">E</span>
-          </div>
+          {isLoading ? (
+            <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+          ) : user ? (
+            <UserMenu />
+          ) : (
+            <LoginDialog />
+          )}
         </div>
       </div>
     </header>
