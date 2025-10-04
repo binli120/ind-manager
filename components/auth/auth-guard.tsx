@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
 import { getCurrentUser } from "@/lib/store/slices/authSlice";
+import { Session } from "@supabase/supabase-js";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -30,9 +31,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
     getInitialSession();
 
+    let curSession: Session | null;
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, _session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Avoid reload on tab refocus
+      if (curSession?.user?.id === session?.user?.id) {
+        return;
+      }
+      curSession = session;
+
       dispatch(getCurrentUser());
 
       if (event === "TOKEN_REFRESHED") {
@@ -53,7 +62,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
       const isAuthPage =
         pathname?.startsWith("/auth/") || pathname === "/login";
       const isApiPage = pathname?.startsWith("/api/");
-      console.log("User:", user, isAuthenticated);
 
       if ((!user || !isAuthenticated) && !isAuthPage && !isApiPage) {
         // Not authenticated and trying to access protected page
