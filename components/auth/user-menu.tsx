@@ -42,8 +42,9 @@ export function UserMenu() {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
+      <DropdownMenuContent className="w-56 z-50">
         <DropdownMenuLabel className="font-normal">
+          <h1>hi</h1>
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">Account</p>
             <p className="text-xs leading-none text-muted-foreground">
