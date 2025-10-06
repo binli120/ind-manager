@@ -51,7 +51,7 @@ export const loginUser = createAsyncThunk(
       if (data.user) {
         // Fetch additional user profile data
         const { data: profile, error: profileError } = await supabase
-          .from("profiles")
+          .from("users")
           .select("*")
           .eq("id", data.user.id)
           .single();
@@ -145,7 +145,7 @@ export const getCurrentUser = createAsyncThunk(
       if (user) {
         // Fetch additional user profile data
         const { data: profile, error: profileError } = await supabase
-          .from("profiles")
+          .from("users")
           .select("*")
           .eq("id", user.id)
           .single();
@@ -187,7 +187,7 @@ export const updateUserProfile = createAsyncThunk(
       if (!userId) throw new Error("No user logged in");
 
       const { data, error } = await supabase
-        .from("profiles")
+        .from("users")
         .update(updates)
         .eq("id", userId)
         .select()

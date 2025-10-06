@@ -968,27 +968,68 @@ export type Database = {
         }
         Relationships: []
       }
+      team_settings: {
+        Row: {
+          allow_invites: boolean
+          created_at: string
+          default_role: string
+          is_public: boolean
+          team_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_invites?: boolean
+          created_at?: string
+          default_role?: string
+          is_public?: boolean
+          team_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_invites?: boolean
+          created_at?: string
+          default_role?: string
+          is_public?: boolean
+          team_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_settings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
+          avatar_url: string | null
           created_at: string
           description: string | null
           id: string
           team_creator_id: string
           team_name: string
+          updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
           team_creator_id: string
           team_name: string
+          updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
           team_creator_id?: string
           team_name?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -1002,16 +1043,19 @@ export type Database = {
       }
       user_teams: {
         Row: {
+          joined_at: string
           role: string
           team_id: string
           user_id: string
         }
         Insert: {
+          joined_at?: string
           role?: string
           team_id: string
           user_id: string
         }
         Update: {
+          joined_at?: string
           role?: string
           team_id?: string
           user_id?: string
@@ -1035,6 +1079,7 @@ export type Database = {
       }
       users: {
         Row: {
+          avatar_url: string | null
           created_at: string | null
           email: string
           id: string
@@ -1042,6 +1087,7 @@ export type Database = {
           phone: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string | null
           email: string
           id: string
@@ -1049,6 +1095,7 @@ export type Database = {
           phone?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string | null
           email?: string
           id?: string
