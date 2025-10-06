@@ -473,69 +473,119 @@ export type Database = {
         }
         Relationships: []
       }
+      project_settings: {
+        Row: {
+          allow_collaboration: boolean
+          created_at: string
+          is_public: boolean
+          project_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_collaboration: boolean
+          created_at?: string
+          is_public?: boolean
+          project_id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_collaboration?: boolean
+          created_at?: string
+          is_public?: boolean
+          project_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_settings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           additional_notes: string | null
           clinical_lead: string
           cmc_lead: string
-          created_at: string | null
+          created_at: string
+          description: string | null
           drug_name: string
           fda_contact_email: string | null
           id: string
           ind_number: string | null
           ind_title: string
+          metadata: Json | null
           pre_ind_meeting_date: string | null
           preclinical_lead: string
+          priority: string
           product_type: string
+          progress: number
           project_creator_id: string | null
           publisher: string
           regulatory_owner: string
           sponsor_contact_email: string
           sponsor_name: string
+          status: string
           target_ind_submission_date: string
           team_id: string
+          updated_at: string
         }
         Insert: {
           additional_notes?: string | null
           clinical_lead: string
           cmc_lead: string
-          created_at?: string | null
+          created_at: string
+          description?: string | null
           drug_name: string
           fda_contact_email?: string | null
           id?: string
           ind_number?: string | null
           ind_title: string
+          metadata?: Json | null
           pre_ind_meeting_date?: string | null
           preclinical_lead: string
+          priority?: string
           product_type: string
+          progress?: number
           project_creator_id?: string | null
           publisher: string
           regulatory_owner: string
           sponsor_contact_email: string
           sponsor_name: string
+          status?: string
           target_ind_submission_date: string
           team_id: string
+          updated_at?: string
         }
         Update: {
           additional_notes?: string | null
           clinical_lead?: string
           cmc_lead?: string
-          created_at?: string | null
+          created_at?: string
+          description?: string | null
           drug_name?: string
           fda_contact_email?: string | null
           id?: string
           ind_number?: string | null
           ind_title?: string
+          metadata?: Json | null
           pre_ind_meeting_date?: string | null
           preclinical_lead?: string
+          priority?: string
           product_type?: string
+          progress?: number
           project_creator_id?: string | null
           publisher?: string
           regulatory_owner?: string
           sponsor_contact_email?: string
           sponsor_name?: string
+          status?: string
           target_ind_submission_date?: string
           team_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
