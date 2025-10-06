@@ -93,7 +93,8 @@ export const fetchUserTeams = createAsyncThunk(
               isPublic:is_public,
               allowInvites:allow_invites,
               defaultRole:default_role
-            )
+            ),
+            memberCount:user_teams(count)
           )
         `,
         )
@@ -109,7 +110,7 @@ export const fetchUserTeams = createAsyncThunk(
           description: member.teams.description,
           avatar: member.teams.avatar,
           ownerId: member.teams.owner_id,
-          memberCount: 0, // Will be populated separately
+          memberCount: member.teams.memberCount?.[0].count ?? 0,
           createdAt: member.teams.created_at,
           updatedAt: member.teams.updated_at,
           settings: (member.teams.settings as Team["settings"]) || {
@@ -119,17 +120,6 @@ export const fetchUserTeams = createAsyncThunk(
           },
           members: [],
         })) || [];
-
-      // Fetch member counts for each team
-      for (const team of teams) {
-        const { count } = await supabase
-          .from("user_teams")
-          .select("*", { count: "exact", head: true })
-          .eq("team_id", team.id)
-          .eq("status", "active");
-
-        team.memberCount = count || 0;
-      }
 
       return teams;
     } catch (error: any) {
