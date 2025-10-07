@@ -35,7 +35,7 @@ type TeamsTeamsTabProps = {
   setShowViewTeam: (value: boolean) => void;
   setShowAddMembers: (value: boolean) => void;
   setShowManageRoles: (value: boolean) => void;
-  handleEditTeam: (team: Team) => void;
+  setShowEditTeam: (value: boolean) => void;
   handleDeleteTeam: (teamId: string) => void;
 };
 
@@ -44,7 +44,7 @@ export const TeamsTeamsTab: React.FC<TeamsTeamsTabProps> = ({
   setShowViewTeam,
   setShowAddMembers,
   setShowManageRoles,
-  handleEditTeam,
+  setShowEditTeam,
   handleDeleteTeam,
 }) => {
   const { isLoading, teams } = useAppSelector((state) => state.teams);
@@ -144,7 +144,10 @@ export const TeamsTeamsTab: React.FC<TeamsTeamsTabProps> = ({
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleEditTeam(team)}
+                            onClick={() => {
+                              setSelectedTeamId(team.id);
+                              setShowEditTeam(true);
+                            }}
                           >
                             <Edit3 className="h-4 w-4" />
                           </Button>

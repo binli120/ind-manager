@@ -35,6 +35,7 @@ import { SelectValue } from "./ui/select";
 import { TeamsOverviewTab } from "./ui/teams/teams-overview-tab";
 import { ViewTeamDialog } from "./ui/teams/view-team-dialog";
 import { TeamsTeamsTab } from "./ui/teams/teams-teams-tab";
+import { EditTeamDialog } from "./ui/teams/edit-team-dialog";
 
 interface TeamMetric {
   label: string;
@@ -50,6 +51,7 @@ export function TeamsView() {
 
   // Dialog state
   const [showViewTeam, setShowViewTeam] = useState<boolean>(false);
+  const [showEditTeam, setShowEditTeam] = useState<boolean>(false);
   const [showAddMembers, setShowAddMembers] = useState<boolean>(false);
   const [showManageRoles, setShowManageRoles] = useState<boolean>(false);
 
@@ -61,7 +63,10 @@ export function TeamsView() {
     }
   }, [dispatch, user?.id]);
 
-  const handleEditTeam = (team: Team) => {};
+  const handleEditTeam = (team: Team) => {
+    setShowEditTeam(false);
+    setSelectedTeamId(null);
+  };
   const handleDeleteTeam = (teamId: string) => {};
 
   const teamMetrics: TeamMetric[] = [
@@ -160,13 +165,20 @@ export function TeamsView() {
             setShowManageRoles={setShowManageRoles}
             setShowViewTeam={setShowViewTeam}
             handleDeleteTeam={handleDeleteTeam}
-            handleEditTeam={handleEditTeam}
+            setShowEditTeam={setShowEditTeam}
           />
         </Tabs>
         <ViewTeamDialog
           showViewTeam={showViewTeam}
           setShowViewTeam={setShowViewTeam}
-          handleEditTeam={handleEditTeam}
+          setShowEditTeam={setShowEditTeam}
+          selectedTeamId={selectedTeamId}
+          setSelectedTeamId={setSelectedTeamId}
+        />
+        <EditTeamDialog
+          showEditTeam={showEditTeam}
+          setShowEditTeam={setShowEditTeam}
+          handleUpdateTeam={handleEditTeam}
           selectedTeamId={selectedTeamId}
           setSelectedTeamId={setSelectedTeamId}
         />

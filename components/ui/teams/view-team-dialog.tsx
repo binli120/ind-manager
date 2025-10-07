@@ -20,7 +20,7 @@ type ViewTeamDialogProps = {
   setShowViewTeam: (value: boolean) => void;
   selectedTeamId: string | null;
   setSelectedTeamId: (teamId: string | null) => void;
-  handleEditTeam: (team: Team) => void;
+  setShowEditTeam: (value: boolean) => void;
 };
 
 export const ViewTeamDialog: React.FC<ViewTeamDialogProps> = ({
@@ -28,7 +28,7 @@ export const ViewTeamDialog: React.FC<ViewTeamDialogProps> = ({
   setShowViewTeam,
   selectedTeamId,
   setSelectedTeamId,
-  handleEditTeam,
+  setShowEditTeam,
 }) => {
   const { user } = useAppSelector((app) => app.auth);
   const dispatch = useAppDispatch();
@@ -116,8 +116,8 @@ export const ViewTeamDialog: React.FC<ViewTeamDialogProps> = ({
           {canManageTeam(teamDetails, user) && (
             <Button
               onClick={() => {
+                setShowEditTeam(true);
                 setShowViewTeam(false);
-                handleEditTeam(teamDetails);
               }}
             >
               <Edit3 className="h-4 w-4 mr-2" />
