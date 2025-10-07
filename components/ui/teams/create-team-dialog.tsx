@@ -88,16 +88,16 @@ export const CreateTeamDialog: React.FC<React.PropsWithChildren<{}>> = ({
     }
   };
 
-  const handleCancel = () => {
+  const onOpenChange = (open: boolean) => {
     setShowCreateTeam(false);
     setNewTeamData({ team_name: "", description: "", memberEmails: [] });
-    setCreateTeamErrors({});
+    setShowCreateTeam(open);
   };
 
   return (
-    <Dialog open={showCreateTeam} onOpenChange={setShowCreateTeam}>
+    <Dialog open={showCreateTeam} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Create New Team</DialogTitle>
           <DialogDescription>
@@ -199,7 +199,7 @@ export const CreateTeamDialog: React.FC<React.PropsWithChildren<{}>> = ({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleCancel()}>
+          <Button variant="outline" onClick={() => setShowCreateTeam(false)}>
             Cancel
           </Button>
           <Button onClick={handleCreateTeam}>Create Team</Button>
