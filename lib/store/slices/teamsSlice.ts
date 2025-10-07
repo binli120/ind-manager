@@ -227,16 +227,22 @@ export const createTeam = createAsyncThunk(
           team_name: name,
           description,
           team_creator_id: userId,
-          // settings: {
-          //   isPublic: false,
-          //   allowInvites: true,
-          //   defaultRole: "member",
-          // },
         })
         .select()
         .single();
 
       if (teamError) throw teamError;
+
+      const { error: settingsError } = await supabase
+        .from("team_settings")
+        .insert({
+          team_id: team.id,
+          is_public: false,
+          allow_invites: true,
+          default_role: "member",
+        });
+
+      if (settingsError) throw teamError;
 
       // Add creator as owner
       const { error: memberError } = await supabase.from("user_teams").insert({

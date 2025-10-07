@@ -1018,6 +1018,50 @@ export type Database = {
         }
         Relationships: []
       }
+      team_invites: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          invited_at: string
+          invited_by: string
+          role: string
+          status: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          invited_at?: string
+          invited_by: string
+          role?: string
+          status?: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          invited_at?: string
+          invited_by?: string
+          role?: string
+          status?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invites_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_settings: {
         Row: {
           allow_invites: boolean

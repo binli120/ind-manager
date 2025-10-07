@@ -217,8 +217,8 @@ export const fetchProjectDetails = createAsyncThunk(
         title: project.ind_title,
         code: project.ind_number || "",
         description: project.description || "No description available",
-        status: project.status,
-        priority: project.priority,
+        status: project.status as Project["status"],
+        priority: project.priority as Project["priority"],
         progress: project.progress || 0,
         sponsor: project.sponsor_name || "",
         drug: project.drug_name || "",
@@ -233,7 +233,7 @@ export const fetchProjectDetails = createAsyncThunk(
           isPublic: false,
           allowCollaboration: true,
         },
-        metadata: project.metadata,
+        metadata: (project.metadata as Project["metadata"]) ?? {},
       };
 
       return transformedProject;
@@ -263,17 +263,17 @@ export const createProject = createAsyncThunk(
       const { data: project, error } = await supabase
         .from("projects")
         .insert({
-          title: projectData.title,
-          code: projectData.code,
+          ind_title: projectData.title,
+          ind_number: projectData.code,
           description: projectData.description,
           status: projectData.status || "draft",
           priority: projectData.priority || "medium",
           progress: projectData.progress || 0,
-          sponsor: projectData.sponsor,
-          drug: projectData.drug,
-          target_date: projectData.targetDate,
+          sponsor_name: projectData.sponsor,
+          drug_name: projectData.drug,
+          target_ind_submission_date: projectData.targetDate,
           team_id: teamId,
-          owner_id: userId,
+          project_creator_id: userId,
           settings: projectData.settings || {
             isPublic: false,
             allowCollaboration: true,

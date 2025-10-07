@@ -22,7 +22,7 @@ import {
   Building2,
   Clock,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { CreateTeamDialog } from "@/components/ui/teams/create-team-dialog";
 
 interface TeamMetric {
   label: string;
@@ -118,11 +118,12 @@ export function TeamsView() {
               Manage your teams, members, and roles
             </p>
           </div>
-
-          <Button className="bg-purple-600 text-white hover:bg-purple-700 shadow-sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Create Team
-          </Button>
+          <CreateTeamDialog>
+            <Button className="bg-purple-600 text-white hover:bg-purple-700 shadow-sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Team
+            </Button>
+          </CreateTeamDialog>
         </div>
 
         {/* Metrics Cards */}
