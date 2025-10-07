@@ -36,6 +36,8 @@ import { TeamsOverviewTab } from "./ui/teams/teams-overview-tab";
 import { ViewTeamDialog } from "./ui/teams/view-team-dialog";
 import { TeamsTeamsTab } from "./ui/teams/teams-teams-tab";
 import { EditTeamDialog } from "./ui/teams/edit-team-dialog";
+import { AddMembersDialog } from "./ui/teams/add-members-dialog";
+import { ManageRolesDialog } from "./ui/teams/manage-roles-dialog";
 
 interface TeamMetric {
   label: string;
@@ -181,6 +183,18 @@ export function TeamsView() {
           handleUpdateTeam={handleEditTeam}
           selectedTeamId={selectedTeamId}
           setSelectedTeamId={setSelectedTeamId}
+        />
+        <AddMembersDialog
+          selectedTeamId={selectedTeamId}
+          setSelectedTeamId={setSelectedTeamId}
+          showAddMembers={showAddMembers}
+          setShowAddMembers={setShowAddMembers}
+        />
+        <ManageRolesDialog
+          selectedTeamId={selectedTeamId}
+          setSelectedTeamId={setSelectedTeamId}
+          showManageRoles={showManageRoles}
+          setShowManageRoles={setShowManageRoles}
         />
       </div>
 
