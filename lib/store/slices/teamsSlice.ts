@@ -11,7 +11,7 @@ export interface TeamMember {
   teamId: string;
   name: string;
   email: string;
-  avatar?: string;
+  avatar?: string | null;
   role: "owner" | "admin" | "member" | "viewer";
   permissions: string[];
   joinedAt: string;
@@ -144,7 +144,18 @@ export const fetchTeamDetails = createAsyncThunk(
             isPublic:is_public,
             allowInvites:allow_invites,
             defaultRole:default_role
-          )
+          ),
+          members:user_teams (
+            users (
+              id,
+              name,
+              email,
+              avatar_url
+            ),
+            role,
+            joined_at
+          ),
+          memberCount:user_teams(count)
         `,
         )
         .eq("id", teamId)
@@ -152,44 +163,13 @@ export const fetchTeamDetails = createAsyncThunk(
 
       if (teamError) throw teamError;
 
-      // Fetch team members
-      const { data: members, error: membersError } = await supabase
-        .from("teams")
-        .select(
-          `
-          *,
-          users (
-            name,
-            avatar_url
-          )
-        `,
-        )
-        .eq("team_id", teamId);
-
-      if (membersError) throw membersError;
-
-      const teamMembers: TeamMember[] =
-        members?.map((member: any) => ({
-          id: member.id,
-          userId: member.user_id,
-          teamId: member.team_id,
-          name: member.profiles?.name || member.email,
-          email: member.email,
-          avatar: member.profiles?.avatar_url,
-          role: member.role,
-          permissions: member.permissions || [],
-          joinedAt: member.created_at,
-          lastActive: member.last_active,
-          status: member.status,
-        })) || [];
-
       const teamData: Team = {
         id: team.id,
         name: team.team_name,
         description: team.description ?? "",
         avatar: team.avatar_url,
         ownerId: team.team_creator_id,
-        memberCount: teamMembers.length,
+        memberCount: team.memberCount?.[0].count,
         createdAt: team.created_at,
         updatedAt: team.updated_at,
         settings: (team.settings as Team["settings"]) || {
@@ -197,10 +177,23 @@ export const fetchTeamDetails = createAsyncThunk(
           allowInvites: true,
           defaultRole: "member",
         },
-        members: teamMembers,
+        members: team.members.map((member) => ({
+          id: member.users.id,
+          userId: member.users.id,
+          teamId: team.id,
+          name: member.users?.name || member.users.email,
+          email: member.users.email,
+          avatar: member.users?.avatar_url,
+          role: member.role as TeamMember["role"],
+          joinedAt: member.joined_at,
+          // TODO: Add these fields to db?
+          permissions: [],
+          lastActive: "",
+          status: "active",
+        })),
       };
 
-      return { team: teamData, members: teamMembers };
+      return { team: teamData, members: teamData.members };
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to fetch team details");
     }
