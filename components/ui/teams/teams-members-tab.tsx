@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -7,27 +7,32 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
-import {
-  Activity,
-  Clock,
-  Crown,
-  Eye,
-  Plus,
-  Settings,
-  UserPlus,
-  UserX,
-} from "lucide-react";
+import { Crown, UserPlus, UserX } from "lucide-react";
 import { Avatar, AvatarFallback } from "../avatar";
 import { Badge } from "../badge";
 import { Button } from "../button";
-import { setCurrentTeam } from "@/lib/store/slices/teamsSlice";
-import { canEditMember, getRoleColor, getRoleIcon } from "./utils";
+import {
+  canEditMember,
+  canManageTeam,
+  getRoleColor,
+  getRoleIcon,
+} from "./utils";
 import { Separator } from "@radix-ui/react-select";
 
-export const TeamsOverviewTab: React.FC = () => {
-  const dispatch = useAppDispatch();
+type TeamsMembersTabProps = {
+  setSelectedTeamId: (teamId: string) => void;
+  setShowAddMembers: (value: boolean) => void;
+};
+
+export const TeamsMembersTab: React.FC<TeamsMembersTabProps> = ({
+  setShowAddMembers,
+  setSelectedTeamId,
+}) => {
   const { isLoading, teams } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
+
+  // TODO: Add functionality
+  const handleRemoveMember = (teamId: string, memberId: string) => {};
 
   return (
     <TabsContent value="members" className="space-y-6">
@@ -45,9 +50,7 @@ export const TeamsOverviewTab: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <h3 className="font-medium">{team.name}</h3>
-                    <Badge variant="outline">
-                      {team.members.length} members
-                    </Badge>
+                    <Badge variant="outline">{team.memberCount} members</Badge>
                     {team.ownerId === user?.id && (
                       <Badge variant="default">
                         <Crown className="h-3 w-3 mr-1" />
@@ -55,17 +58,19 @@ export const TeamsOverviewTab: React.FC = () => {
                       </Badge>
                     )}
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedTeam(team);
-                      setShowAddMembers(true);
-                    }}
-                  >
-                    <UserPlus className="h-3 w-3 mr-1" />
-                    Add Member
-                  </Button>
+                  {canManageTeam(team, user) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedTeamId(team.id);
+                        setShowAddMembers(true);
+                      }}
+                    >
+                      <UserPlus className="h-3 w-3 mr-1" />
+                      Add Member
+                    </Button>
+                  )}
                 </div>
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {team.members.map((member) => (
