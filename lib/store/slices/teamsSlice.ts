@@ -77,6 +77,8 @@ export const fetchUserTeams = createAsyncThunk(
       const supabase = createClient();
 
       // Fetch teams where user is a member
+      // NOTE: Currently querying all member info since current UI shows
+      // list of members and roles in teams, members, & roles tab
       const { data: teamData, error: membersError } = await supabase
         .from("user_teams")
         .select(
