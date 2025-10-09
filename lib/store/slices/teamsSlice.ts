@@ -300,7 +300,11 @@ export const inviteTeamMember = createAsyncThunk(
 export const updateTeamMember = createAsyncThunk(
   "teams/updateTeamMember",
   async (
-    { memberId, updates }: { memberId: string; updates: Partial<TeamMember> },
+    {
+      memberId,
+      teamId,
+      updates,
+    }: { memberId: string; teamId: string; updates: Partial<TeamMember> },
     { rejectWithValue },
   ) => {
     try {
@@ -309,7 +313,8 @@ export const updateTeamMember = createAsyncThunk(
       const { data, error } = await supabase
         .from("user_teams")
         .update(updates)
-        .eq("id", memberId)
+        .eq("user_id", memberId)
+        .eq("team_id", teamId)
         .select()
         .single();
 
@@ -434,11 +439,11 @@ const teamsSlice = createSlice({
           id: action.payload.id,
           teamId: action.payload.team_id,
           email: action.payload.email,
-          role: action.payload.role,
+          role: action.payload.role as TeamInvite["role"],
           invitedBy: action.payload.invited_by,
           invitedAt: action.payload.created_at,
           expiresAt: action.payload.expires_at,
-          status: action.payload.status,
+          status: action.payload.status as TeamInvite["status"],
         };
         state.teamInvites.push(invite);
       })
@@ -448,13 +453,31 @@ const teamsSlice = createSlice({
       // Update team member
       .addCase(updateTeamMember.fulfilled, (state, action) => {
         const index = state.teamMembers.findIndex(
-          (member) => member.id === action.payload.id,
+          (member) => member.id === action.payload.user_id,
         );
         if (index !== -1) {
           state.teamMembers[index] = {
             ...state.teamMembers[index],
             ...action.payload,
+            role: action.payload.role as TeamMember["role"],
           };
+        }
+        const teamToUpdate = state.teams.findIndex(
+          (t) => t.id === action.payload.team_id,
+        );
+        console.log("updating", teamToUpdate);
+        if (teamToUpdate !== -1) {
+          const memberToUpdate = state.teams[teamToUpdate].members.findIndex(
+            (m) => m.id === action.payload.user_id,
+          );
+          console.log("updating member", memberToUpdate);
+          if (memberToUpdate !== -1) {
+            state.teams[teamToUpdate].members[memberToUpdate] = {
+              ...state.teams[teamToUpdate].members[memberToUpdate],
+              ...action.payload,
+              role: action.payload.role as TeamMember["role"],
+            };
+          }
         }
       })
       // Remove team member

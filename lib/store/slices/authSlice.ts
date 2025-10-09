@@ -8,10 +8,10 @@ import { createClient } from "@/lib/supabase/client";
 export interface User {
   id: string;
   email: string;
-  name?: string;
-  avatar?: string;
-  role?: string;
-  permissions?: string[];
+  name?: string | null;
+  avatar?: string | null;
+  role?: string | null;
+  permissions?: string[] | null;
   teamId?: string;
   createdAt: string;
   lastLoginAt?: string;
@@ -65,9 +65,9 @@ export const loginUser = createAsyncThunk(
           email: data.user.email!,
           name: profile?.name || data.user.user_metadata?.name,
           avatar: profile?.avatar_url,
-          role: profile?.role || "user",
-          permissions: profile?.permissions || [],
-          teamId: profile?.team_id,
+          // role: profile?.role || "user",
+          // permissions: profile?.permissions || [],
+          // teamId: profile?.team_id,
           createdAt: data.user.created_at,
           lastLoginAt: data.user.last_sign_in_at,
         };
@@ -159,9 +159,9 @@ export const getCurrentUser = createAsyncThunk(
           email: user.email!,
           name: profile?.name || user.user_metadata?.name,
           avatar: profile?.avatar_url,
-          role: profile?.role || "user",
-          permissions: profile?.permissions || [],
-          teamId: profile?.team_id,
+          // role: profile?.role || "user",
+          // permissions: profile?.permissions || [],
+          // teamId: profile?.team_id,
           createdAt: user.created_at,
           lastLoginAt: user.last_sign_in_at,
         };

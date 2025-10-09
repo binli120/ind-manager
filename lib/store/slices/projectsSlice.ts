@@ -83,7 +83,6 @@ export const fetchProjects = createAsyncThunk(
     try {
       const supabase = createClient();
 
-      // TODO: Fix query
       let query = supabase.from("projects").select(`
           *,
           teams (
@@ -179,14 +178,16 @@ export const fetchProjectDetails = createAsyncThunk(
             allowCollaboration:allow_collaboration,
             isPublic:is_public
           ),
-          project_members (
-            id,
-            user_id,
-            role,
-            created_at,
-            profiles (
-              name,
-              avatar_url
+          teams (
+            user_teams (
+              team_id,
+              user_id,
+              role,
+              joined_at,
+              users (
+                name,
+                avatar_url
+              )
             )
           )
         `,
@@ -197,19 +198,19 @@ export const fetchProjectDetails = createAsyncThunk(
       if (error) throw error;
 
       const members: ProjectMember[] =
-        project.project_members?.map((member) => ({
-          id: member.id,
+        project.teams.user_teams?.map((member) => ({
+          id: member.user_id,
           userId: member.user_id,
           projectId: project.id,
-          name: member.profiles?.name || "Unknown User",
-          avatar: member.profiles?.avatar_url,
+          name: member.users?.name || "Unknown User",
+          avatar: member.users?.avatar_url,
           initials:
-            member.profiles?.name
+            member.users?.name
               ?.split(" ")
               .map((n: string) => n[0])
               .join("") || "U",
-          role: member.role,
-          joinedAt: member.created_at,
+          role: member.role as ProjectMember["role"],
+          joinedAt: member.joined_at,
         })) || [];
 
       const transformedProject: Project = {
@@ -259,6 +260,7 @@ export const createProject = createAsyncThunk(
 
       if (!userId) throw new Error("User not authenticated");
       if (!teamId) throw new Error("No team selected");
+      if (!projectData.title) throw new Error("Project title required");
 
       const { data: project, error } = await supabase
         .from("projects")
@@ -274,10 +276,10 @@ export const createProject = createAsyncThunk(
           target_ind_submission_date: projectData.targetDate,
           team_id: teamId,
           project_creator_id: userId,
-          settings: projectData.settings || {
-            isPublic: false,
-            allowCollaboration: true,
-          },
+          // settings: projectData.settings || {
+          //   isPublic: false,
+          //   allowCollaboration: true,
+          // },
           metadata: projectData.metadata,
         })
         .select()
@@ -286,15 +288,16 @@ export const createProject = createAsyncThunk(
       if (error) throw error;
 
       // Add creator as project lead
-      const { error: memberError } = await supabase
-        .from("project_members")
-        .insert({
-          project_id: project.id,
-          user_id: userId,
-          role: "lead",
-        });
+      // Project members = team members for now
+      // const { error: memberError } = await supabase
+      //   .from("project_members")
+      //   .insert({
+      //     project_id: project.id,
+      //     user_id: userId,
+      //     role: "lead",
+      //   });
 
-      if (memberError) throw memberError;
+      // if (memberError) throw memberError;
 
       return project;
     } catch (error: any) {

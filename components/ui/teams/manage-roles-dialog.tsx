@@ -19,7 +19,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Crown } from "lucide-react";
-import { Team, fetchTeamDetails } from "@/lib/store/slices/teamsSlice";
+import {
+  Team,
+  TeamMember,
+  fetchTeamDetails,
+  updateTeamMember,
+} from "@/lib/store/slices/teamsSlice";
 import { Label } from "../label";
 import {
   canEditMember,
@@ -42,16 +47,13 @@ export const ManageRolesDialog: React.FC<ManageRolesDialogProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((app) => app.auth);
+  const { teams } = useAppSelector((app) => app.teams);
 
-  const [teamDetails, setTeamDetails] = useState<Team | null>(null);
+  const teamDetails = teams.find((t) => t.id === selectedTeamId);
 
   useEffect(() => {
     if (selectedTeamId) {
-      dispatch(fetchTeamDetails(selectedTeamId))
-        .unwrap()
-        .then((res) => setTeamDetails(res.team));
-    } else {
-      setTeamDetails(null);
+      dispatch(fetchTeamDetails(selectedTeamId));
     }
   }, [dispatch, selectedTeamId]);
 
@@ -62,8 +64,15 @@ export const ManageRolesDialog: React.FC<ManageRolesDialogProps> = ({
     setShowManageRoles(open);
   };
 
-  // TODO: Add functionality
-  const handleUpdateRole = (teamId: string, userId: string, role: string) => {};
+  const handleUpdateRole = (teamId: string, userId: string, role: string) => {
+    dispatch(
+      updateTeamMember({
+        memberId: userId,
+        teamId: teamId,
+        updates: { role: role as TeamMember["role"] },
+      }),
+    );
+  };
 
   if (teamDetails == null) return <></>;
 
@@ -121,6 +130,7 @@ export const ManageRolesDialog: React.FC<ManageRolesDialogProps> = ({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="viewer">Viewer</SelectItem>
                           <SelectItem value="member">Member</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>

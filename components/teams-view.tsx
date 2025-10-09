@@ -3,35 +3,21 @@
 import type React from "react";
 
 import { useAppSelector, useAppDispatch } from "@/lib/store";
-import {
-  Team,
-  fetchUserTeams,
-  setCurrentTeam,
-} from "@/lib/store/slices/teamsSlice";
+import { Team, fetchUserTeams } from "@/lib/store/slices/teamsSlice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus,
   Users,
   Crown,
   UserCheck,
   Activity,
-  Eye,
-  UserPlus,
-  Settings,
   Building2,
-  Clock,
-  Search,
 } from "lucide-react";
 import { CreateTeamDialog } from "@/components/ui/teams/create-team-dialog";
-import { Input } from "./ui/input";
-import { Select, SelectContent, SelectTrigger } from "./ui/select";
-import { SelectItem } from "./ui/select";
-import { SelectValue } from "./ui/select";
 import { TeamsOverviewTab } from "./ui/teams/teams-overview-tab";
 import { ViewTeamDialog } from "./ui/teams/view-team-dialog";
 import { TeamsTeamsTab } from "./ui/teams/teams-teams-tab";
