@@ -45,6 +45,7 @@ export const canEditMember = (
   member: TeamMember,
   user: User | null,
 ) => {
+  if (team.ownerId === member.id) return false;
   if (team.ownerId === user?.id) return true;
   if (member.id === user?.id) return false;
   const currentUserRole = team.members.find((m) => m.id === user?.id)?.role;

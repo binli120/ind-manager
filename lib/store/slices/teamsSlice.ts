@@ -77,7 +77,7 @@ export const fetchUserTeams = createAsyncThunk(
       const supabase = createClient();
 
       // Fetch teams where user is a member
-      const { data: teamMembers, error: membersError } = await supabase
+      const { data: teamData, error: membersError } = await supabase
         .from("user_teams")
         .select(
           `
@@ -95,7 +95,17 @@ export const fetchUserTeams = createAsyncThunk(
               allowInvites:allow_invites,
               defaultRole:default_role
             ),
-            memberCount:user_teams(count)
+            memberCount:user_teams(count),
+            members:user_teams(
+              users (
+                id,
+                name,
+                email,
+                avatar_url
+              ),
+              role,
+              joined_at
+            )
           )
         `,
         )
@@ -105,21 +115,33 @@ export const fetchUserTeams = createAsyncThunk(
 
       // Transform data to match our interface
       const teams: Team[] =
-        teamMembers?.map((member) => ({
-          id: member.teams.id,
-          name: member.teams.name,
-          description: member.teams.description,
-          avatar: member.teams.avatar,
-          ownerId: member.teams.owner_id,
-          memberCount: member.teams.memberCount?.[0].count ?? 0,
-          createdAt: member.teams.created_at,
-          updatedAt: member.teams.updated_at,
-          settings: (member.teams.settings as Team["settings"]) || {
+        teamData?.map((team) => ({
+          id: team.teams.id,
+          name: team.teams.name,
+          description: team.teams.description,
+          avatar: team.teams.avatar,
+          ownerId: team.teams.owner_id,
+          memberCount: team.teams.memberCount?.[0].count ?? 0,
+          createdAt: team.teams.created_at,
+          updatedAt: team.teams.updated_at,
+          settings: (team.teams.settings as Team["settings"]) || {
             isPublic: false,
             allowInvites: true,
             defaultRole: "member",
           },
-          members: [],
+          members: team.teams.members.map((m) => ({
+            id: m.users.id,
+            email: m.users.email,
+            name: m.users?.name || m.users.email,
+            userId: m.users.id,
+            teamId: team.teams.id,
+            role: m.role as TeamMember["role"],
+            joinedAt: m.joined_at,
+            // TODO: Add these fields to db?
+            status: "active",
+            permissions: [],
+            lastActive: "",
+          })),
         })) || [];
 
       return teams;

@@ -53,10 +53,13 @@ export function TeamsView() {
     }
   }, [dispatch, user?.id]);
 
-  const handleEditTeam = (team: Team) => {
+  // TODO: add functionality
+  const handleUpdateTeam = (team: Team) => {
     setShowEditTeam(false);
     setSelectedTeamId(null);
   };
+
+  // TODO: add functionality
   const handleDeleteTeam = (teamId: string) => {};
 
   const teamMetrics: TeamMetric[] = [
@@ -176,7 +179,7 @@ export function TeamsView() {
         <EditTeamDialog
           showEditTeam={showEditTeam}
           setShowEditTeam={setShowEditTeam}
-          handleUpdateTeam={handleEditTeam}
+          handleUpdateTeam={handleUpdateTeam}
           selectedTeamId={selectedTeamId}
           setSelectedTeamId={setSelectedTeamId}
         />

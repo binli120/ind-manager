@@ -72,18 +72,18 @@ export const TeamsTeamsTab: React.FC<TeamsTeamsTabProps> = ({
   return (
     <TabsContent value="teams" className="space-y-6">
       <div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 my-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search teams and members..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="pl-9 border shadow-sm hover:shadow-md transition-shadow"
             />
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] border shadow-sm hover:shadow-md transition-shadow">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
