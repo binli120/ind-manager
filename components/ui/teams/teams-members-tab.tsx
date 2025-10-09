@@ -14,10 +14,12 @@ import { Button } from "../button";
 import {
   canEditMember,
   canManageTeam,
+  formatRole,
   getRoleColor,
   getRoleIcon,
 } from "./utils";
 import { Separator } from "@radix-ui/react-select";
+import { removeTeamMember } from "@/lib/store/slices/teamsSlice";
 
 type TeamsMembersTabProps = {
   setSelectedTeamId: (teamId: string) => void;
@@ -28,11 +30,14 @@ export const TeamsMembersTab: React.FC<TeamsMembersTabProps> = ({
   setShowAddMembers,
   setSelectedTeamId,
 }) => {
+  const dispatch = useAppDispatch();
   const { isLoading, teams } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
 
   // TODO: Add functionality
-  const handleRemoveMember = (teamId: string, memberId: string) => {};
+  const handleRemoveMember = (teamId: string, memberId: string) => {
+    dispatch(removeTeamMember({ memberId, teamId }));
+  };
 
   return (
     <TabsContent value="members" className="space-y-6">
@@ -95,14 +100,14 @@ export const TeamsMembersTab: React.FC<TeamsMembersTabProps> = ({
                             className={`${getRoleColor(member.role || "member")} text-white text-xs`}
                           >
                             {getRoleIcon(member.role || "member")}
-                            {member.role || "member"}
+                            {formatRole(member.role) || "Member"}
                           </Badge>
-                          {member.id === team.ownerId && (
+                          {/* member.id === team.ownerId && (
                             <Badge variant="default" className="text-xs">
                               <Crown className="h-3 w-3 mr-1" />
                               Owner
                             </Badge>
-                          )}
+                          ) */}
                         </div>
                       </div>
                       {canEditMember(team, member, user) && (

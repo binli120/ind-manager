@@ -25,6 +25,7 @@ import { Label } from "../label";
 import { useState } from "react";
 import {
   canManageTeam,
+  formatRole,
   getRoleColor,
   getRoleIcon,
 } from "@/components/ui/teams/utils";
@@ -195,7 +196,7 @@ export const TeamsTeamsTab: React.FC<TeamsTeamsTabProps> = ({
                                 className={`${getRoleColor(member.role || "member")} text-white text-xs`}
                               >
                                 {getRoleIcon(member.role || "member")}
-                                {member.role || "member"}
+                                {formatRole(member.role) || "Member"}
                               </Badge>
                             </div>
                           </div>

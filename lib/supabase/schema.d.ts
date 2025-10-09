@@ -1023,6 +1023,7 @@ export type Database = {
           created_at: string
           email: string
           expires_at: string
+          id: string
           invited_at: string
           invited_by: string
           role: string
@@ -1034,6 +1035,7 @@ export type Database = {
           created_at?: string
           email: string
           expires_at: string
+          id?: string
           invited_at?: string
           invited_by: string
           role?: string
@@ -1045,6 +1047,7 @@ export type Database = {
           created_at?: string
           email?: string
           expires_at?: string
+          id?: string
           invited_at?: string
           invited_by?: string
           role?: string

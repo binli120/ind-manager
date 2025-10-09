@@ -3,7 +3,7 @@ import { Team, TeamMember } from "@/lib/store/slices/teamsSlice";
 import { Crown, Shield, UserCheck, Users } from "lucide-react";
 
 export const getRoleColor = (role: string) => {
-  switch (role) {
+  switch (role.toLowerCase()) {
     case "owner":
       return "bg-purple-600";
     case "admin":
@@ -16,7 +16,7 @@ export const getRoleColor = (role: string) => {
 };
 
 export const getRoleIcon = (role: string) => {
-  switch (role) {
+  switch (role.toLowerCase()) {
     case "owner":
       return <Crown className="h-3 w-3" />;
     case "admin":
@@ -26,6 +26,11 @@ export const getRoleIcon = (role: string) => {
     default:
       return <Users className="h-3 w-3" />;
   }
+};
+
+export const formatRole = (role: string | null | undefined) => {
+  if (role == null || role.length < 2) return "";
+  return role.charAt(0).toUpperCase() + role.slice(1);
 };
 
 export const canManageTeam = (team: Team, user: User | null) => {

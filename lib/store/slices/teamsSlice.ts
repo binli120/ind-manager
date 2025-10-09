@@ -6,6 +6,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 
 export interface TeamMember {
+  // TODO: Is id separate from userId?
   id: string;
   userId: string;
   teamId: string;
@@ -226,14 +227,16 @@ export const createTeam = createAsyncThunk(
 
       if (teamError) throw teamError;
 
-      const { error: settingsError } = await supabase
+      const { data: settingsData, error: settingsError } = await supabase
         .from("team_settings")
         .insert({
           team_id: team.id,
           is_public: false,
           allow_invites: true,
           default_role: "member",
-        });
+        })
+        .select()
+        .single();
 
       if (settingsError) throw teamError;
 
@@ -248,7 +251,7 @@ export const createTeam = createAsyncThunk(
 
       if (memberError) throw memberError;
 
-      return team;
+      return { team, settings: settingsData };
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to create team");
     }
@@ -329,18 +332,24 @@ export const updateTeamMember = createAsyncThunk(
 
 export const removeTeamMember = createAsyncThunk(
   "teams/removeTeamMember",
-  async (memberId: string, { rejectWithValue }) => {
+  async (
+    { memberId, teamId }: { memberId: string; teamId: string },
+    { rejectWithValue },
+  ) => {
     try {
       const supabase = createClient();
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("user_teams")
         .delete()
-        .eq("user_id", memberId);
+        .eq("user_id", memberId)
+        .eq("team_id", teamId)
+        .select()
+        .single();
 
       if (error) throw error;
 
-      return memberId;
+      return data;
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to remove team member");
     }
@@ -422,7 +431,17 @@ const teamsSlice = createSlice({
       // Create team
       .addCase(createTeam.fulfilled, (state, action) => {
         const newTeam: Team = {
-          ...action.payload,
+          ...action.payload.team,
+          ownerId: action.payload.team.team_creator_id,
+          name: action.payload.team.team_name,
+          createdAt: action.payload.team.created_at,
+          updatedAt: action.payload.team.updated_at,
+          settings: {
+            allowInvites: action.payload.settings.allow_invites,
+            isPublic: action.payload.settings.is_public,
+            defaultRole: action.payload.settings
+              .default_role as Team["settings"]["defaultRole"],
+          },
           memberCount: 1,
           members: [],
         };
@@ -465,12 +484,10 @@ const teamsSlice = createSlice({
         const teamToUpdate = state.teams.findIndex(
           (t) => t.id === action.payload.team_id,
         );
-        console.log("updating", teamToUpdate);
         if (teamToUpdate !== -1) {
           const memberToUpdate = state.teams[teamToUpdate].members.findIndex(
             (m) => m.id === action.payload.user_id,
           );
-          console.log("updating member", memberToUpdate);
           if (memberToUpdate !== -1) {
             state.teams[teamToUpdate].members[memberToUpdate] = {
               ...state.teams[teamToUpdate].members[memberToUpdate],
@@ -483,13 +500,22 @@ const teamsSlice = createSlice({
       // Remove team member
       .addCase(removeTeamMember.fulfilled, (state, action) => {
         state.teamMembers = state.teamMembers.filter(
-          (member) => member.id !== action.payload,
+          (member) => member.id !== action.payload.user_id,
         );
         if (state.currentTeam) {
           state.currentTeam.memberCount = Math.max(
             0,
             state.currentTeam.memberCount - 1,
           );
+        }
+
+        const teamToUpdate = state.teams.findIndex(
+          (t) => t.id === action.payload.team_id,
+        );
+        if (teamToUpdate !== -1) {
+          state.teams[teamToUpdate].members = state.teams[
+            teamToUpdate
+          ].members.filter((m) => m.userId != action.payload.user_id);
         }
       });
   },

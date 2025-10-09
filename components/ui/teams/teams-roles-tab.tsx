@@ -6,12 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAppSelector } from "@/lib/store";
+import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { Crown, Settings } from "lucide-react";
 import { Avatar, AvatarFallback } from "../avatar";
 import { Badge } from "../badge";
 import { Button } from "../button";
-import { canManageTeam, getRoleColor, getRoleIcon } from "./utils";
+import { canManageTeam, formatRole, getRoleColor, getRoleIcon } from "./utils";
 import { Separator } from "@radix-ui/react-select";
 import {
   Select,
@@ -20,6 +20,7 @@ import {
   SelectValue,
   SelectContent,
 } from "../select";
+import { TeamMember, updateTeamMember } from "@/lib/store/slices/teamsSlice";
 
 type TeamsRolesTabProps = {
   setSelectedTeamId: (teamId: string) => void;
@@ -30,15 +31,19 @@ export const TeamsRolesTab: React.FC<TeamsRolesTabProps> = ({
   setShowManageRoles,
   setSelectedTeamId,
 }) => {
+  const dispatch = useAppDispatch();
   const { isLoading, teams } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
 
-  // TODO: Add functionality
-  const handleUpdateRole = (
-    teamId: string,
-    memberId: string,
-    role: string,
-  ) => {};
+  const handleUpdateRole = (teamId: string, memberId: string, role: string) => {
+    dispatch(
+      updateTeamMember({
+        memberId,
+        teamId,
+        updates: { role: role as TeamMember["role"] },
+      }),
+    );
+  };
 
   return (
     <TabsContent value="roles" className="space-y-6">
@@ -123,7 +128,7 @@ export const TeamsRolesTab: React.FC<TeamsRolesTabProps> = ({
                                 className={`${getRoleColor(member.role || "member")} text-white text-xs`}
                               >
                                 {getRoleIcon(member.role || "member")}
-                                {member.role || "member"}
+                                {formatRole(member.role) || "Member"}
                               </Badge>
                             )}
                           </div>
