@@ -28,7 +28,7 @@ import {
   formatRole,
   getRoleColor,
   getRoleIcon,
-} from "@/components/ui/teams/utils";
+} from "@/lib/metadata/teams";
 import { Team } from "@/lib/store/slices/teamsSlice";
 
 type TeamsTeamsTabProps = {

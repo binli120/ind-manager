@@ -31,7 +31,7 @@ import {
   canManageTeam,
   getRoleColor,
   getRoleIcon,
-} from "./utils";
+} from "@/lib/metadata/teams";
 
 type ManageRolesDialogProps = {
   showManageRoles: boolean;

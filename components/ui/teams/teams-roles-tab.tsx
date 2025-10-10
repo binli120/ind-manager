@@ -11,7 +11,12 @@ import { Crown, Settings } from "lucide-react";
 import { Avatar, AvatarFallback } from "../avatar";
 import { Badge } from "../badge";
 import { Button } from "../button";
-import { canManageTeam, formatRole, getRoleColor, getRoleIcon } from "./utils";
+import {
+  canManageTeam,
+  formatRole,
+  getRoleColor,
+  getRoleIcon,
+} from "@/lib/metadata/teams";
 import { Separator } from "@radix-ui/react-select";
 import {
   Select,

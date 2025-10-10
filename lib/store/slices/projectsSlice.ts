@@ -248,7 +248,14 @@ export const fetchProjectDetails = createAsyncThunk(
 
 export const createProject = createAsyncThunk(
   "projects/createProject",
-  async (projectData: Partial<Project>, { rejectWithValue, getState }) => {
+  async (
+    projectData: Pick<
+      Project,
+      "title" | "drug" | "code" | "sponsor" | "targetDate"
+    > &
+      Partial<Project>,
+    { rejectWithValue, getState },
+  ) => {
     try {
       const supabase = createClient();
       const state = getState() as {
@@ -262,12 +269,12 @@ export const createProject = createAsyncThunk(
       if (!teamId) throw new Error("No team selected");
       if (!projectData.title) throw new Error("Project title required");
 
-      const { data: project, error } = await supabase
+      const { data: newProject, error } = await supabase
         .from("projects")
         .insert({
           ind_title: projectData.title,
           ind_number: projectData.code,
-          description: projectData.description,
+          description: projectData.description ?? "",
           status: projectData.status || "draft",
           priority: projectData.priority || "medium",
           progress: projectData.progress || 0,
@@ -280,7 +287,16 @@ export const createProject = createAsyncThunk(
           //   isPublic: false,
           //   allowCollaboration: true,
           // },
-          metadata: projectData.metadata,
+          // metadata: projectData.metadata,
+          // TODO: integtate these fields
+          publisher: "",
+          regulatory_owner: "",
+          cmc_lead: "",
+          preclinical_lead: "",
+          clinical_lead: "",
+          created_at: "",
+          product_type: "",
+          sponsor_contact_email: "",
         })
         .select()
         .single();
@@ -299,7 +315,7 @@ export const createProject = createAsyncThunk(
 
       // if (memberError) throw memberError;
 
-      return project;
+      return newProject;
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to create project");
     }

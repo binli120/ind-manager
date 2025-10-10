@@ -17,7 +17,7 @@ import {
   formatRole,
   getRoleColor,
   getRoleIcon,
-} from "./utils";
+} from "@/lib/metadata/teams";
 import { Separator } from "@radix-ui/react-select";
 import { removeTeamMember } from "@/lib/store/slices/teamsSlice";
 

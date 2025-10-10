@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge, Edit3 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { Team, fetchTeamDetails } from "@/lib/store/slices/teamsSlice";
-import { canManageTeam, getRoleColor, getRoleIcon } from "./utils";
+import { canManageTeam, getRoleColor, getRoleIcon } from "@/lib/metadata/teams";
 import { Avatar, AvatarFallback } from "../avatar";
 import { useEffect, useState } from "react";
 
