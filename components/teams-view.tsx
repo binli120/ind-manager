@@ -3,7 +3,12 @@
 import type React from "react";
 
 import { useAppSelector, useAppDispatch } from "@/lib/store";
-import { Team, fetchUserTeams } from "@/lib/store/slices/teamsSlice";
+import {
+  Team,
+  deleteTeam,
+  fetchUserTeams,
+  updateTeam,
+} from "@/lib/store/slices/teamsSlice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,14 +58,25 @@ export function TeamsView() {
     }
   }, [dispatch, user?.id]);
 
-  // TODO: add functionality
   const handleUpdateTeam = (team: Team) => {
+    dispatch(
+      updateTeam({
+        teamId: team.id,
+        updates: { name: team.name, description: team.description },
+      }),
+    );
     setShowEditTeam(false);
     setSelectedTeamId(null);
   };
 
-  // TODO: add functionality
-  const handleDeleteTeam = (teamId: string) => {};
+  const handleDeleteTeam = (teamId: string) => {
+    dispatch(deleteTeam({ teamId }));
+    setShowEditTeam(false);
+    setShowViewTeam(false);
+    setShowAddMembers(false);
+    setShowManageRoles(false);
+    setSelectedTeamId(null);
+  };
 
   const teamMetrics: TeamMetric[] = [
     {

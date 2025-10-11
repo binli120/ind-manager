@@ -282,6 +282,72 @@ export const createTeam = createAsyncThunk(
   },
 );
 
+export const updateTeam = createAsyncThunk(
+  "teams/updateTeam",
+  async (
+    {
+      teamId,
+      updates: { name, description },
+    }: {
+      teamId: string;
+      updates: { name: string; description?: string | null };
+    },
+    { rejectWithValue, getState },
+  ) => {
+    try {
+      const supabase = createClient();
+      const state = getState() as { auth: { user: { id: string } | null } };
+      const userId = state.auth.user?.id;
+
+      if (!userId) throw new Error("User not authenticated");
+
+      // Update team
+      const { data: team, error: teamError } = await supabase
+        .from("teams")
+        .update({
+          team_name: name,
+          description,
+        })
+        .eq("id", teamId)
+        .select()
+        .single();
+
+      if (teamError) throw teamError;
+
+      return { team };
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Failed to update team");
+    }
+  },
+);
+
+export const deleteTeam = createAsyncThunk(
+  "teams/deleteTeam",
+  async ({ teamId }: { teamId: string }, { rejectWithValue, getState }) => {
+    try {
+      const supabase = createClient();
+      const state = getState() as { auth: { user: { id: string } | null } };
+      const userId = state.auth.user?.id;
+
+      if (!userId) throw new Error("User not authenticated");
+
+      const { data, error } = await supabase
+        .from("teams")
+        .delete()
+        .eq("id", teamId)
+        .eq("team_creator_id", userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Failed to delete team");
+    }
+  },
+);
+
 export const inviteTeamMember = createAsyncThunk(
   "teams/inviteTeamMember",
   async (
@@ -474,6 +540,28 @@ const teamsSlice = createSlice({
         state.selectedTeamId = newTeam.id;
       })
       .addCase(createTeam.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      // Update team name & description
+      .addCase(updateTeam.fulfilled, (state, action) => {
+        const updatedTeam = state.teams.find(
+          (t) => t.id === action.payload.team.id,
+        );
+        if (updatedTeam) {
+          updatedTeam.name = action.payload.team.team_name;
+          updatedTeam.description = action.payload.team.description;
+        }
+      })
+      .addCase(updateTeam.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      // Delete team
+      .addCase(deleteTeam.fulfilled, (state, action) => {
+        state.teams = state.teams.filter(
+          (team) => team.id !== action.payload.id,
+        );
+      })
+      .addCase(deleteTeam.rejected, (state, action) => {
         state.error = action.payload as string;
       })
       // Invite team member

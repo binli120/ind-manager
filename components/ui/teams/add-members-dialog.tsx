@@ -1,4 +1,8 @@
-import { Team, fetchTeamDetails } from "@/lib/store/slices/teamsSlice";
+import {
+  Team,
+  fetchTeamDetails,
+  inviteTeamMember,
+} from "@/lib/store/slices/teamsSlice";
 import {
   Dialog,
   DialogTitle,
@@ -51,8 +55,15 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
     setShowAddMembers(open);
   };
 
-  // TODO: Add functionality
-  const handleAddMember = (teamId: string, email: string) => {};
+  const handleAddMember = (teamId: string, email: string) => {
+    dispatch(
+      inviteTeamMember({
+        teamId,
+        email,
+        role: teamDetails?.settings.defaultRole ?? "viewer",
+      }),
+    );
+  };
 
   if (teamDetails == null) return <></>;
 
