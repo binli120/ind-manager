@@ -8,6 +8,7 @@ import {
   createProject,
   Project,
   ProjectCreation,
+  deleteProject,
 } from "@/lib/store/slices/projectsSlice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,17 @@ export function ProjectsView() {
 
   const handleCreateProject = (data: ProjectCreation) => {
     dispatch(createProject(data));
+    setShowCreateDialog(false);
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    if (
+      confirm(
+        "Are you sure you wish to delete this project? This action cannot be undone.",
+      )
+    ) {
+      dispatch(deleteProject(projectId));
+    }
   };
 
   return (
@@ -384,6 +396,7 @@ export function ProjectsView() {
                       variant="ghost"
                       size="sm"
                       className="hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => handleDeleteProject(project.id)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

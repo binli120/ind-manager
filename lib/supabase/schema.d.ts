@@ -508,8 +508,8 @@ export type Database = {
       projects: {
         Row: {
           additional_notes: string | null
-          clinical_lead: string
-          cmc_lead: string
+          clinical_lead: string | null
+          cmc_lead: string | null
           created_at: string
           description: string | null
           drug_name: string
@@ -519,14 +519,14 @@ export type Database = {
           ind_title: string
           metadata: Json | null
           pre_ind_meeting_date: string | null
-          preclinical_lead: string
+          preclinical_lead: string | null
           priority: string
           product_type: string
           progress: number
           project_creator_id: string | null
           project_start_date: string
-          publisher: string
-          regulatory_owner: string
+          publisher: string | null
+          regulatory_owner: string | null
           sponsor_contact_email: string
           sponsor_name: string
           status: string
@@ -536,8 +536,8 @@ export type Database = {
         }
         Insert: {
           additional_notes?: string | null
-          clinical_lead: string
-          cmc_lead: string
+          clinical_lead?: string | null
+          cmc_lead?: string | null
           created_at?: string
           description?: string | null
           drug_name: string
@@ -547,14 +547,14 @@ export type Database = {
           ind_title: string
           metadata?: Json | null
           pre_ind_meeting_date?: string | null
-          preclinical_lead: string
+          preclinical_lead?: string | null
           priority?: string
           product_type: string
           progress?: number
           project_creator_id?: string | null
           project_start_date?: string
-          publisher: string
-          regulatory_owner: string
+          publisher?: string | null
+          regulatory_owner?: string | null
           sponsor_contact_email: string
           sponsor_name: string
           status?: string
@@ -564,8 +564,8 @@ export type Database = {
         }
         Update: {
           additional_notes?: string | null
-          clinical_lead?: string
-          cmc_lead?: string
+          clinical_lead?: string | null
+          cmc_lead?: string | null
           created_at?: string
           description?: string | null
           drug_name?: string
@@ -575,14 +575,14 @@ export type Database = {
           ind_title?: string
           metadata?: Json | null
           pre_ind_meeting_date?: string | null
-          preclinical_lead?: string
+          preclinical_lead?: string | null
           priority?: string
           product_type?: string
           progress?: number
           project_creator_id?: string | null
           project_start_date?: string
-          publisher?: string
-          regulatory_owner?: string
+          publisher?: string | null
+          regulatory_owner?: string | null
           sponsor_contact_email?: string
           sponsor_name?: string
           status?: string

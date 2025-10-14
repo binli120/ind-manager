@@ -59,11 +59,11 @@ export const CreateTeamDialog: React.FC<React.PropsWithChildren<{}>> = ({
       ).unwrap();
 
       for (const email of newTeamData.memberEmails.filter(
-        (email) => email !== user?.email,
+        (email) => email.trim().length !== 0 && email !== user?.email,
       )) {
         const _inviteRes = await dispatch(
           inviteTeamMember({
-            teamId: createRes.id,
+            teamId: createRes.team.id,
             email: email,
             role: "member",
           }),
@@ -71,7 +71,7 @@ export const CreateTeamDialog: React.FC<React.PropsWithChildren<{}>> = ({
       }
 
       setNewTeamData({ team_name: "", description: "", memberEmails: [] });
-      setCreateTeamErrors({});
+      setCreateTeamErrors({ members: true });
       setShowCreateTeam(false);
 
       toast({
@@ -85,6 +85,9 @@ export const CreateTeamDialog: React.FC<React.PropsWithChildren<{}>> = ({
         description: "Failed to create team",
         variant: "destructive",
       });
+      setNewTeamData({ team_name: "", description: "", memberEmails: [] });
+      setCreateTeamErrors({});
+      setShowCreateTeam(false);
     }
   };
 

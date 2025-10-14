@@ -67,6 +67,8 @@ export const ProjectCreationForm: React.FC<ProjectFormProps> = ({
 
   const handleSubmit = () => {
     onSubmit(projectData);
+    setProjectData(initialData || getDefaultProjectData());
+    setCurrentStep(1);
   };
 
   const updateProjectData = <T extends keyof ProjectCreation>(
@@ -186,24 +188,6 @@ export const ProjectCreationForm: React.FC<ProjectFormProps> = ({
                   placeholder="fda.contact@fda.gov"
                 />
               </div>
-              <div>
-                <Label htmlFor="target_ind_submission_date">
-                  Target Submission Date
-                </Label>
-                <Input
-                  id="target_ind_submission_date"
-                  type="date"
-                  value={
-                    (projectData.target_ind_submission_date as string) || ""
-                  }
-                  onChange={(e) =>
-                    updateProjectData(
-                      "target_ind_submission_date",
-                      e.target.value,
-                    )
-                  }
-                />
-              </div>
             </div>
           </div>
         );
@@ -236,11 +220,11 @@ export const ProjectCreationForm: React.FC<ProjectFormProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="ind_submission_date">
-                  IND Submission Date *
+                <Label htmlFor="target_ind_submission_date">
+                  Target IND Submission Date *
                 </Label>
                 <Input
-                  id="ind_submission_date"
+                  id="target_ind_submission_date"
                   type="date"
                   value={
                     (projectData.target_ind_submission_date as string) || ""

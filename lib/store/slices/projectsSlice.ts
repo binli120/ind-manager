@@ -499,11 +499,8 @@ const projectsSlice = createSlice({
       })
       // Create project
       .addCase(createProject.fulfilled, (state, action) => {
-        const newProject: Project = {
-          ...action.payload,
-          teamMembers: [],
-          teamSize: 1,
-        };
+        const proj = action.payload;
+        const newProject: Project = dbToClientProject(proj);
         state.projects.unshift(newProject);
         state.currentProject = newProject;
         state.selectedProjectId = newProject.id;
@@ -518,12 +515,13 @@ const projectsSlice = createSlice({
         );
         if (index !== -1) {
           state.projects[index] = {
-            ...state.projects[index],
-            ...action.payload,
+            ...dbToClientProject(action.payload),
           };
         }
         if (state.currentProject?.id === action.payload.id) {
-          state.currentProject = { ...state.currentProject, ...action.payload };
+          state.currentProject = {
+            ...dbToClientProject(action.payload),
+          };
         }
       })
       .addCase(updateProject.rejected, (state, action) => {
@@ -598,6 +596,23 @@ const projectsSlice = createSlice({
       });
   },
 });
+
+const dbToClientProject = (project: ProjectCreation): Project => {
+  return {
+    ...project,
+    teamId: project.team_id,
+    title: project.ind_title,
+    code: project.ind_number,
+    sponsor: project.sponsor_name,
+    ownerId: project.project_creator_id,
+    targetDate: project.target_ind_submission_date,
+    drug: project.drug_name,
+    createdAt: project.created_at,
+    updatedAt: project.updated_at,
+    teamMembers: [],
+    teamSize: 1,
+  };
+};
 
 export const {
   setCurrentProject,

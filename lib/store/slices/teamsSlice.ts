@@ -265,17 +265,20 @@ export const createTeam = createAsyncThunk(
       if (settingsError) throw teamError;
 
       // Add creator as owner
-      const { error: memberError } = await supabase.from("user_teams").insert({
-        team_id: team.id,
-        user_id: userId,
-        role: "owner",
-        // status: "active",
-        // permissions: ["all"],
-      });
+      const { data: memberData, error: memberError } = await supabase
+        .from("user_teams")
+        .insert({
+          team_id: team.id,
+          user_id: userId,
+          role: "owner",
+          // status: "active",
+          // permissions: ["all"],
+        })
+        .select();
 
       if (memberError) throw memberError;
 
-      return { team, settings: settingsData };
+      return { team, settings: settingsData, members: memberData };
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to create team");
     }
@@ -364,6 +367,7 @@ export const inviteTeamMember = createAsyncThunk(
       const userId = state.auth.user?.id;
 
       if (!userId) throw new Error("User not authenticated");
+      console.log("team", teamId);
 
       // Create invitation
       const { data: invite, error } = await supabase

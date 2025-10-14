@@ -3,6 +3,7 @@
  */
 
 import { Project, ProjectCreation } from "../store/slices/projectsSlice";
+import { Exact } from "../utils";
 
 export const PROJECT_STATUSES = {
   DRAFT: "draft",
@@ -56,7 +57,7 @@ export const PROJECT_CREATION_STEPS = [
     id: 3,
     title: "Timeline",
     description: "Set project milestones and deadlines",
-    requiredFields: ["project_start_date", "ind_submission_date"],
+    requiredFields: ["project_start_date", "target_ind_submission_date"],
   },
   {
     id: 4,
@@ -116,31 +117,33 @@ export const validateProjectStep = (
 };
 
 // Default project form data
-export const getDefaultProjectData: () => ProjectCreation = () => ({
-  ind_title: "",
-  drug_name: "",
-  product_type: "",
-  sponsor_name: "",
-  sponsor_contact_email: "",
-  fda_contact_email: "",
-  team_id: "",
-  cmc_lead: "",
-  clinical_lead: "",
-  preclinical_lead: "",
-  regulatory_owner: "",
-  publisher: "",
-  target_ind_submission_date: "",
-  pre_ind_meeting_date: "",
-  additional_notes: "",
-  // Timeline fields
-  project_start_date: "",
-  ind_submission_date: "",
-  phase_1_start_date: "",
-  phase_1_end_date: "",
-  phase_2_start_date: "",
-  phase_2_end_date: "",
-  phase_3_start_date: "",
-  phase_3_end_date: "",
-  nda_submission_date: "",
-  fda_approval_date: "",
-});
+export const getDefaultProjectData = () =>
+  ({
+    team_id: "",
+    ind_title: "",
+    drug_name: "",
+    product_type: "",
+    sponsor_name: "",
+    sponsor_contact_email: "",
+    fda_contact_email: "",
+    target_ind_submission_date: "",
+    pre_ind_meeting_date: "",
+    additional_notes: "",
+    cmc_lead: null,
+    clinical_lead: null,
+    preclinical_lead: null,
+    regulatory_owner: null,
+    publisher: null,
+    // NOTE: Currently not in database schema/not used
+    // Timeline fields
+    // project_start_date: "",
+    // ind_submission_date: "",
+    // phase_1_start_date: "",
+    // phase_1_end_date: "",
+    // phase_2_start_date: "",
+    // phase_2_end_date: "",
+    // phase_3_start_date: "",
+    // phase_3_end_date: "",
+    // nda_submission_date: "",
+    // fda_approval_date: "",
+  }) satisfies ProjectCreation;
