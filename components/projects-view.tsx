@@ -6,6 +6,8 @@ import {
   setFilters,
   fetchProjects,
   createProject,
+  Project,
+  ProjectCreation,
 } from "@/lib/store/slices/projectsSlice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,21 +38,6 @@ import {
   Target,
 } from "lucide-react";
 import { ProjectCreationForm } from "./ui/projects/project-form";
-
-interface Project {
-  id: string;
-  title: string;
-  code: string;
-  description: string;
-  status: "draft" | "active" | "completed" | "paused";
-  priority: "low" | "medium" | "high" | "critical";
-  progress: number;
-  sponsor: string;
-  drug: string;
-  targetDate: string;
-  teamSize: number;
-  teamMembers: Array<{ name: string; avatar?: string; initials: string }>;
-}
 
 const statusConfig = {
   draft: { label: "Draft", color: "bg-gray-100 text-gray-700 border-gray-200" },
@@ -120,7 +107,7 @@ export function ProjectsView() {
     dispatch(setFilters({ priority }));
   };
 
-  const handleCreateProject = (data: Record<string, unknown>) => {
+  const handleCreateProject = (data: ProjectCreation) => {
     dispatch(createProject(data));
   };
 

@@ -4,6 +4,7 @@ import {
   type PayloadAction,
 } from "@reduxjs/toolkit";
 import { createClient } from "@/lib/supabase/client";
+import { Database } from "@/lib/supabase/schema";
 
 export interface ProjectMember {
   id: string;
@@ -44,6 +45,9 @@ export interface Project {
     regulatoryPath?: string;
   };
 }
+
+export type ProjectCreation =
+  Database["public"]["Tables"]["projects"]["Insert"];
 
 interface ProjectFilters {
   search: string;
@@ -248,14 +252,7 @@ export const fetchProjectDetails = createAsyncThunk(
 
 export const createProject = createAsyncThunk(
   "projects/createProject",
-  async (
-    projectData: Pick<
-      Project,
-      "title" | "drug" | "code" | "sponsor" | "targetDate"
-    > &
-      Partial<Project>,
-    { rejectWithValue, getState },
-  ) => {
+  async (projectData: ProjectCreation, { rejectWithValue, getState }) => {
     try {
       const supabase = createClient();
       const state = getState() as {
@@ -267,37 +264,11 @@ export const createProject = createAsyncThunk(
 
       if (!userId) throw new Error("User not authenticated");
       if (!teamId) throw new Error("No team selected");
-      if (!projectData.title) throw new Error("Project title required");
+      if (!projectData.ind_title) throw new Error("Project title required");
 
       const { data: newProject, error } = await supabase
         .from("projects")
-        .insert({
-          ind_title: projectData.title,
-          ind_number: projectData.code,
-          description: projectData.description ?? "",
-          status: projectData.status || "draft",
-          priority: projectData.priority || "medium",
-          progress: projectData.progress || 0,
-          sponsor_name: projectData.sponsor,
-          drug_name: projectData.drug,
-          target_ind_submission_date: projectData.targetDate,
-          team_id: teamId,
-          project_creator_id: userId,
-          // settings: projectData.settings || {
-          //   isPublic: false,
-          //   allowCollaboration: true,
-          // },
-          // metadata: projectData.metadata,
-          // TODO: integtate these fields
-          publisher: "",
-          regulatory_owner: "",
-          cmc_lead: "",
-          preclinical_lead: "",
-          clinical_lead: "",
-          created_at: "",
-          product_type: "",
-          sponsor_contact_email: "",
-        })
+        .insert({ ...projectData, project_creator_id: userId, team_id: teamId })
         .select()
         .single();
 
@@ -396,7 +367,7 @@ export const addProjectMember = createAsyncThunk(
     try {
       const supabase = createClient();
 
-      // TODO: Fix query
+      // TODO: Fix query, team member = project member?
       const { data, error } = await supabase
         .from("project_members")
         .insert({
@@ -430,7 +401,7 @@ export const removeProjectMember = createAsyncThunk(
     try {
       const supabase = createClient();
 
-      // TODO: Fix query
+      // TODO: Fix query, team member = project member?
       const { error } = await supabase
         .from("project_members")
         .delete()

@@ -2,6 +2,8 @@
  * Project-related metadata, constants, and utility functions
  */
 
+import { Project, ProjectCreation } from "../store/slices/projectsSlice";
+
 export const PROJECT_STATUSES = {
   DRAFT: "draft",
   IN_PROGRESS: "in-progress",
@@ -114,7 +116,7 @@ export const validateProjectStep = (
 };
 
 // Default project form data
-export const getDefaultProjectData = () => ({
+export const getDefaultProjectData: () => ProjectCreation = () => ({
   ind_title: "",
   drug_name: "",
   product_type: "",

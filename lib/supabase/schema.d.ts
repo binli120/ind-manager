@@ -524,6 +524,7 @@ export type Database = {
           product_type: string
           progress: number
           project_creator_id: string | null
+          project_start_date: string
           publisher: string
           regulatory_owner: string
           sponsor_contact_email: string
@@ -537,7 +538,7 @@ export type Database = {
           additional_notes?: string | null
           clinical_lead: string
           cmc_lead: string
-          created_at: string
+          created_at?: string
           description?: string | null
           drug_name: string
           fda_contact_email?: string | null
@@ -551,6 +552,7 @@ export type Database = {
           product_type: string
           progress?: number
           project_creator_id?: string | null
+          project_start_date?: string
           publisher: string
           regulatory_owner: string
           sponsor_contact_email: string
@@ -578,6 +580,7 @@ export type Database = {
           product_type?: string
           progress?: number
           project_creator_id?: string | null
+          project_start_date?: string
           publisher?: string
           regulatory_owner?: string
           sponsor_contact_email?: string
@@ -1268,7 +1271,7 @@ export type Database = {
       }
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: string
+        Returns: unknown
       }
       match_ind_docs: {
         Args: { match_count?: number; query_embedding: string }

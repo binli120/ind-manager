@@ -23,15 +23,14 @@ import {
   PROJECT_CREATION_STEPS,
   validateProjectStep,
 } from "@/lib/metadata/projects";
-import { Project } from "@/lib/store/slices/projectsSlice";
-import { createClient } from "@/lib/supabase/client";
+import { ProjectCreation } from "@/lib/store/slices/projectsSlice";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 interface ProjectFormProps {
-  initialData?: Record<string, unknown>;
+  initialData?: ProjectCreation;
   teams: Array<{ id: string; name: string }>;
-  onSubmit: (data: Project) => void;
+  onSubmit: (data: ProjectCreation) => void;
   onCancel: () => void;
   isEditing?: boolean;
 }
@@ -44,7 +43,7 @@ export const ProjectCreationForm: React.FC<ProjectFormProps> = ({
   isEditing = false,
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [projectData, setProjectData] = useState(
+  const [projectData, setProjectData] = useState<ProjectCreation>(
     initialData || getDefaultProjectData(),
   );
 
@@ -70,7 +69,10 @@ export const ProjectCreationForm: React.FC<ProjectFormProps> = ({
     onSubmit(projectData);
   };
 
-  const updateProjectData = (field: string, value: unknown) => {
+  const updateProjectData = <T extends keyof ProjectCreation>(
+    field: T,
+    value: ProjectCreation[T],
+  ) => {
     setProjectData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -240,9 +242,14 @@ export const ProjectCreationForm: React.FC<ProjectFormProps> = ({
                 <Input
                   id="ind_submission_date"
                   type="date"
-                  value={(projectData.ind_submission_date as string) || ""}
+                  value={
+                    (projectData.target_ind_submission_date as string) || ""
+                  }
                   onChange={(e) =>
-                    updateProjectData("ind_submission_date", e.target.value)
+                    updateProjectData(
+                      "target_ind_submission_date",
+                      e.target.value,
+                    )
                   }
                 />
               </div>
