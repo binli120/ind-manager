@@ -9,6 +9,7 @@ import {
   Project,
   ProjectCreation,
   deleteProject,
+  updateProject,
 } from "@/lib/store/slices/projectsSlice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,8 @@ export function ProjectsView() {
   const { selectedTeamId } = useAppSelector((state) => state.teams);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editProject, setEditProject] = useState<ProjectCreation | null>(null);
 
   useEffect(() => {
     if (selectedTeamId) {
@@ -113,6 +116,11 @@ export function ProjectsView() {
     setShowCreateDialog(false);
   };
 
+  const handleEditProject = (data: ProjectCreation) => {
+    dispatch(updateProject(data));
+    setShowEditDialog(false);
+  };
+
   const handleDeleteProject = (projectId: string) => {
     if (
       confirm(
@@ -121,6 +129,13 @@ export function ProjectsView() {
     ) {
       dispatch(deleteProject(projectId));
     }
+  };
+
+  const handleClickEdit = (projectId: string) => {
+    const proj = projects.find((p) => p.id === projectId);
+    if (!proj) return;
+    setShowEditDialog(true);
+    setEditProject(proj);
   };
 
   return (
@@ -359,6 +374,7 @@ export function ProjectsView() {
                       variant="ghost"
                       size="sm"
                       className="flex-1 hover:bg-accent/10 hover:text-accent"
+                      onClick={() => handleClickEdit(project.id)}
                     >
                       <Edit3 className="w-4 h-4 mr-2" />
                       Edit
@@ -426,6 +442,15 @@ export function ProjectsView() {
           teams={teams}
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateDialog(false)}
+        />
+      )}
+      {showEditDialog && editProject && (
+        <ProjectCreationForm
+          teams={teams}
+          initialData={editProject}
+          isEditing
+          onSubmit={handleEditProject}
+          onCancel={() => setShowEditDialog(false)}
         />
       )}
     </div>

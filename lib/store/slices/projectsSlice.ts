@@ -597,20 +597,30 @@ const projectsSlice = createSlice({
   },
 });
 
-const dbToClientProject = (project: ProjectCreation): Project => {
+const dbToClientProject = (
+  project: ProjectCreation & { id: string },
+  settings?: Database["public"]["Tables"]["project_settings"]["Row"],
+): Project => {
   return {
     ...project,
+    description: project.description ?? "",
     teamId: project.team_id,
     title: project.ind_title,
-    code: project.ind_number ?? '';,
+    code: project.ind_number ?? "",
     sponsor: project.sponsor_name,
-    ownerId: project.project_creator_id ?? '',
+    ownerId: project.project_creator_id ?? "",
     targetDate: project.target_ind_submission_date,
     drug: project.drug_name,
     createdAt: project.created_at ?? "",
     updatedAt: project.updated_at ?? "",
     teamMembers: [],
     teamSize: 1,
+    status: (project.status ?? "draft") as Project["status"],
+    priority: (project.priority ?? "low") as Project["priority"],
+    settings: {
+      allowCollaboration: settings?.allow_collaboration ?? false,
+      isPublic: settings?.is_public ?? false,
+    },
   };
 };
 
