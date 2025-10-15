@@ -617,6 +617,8 @@ const dbToClientProject = (
     teamSize: 1,
     status: (project.status ?? "draft") as Project["status"],
     priority: (project.priority ?? "low") as Project["priority"],
+    progress: project.progress ?? 0,
+    metadata: project.metadata as Project["metadata"],
     settings: {
       allowCollaboration: settings?.allow_collaboration ?? false,
       isPublic: settings?.is_public ?? false,
