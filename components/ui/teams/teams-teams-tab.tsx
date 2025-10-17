@@ -1,6 +1,6 @@
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAppSelector } from "@/lib/store";
+import { useAppDispatch, useAppSelector } from "@/lib/store";
 import {
   Crown,
   Edit3,
@@ -29,7 +29,7 @@ import {
   getRoleColor,
   getRoleIcon,
 } from "@/lib/metadata/teams";
-import { Team } from "@/lib/store/slices/teamsSlice";
+import { setSelectedTeamId as setGlobalSelectedTeamId } from "@/lib/store/slices/teamsSlice";
 
 type TeamsTeamsTabProps = {
   setSelectedTeamId: (teamId: string) => void;
@@ -48,6 +48,7 @@ export const TeamsTeamsTab: React.FC<TeamsTeamsTabProps> = ({
   setShowEditTeam,
   handleDeleteTeam,
 }) => {
+  const dispatch = useAppDispatch();
   const { isLoading, teams } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
 
@@ -136,6 +137,7 @@ export const TeamsTeamsTab: React.FC<TeamsTeamsTabProps> = ({
                         onClick={() => {
                           setSelectedTeamId(team.id);
                           setShowViewTeam(true);
+                          dispatch(setGlobalSelectedTeamId(team.id));
                         }}
                       >
                         <Eye className="h-4 w-4" />

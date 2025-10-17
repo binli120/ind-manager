@@ -23,7 +23,10 @@ import {
   PROJECT_CREATION_STEPS,
   validateProjectStep,
 } from "@/lib/metadata/projects";
-import { ProjectCreation } from "@/lib/store/slices/projectsSlice";
+import {
+  ProjectCreation,
+  ProjectUpdate,
+} from "@/lib/store/slices/projectsSlice";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
@@ -35,7 +38,7 @@ interface ProjectFormProps {
   isEditing?: boolean;
 }
 
-export const ProjectCreationForm: React.FC<ProjectFormProps> = ({
+export const ProjectForm: React.FC<ProjectFormProps> = ({
   initialData,
   teams,
   onSubmit,

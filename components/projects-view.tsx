@@ -10,6 +10,7 @@ import {
   ProjectCreation,
   deleteProject,
   updateProject,
+  ProjectUpdate,
 } from "@/lib/store/slices/projectsSlice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ import {
   Pill,
   Target,
 } from "lucide-react";
-import { ProjectCreationForm } from "./ui/projects/project-form";
+import { ProjectForm } from "./ui/projects/project-form";
 
 const statusConfig = {
   draft: { label: "Draft", color: "bg-gray-100 text-gray-700 border-gray-200" },
@@ -71,6 +72,7 @@ export function ProjectsView() {
   );
   const { teams } = useAppSelector((state) => state.teams);
   const { selectedTeamId } = useAppSelector((state) => state.teams);
+  const { user } = useAppSelector((state) => state.auth);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -116,8 +118,14 @@ export function ProjectsView() {
     setShowCreateDialog(false);
   };
 
-  const handleEditProject = (data: ProjectCreation) => {
-    dispatch(updateProject(data));
+  const handleEditProject = (data: ProjectUpdate) => {
+    if (editProject == null || editProject.id == null) return;
+    dispatch(
+      updateProject({
+        projectId: editProject.id,
+        updates: { ...data, id: undefined },
+      }),
+    );
     setShowEditDialog(false);
   };
 
@@ -135,7 +143,22 @@ export function ProjectsView() {
     const proj = projects.find((p) => p.id === projectId);
     if (!proj) return;
     setShowEditDialog(true);
-    setEditProject(proj);
+    setEditProject({
+      id: proj.id,
+      team_id: proj.teamId,
+      drug_name: proj.drug,
+      ind_title: proj.title,
+      ind_number: proj.code,
+      product_type: proj.productType,
+      description: proj.description,
+      sponsor_contact_email: proj.sponsorContactEmail,
+      sponsor_name: proj.sponsor,
+      fda_contact_email: proj.fdaContactEmail,
+      project_start_date: proj.projectStartDate,
+      pre_ind_meeting_date: proj.preIndMeetingDate,
+      target_ind_submission_date: proj.targetIndSubmissionDate,
+      additional_notes: proj.additionalNotes,
+    });
   };
 
   return (
@@ -370,15 +393,17 @@ export function ProjectsView() {
                       <Eye className="w-4 h-4 mr-2" />
                       View
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-1 hover:bg-accent/10 hover:text-accent"
-                      onClick={() => handleClickEdit(project.id)}
-                    >
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
+                    {project.ownerId === user?.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 hover:bg-accent/10 hover:text-accent"
+                        onClick={() => handleClickEdit(project.id)}
+                      >
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                    )}
                     <button
                       style={{
                         backgroundColor: "#8b5cf6",
@@ -408,14 +433,16 @@ export function ProjectsView() {
                       <Play className="w-4 h-4" style={{ color: "#ffffff" }} />
                       <span style={{ color: "#ffffff" }}>Resume</span>
                     </button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => handleDeleteProject(project.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {project.ownerId === user?.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => handleDeleteProject(project.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -438,14 +465,14 @@ export function ProjectsView() {
         )}
       </div>
       {showCreateDialog && (
-        <ProjectCreationForm
+        <ProjectForm
           teams={teams}
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateDialog(false)}
         />
       )}
       {showEditDialog && editProject && (
-        <ProjectCreationForm
+        <ProjectForm
           teams={teams}
           initialData={editProject}
           isEditing

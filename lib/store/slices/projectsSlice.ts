@@ -44,10 +44,19 @@ export interface Project {
     studyType?: string;
     regulatoryPath?: string;
   };
+  targetIndSubmissionDate: string;
+  preIndMeetingDate: string | null;
+  projectStartDate: string;
+  fdaContactEmail: string | null;
+  sponsorContactEmail: string;
+  additionalNotes: string | null;
+  productType: string;
 }
 
 export type ProjectCreation =
   Database["public"]["Tables"]["projects"]["Insert"];
+
+export type ProjectUpdate = Database["public"]["Tables"]["projects"]["Update"];
 
 interface ProjectFilters {
   search: string;
@@ -156,6 +165,13 @@ export const fetchProjects = createAsyncThunk(
               allowCollaboration: true,
             },
             metadata: {},
+            targetIndSubmissionDate: project.target_ind_submission_date,
+            preIndMeetingDate: project.pre_ind_meeting_date,
+            projectStartDate: project.project_start_date,
+            fdaContactEmail: project.fda_contact_email,
+            sponsorContactEmail: project.sponsor_contact_email,
+            additionalNotes: project.additional_notes,
+            productType: project.product_type,
           };
         }) || [];
 
@@ -172,7 +188,6 @@ export const fetchProjectDetails = createAsyncThunk(
     try {
       const supabase = createClient();
 
-      // TODO: Fix query
       const { data: project, error } = await supabase
         .from("projects")
         .select(
@@ -239,6 +254,13 @@ export const fetchProjectDetails = createAsyncThunk(
           allowCollaboration: true,
         },
         metadata: (project.metadata as Project["metadata"]) ?? {},
+        targetIndSubmissionDate: project.target_ind_submission_date,
+        preIndMeetingDate: project.pre_ind_meeting_date,
+        projectStartDate: project.project_start_date,
+        fdaContactEmail: project.fda_contact_email,
+        sponsorContactEmail: project.sponsor_contact_email,
+        additionalNotes: project.additional_notes,
+        productType: project.product_type,
       };
 
       return transformedProject;
@@ -296,27 +318,16 @@ export const createProject = createAsyncThunk(
 export const updateProject = createAsyncThunk(
   "projects/updateProject",
   async (
-    { projectId, updates }: { projectId: string; updates: Partial<Project> },
+    { projectId, updates }: { projectId: string; updates: ProjectUpdate },
     { rejectWithValue },
   ) => {
     try {
       const supabase = createClient();
+      console.log("updating: ", projectId, updates);
 
       const { data, error } = await supabase
         .from("projects")
-        .update({
-          title: updates.title,
-          code: updates.code,
-          description: updates.description,
-          status: updates.status,
-          priority: updates.priority,
-          progress: updates.progress,
-          sponsor: updates.sponsor,
-          drug: updates.drug,
-          target_date: updates.targetDate,
-          settings: updates.settings,
-          metadata: updates.metadata,
-        })
+        .update(updates)
         .eq("id", projectId)
         .select()
         .single();
@@ -623,6 +634,13 @@ const dbToClientProject = (
       allowCollaboration: settings?.allow_collaboration ?? false,
       isPublic: settings?.is_public ?? false,
     },
+    projectStartDate: project.project_start_date,
+    fdaContactEmail: project.fda_contact_email,
+    additionalNotes: project.additional_notes,
+    preIndMeetingDate: project.pre_ind_meeting_date,
+    productType: project.product_type,
+    sponsorContactEmail: project.sponsor_contact_email,
+    targetIndSubmissionDate: project.target_ind_submission_date,
   };
 };
 
