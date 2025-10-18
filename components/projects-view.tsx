@@ -1,83 +1,165 @@
-"use client"
+"use client";
 
-import { useAppSelector, useAppDispatch } from "@/lib/store"
-import { setViewMode, setFilters, fetchProjects } from "@/lib/store/slices/projectsSlice"
-import { useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Search, Plus, Grid3X3, List, Eye, Edit3, Play, Trash2, Users, Building2, Pill, Target } from "lucide-react"
-
-interface Project {
-  id: string
-  title: string
-  code: string
-  description: string
-  status: "draft" | "active" | "completed" | "paused"
-  priority: "low" | "medium" | "high" | "critical"
-  progress: number
-  sponsor: string
-  drug: string
-  targetDate: string
-  teamSize: number
-  teamMembers: Array<{ name: string; avatar?: string; initials: string }>
-}
+import { useAppSelector, useAppDispatch } from "@/lib/store";
+import {
+  setViewMode,
+  setFilters,
+  fetchProjects,
+  createProject,
+  Project,
+  ProjectCreation,
+  deleteProject,
+  updateProject,
+  ProjectUpdate,
+} from "@/lib/store/slices/projectsSlice";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Search,
+  Plus,
+  Grid3X3,
+  List,
+  Eye,
+  Edit3,
+  Play,
+  Trash2,
+  Users,
+  Building2,
+  Pill,
+  Target,
+} from "lucide-react";
+import { ProjectForm } from "./ui/projects/project-form";
 
 const statusConfig = {
   draft: { label: "Draft", color: "bg-gray-100 text-gray-700 border-gray-200" },
-  active: { label: "Active", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  completed: { label: "Completed", color: "bg-green-100 text-green-700 border-green-200" },
-  paused: { label: "Paused", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-}
+  active: {
+    label: "Active",
+    color: "bg-blue-100 text-blue-700 border-blue-200",
+  },
+  completed: {
+    label: "Completed",
+    color: "bg-green-100 text-green-700 border-green-200",
+  },
+  paused: {
+    label: "Paused",
+    color: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  },
+};
 
 const priorityConfig = {
   low: { label: "Low", color: "bg-gray-100 text-gray-600" },
   medium: { label: "Medium", color: "bg-amber-100 text-amber-700" },
   high: { label: "High", color: "bg-orange-100 text-orange-700" },
   critical: { label: "Critical", color: "bg-red-100 text-red-700" },
-}
+};
 
 export function ProjectsView() {
-  const dispatch = useAppDispatch()
-  const { projects, viewMode, filters, isLoading } = useAppSelector((state) => state.projects)
-  const { selectedTeamId } = useAppSelector((state) => state.teams)
+  const dispatch = useAppDispatch();
+  const { projects, viewMode, filters, isLoading } = useAppSelector(
+    (state) => state.projects,
+  );
+  const { teams } = useAppSelector((state) => state.teams);
+  const { selectedTeamId } = useAppSelector((state) => state.teams);
+  const { user } = useAppSelector((state) => state.auth);
+
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editProject, setEditProject] = useState<ProjectCreation | null>(null);
 
   useEffect(() => {
     if (selectedTeamId) {
-      dispatch(fetchProjects(selectedTeamId))
+      dispatch(fetchProjects(selectedTeamId));
     }
-  }, [dispatch, selectedTeamId])
+  }, [dispatch, selectedTeamId]);
 
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
       project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
       project.sponsor.toLowerCase().includes(filters.search.toLowerCase()) ||
-      project.drug.toLowerCase().includes(filters.search.toLowerCase())
-    const matchesStatus = filters.status === "all" || project.status === filters.status
-    const matchesPriority = filters.priority === "all" || project.priority === filters.priority
+      project.drug.toLowerCase().includes(filters.search.toLowerCase());
+    const matchesStatus =
+      filters.status === "all" || project.status === filters.status;
+    const matchesPriority =
+      filters.priority === "all" || project.priority === filters.priority;
 
-    return matchesSearch && matchesStatus && matchesPriority
-  })
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
 
   const handleViewModeChange = (mode: "grid" | "list") => {
-    dispatch(setViewMode(mode))
-  }
+    dispatch(setViewMode(mode));
+  };
 
   const handleSearchChange = (search: string) => {
-    dispatch(setFilters({ search }))
-  }
+    dispatch(setFilters({ search }));
+  };
 
   const handleStatusFilterChange = (status: string) => {
-    dispatch(setFilters({ status }))
-  }
+    dispatch(setFilters({ status }));
+  };
 
   const handlePriorityFilterChange = (priority: string) => {
-    dispatch(setFilters({ priority }))
-  }
+    dispatch(setFilters({ priority }));
+  };
+
+  const handleCreateProject = (data: ProjectCreation) => {
+    dispatch(createProject(data));
+    setShowCreateDialog(false);
+  };
+
+  const handleEditProject = (data: ProjectUpdate) => {
+    if (editProject == null || editProject.id == null) return;
+    dispatch(
+      updateProject({
+        projectId: editProject.id,
+        updates: { ...data, id: undefined },
+      }),
+    );
+    setShowEditDialog(false);
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    if (
+      confirm(
+        "Are you sure you wish to delete this project? This action cannot be undone.",
+      )
+    ) {
+      dispatch(deleteProject(projectId));
+    }
+  };
+
+  const handleClickEdit = (projectId: string) => {
+    const proj = projects.find((p) => p.id === projectId);
+    if (!proj) return;
+    setShowEditDialog(true);
+    setEditProject({
+      id: proj.id,
+      team_id: proj.teamId,
+      drug_name: proj.drug,
+      ind_title: proj.title,
+      ind_number: proj.code,
+      product_type: proj.productType,
+      description: proj.description,
+      sponsor_contact_email: proj.sponsorContactEmail,
+      sponsor_name: proj.sponsor,
+      fda_contact_email: proj.fdaContactEmail,
+      project_start_date: proj.projectStartDate,
+      pre_ind_meeting_date: proj.preIndMeetingDate,
+      target_ind_submission_date: proj.targetIndSubmissionDate,
+      additional_notes: proj.additionalNotes,
+    });
+  };
 
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50/50">
@@ -85,11 +167,18 @@ export function ProjectsView() {
       <div className="bg-background border-b border-border px-8 py-6">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Project Management</h1>
-            <p className="text-muted-foreground text-lg">Manage your IND projects and track their progress</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Project Management
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Manage your IND projects and track their progress
+            </p>
           </div>
 
-          <Button className="bg-purple-600 text-white hover:bg-purple-700 shadow-sm">
+          <Button
+            className="bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
+            onClick={() => setShowCreateDialog(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Create Project
           </Button>
@@ -108,7 +197,10 @@ export function ProjectsView() {
               />
             </div>
 
-            <Select value={filters.status} onValueChange={handleStatusFilterChange}>
+            <Select
+              value={filters.status}
+              onValueChange={handleStatusFilterChange}
+            >
               <SelectTrigger className="w-40 bg-background border-border shadow-sm">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
@@ -121,7 +213,10 @@ export function ProjectsView() {
               </SelectContent>
             </Select>
 
-            <Select value={filters.priority} onValueChange={handlePriorityFilterChange}>
+            <Select
+              value={filters.priority}
+              onValueChange={handlePriorityFilterChange}
+            >
               <SelectTrigger className="w-40 bg-background border-border shadow-sm">
                 <SelectValue placeholder="All Priority" />
               </SelectTrigger>
@@ -182,15 +277,23 @@ export function ProjectsView() {
                         <Badge className={statusConfig[project.status].color}>
                           {statusConfig[project.status].label}
                         </Badge>
-                        <Badge className={priorityConfig[project.priority].color}>
+                        <Badge
+                          className={priorityConfig[project.priority].color}
+                        >
                           {priorityConfig[project.priority].label}
                         </Badge>
                       </div>
-                      {project.code && <p className="text-sm text-muted-foreground font-mono">{project.code}</p>}
+                      {project.code && (
+                        <p className="text-sm text-muted-foreground font-mono">
+                          {project.code}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <p className="text-muted-foreground text-sm leading-relaxed">{project.description}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {project.description}
+                  </p>
                 </CardHeader>
 
                 <CardContent className="space-y-4 flex-1 flex flex-col">
@@ -209,8 +312,12 @@ export function ProjectsView() {
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-muted" />
                         <div>
-                          <p className="text-muted-foreground text-xs">Sponsor:</p>
-                          <p className="font-medium text-card-foreground">{project.sponsor}</p>
+                          <p className="text-muted-foreground text-xs">
+                            Sponsor:
+                          </p>
+                          <p className="font-medium text-card-foreground">
+                            {project.sponsor}
+                          </p>
                         </div>
                       </div>
 
@@ -218,7 +325,9 @@ export function ProjectsView() {
                         <Pill className="w-4 h-4 text-muted" />
                         <div>
                           <p className="text-muted-foreground text-xs">Drug:</p>
-                          <p className="font-medium text-card-foreground">{project.drug}</p>
+                          <p className="font-medium text-card-foreground">
+                            {project.drug}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -227,8 +336,12 @@ export function ProjectsView() {
                       <div className="flex items-center gap-2">
                         <Target className="w-4 h-4 text-muted" />
                         <div>
-                          <p className="text-muted-foreground text-xs">Target Date:</p>
-                          <p className="font-medium text-card-foreground">{project.targetDate}</p>
+                          <p className="text-muted-foreground text-xs">
+                            Target Date:
+                          </p>
+                          <p className="font-medium text-card-foreground">
+                            {project.targetDate}
+                          </p>
                         </div>
                       </div>
 
@@ -236,7 +349,9 @@ export function ProjectsView() {
                         <Users className="w-4 h-4 text-muted" />
                         <div>
                           <p className="text-muted-foreground text-xs">Team:</p>
-                          <p className="font-medium text-card-foreground">{project.teamSize} members</p>
+                          <p className="font-medium text-card-foreground">
+                            {project.teamSize} members
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -246,8 +361,13 @@ export function ProjectsView() {
                   <div className="flex items-center gap-3 pt-2">
                     <div className="flex -space-x-2">
                       {project.teamMembers.slice(0, 3).map((member, index) => (
-                        <Avatar key={index} className="w-8 h-8 border-2 border-background">
-                          <AvatarImage src={member.avatar || "/placeholder.svg"} />
+                        <Avatar
+                          key={index}
+                          className="w-8 h-8 border-2 border-background"
+                        >
+                          <AvatarImage
+                            src={member.avatar || "/placeholder.svg"}
+                          />
                           <AvatarFallback className="text-xs bg-accent/10 text-accent">
                             {member.initials}
                           </AvatarFallback>
@@ -255,7 +375,9 @@ export function ProjectsView() {
                       ))}
                       {project.teamMembers.length > 3 && (
                         <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center">
-                          <span className="text-xs text-muted-foreground">+{project.teamMembers.length - 3}</span>
+                          <span className="text-xs text-muted-foreground">
+                            +{project.teamMembers.length - 3}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -263,14 +385,25 @@ export function ProjectsView() {
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2 pt-4 border-t border-border mt-auto">
-                    <Button variant="ghost" size="sm" className="flex-1 hover:bg-accent/10 hover:text-accent">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 hover:bg-accent/10 hover:text-accent"
+                    >
                       <Eye className="w-4 h-4 mr-2" />
                       View
                     </Button>
-                    <Button variant="ghost" size="sm" className="flex-1 hover:bg-accent/10 hover:text-accent">
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
+                    {project.ownerId === user?.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 hover:bg-accent/10 hover:text-accent"
+                        onClick={() => handleClickEdit(project.id)}
+                      >
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                    )}
                     <button
                       style={{
                         backgroundColor: "#8b5cf6",
@@ -290,19 +423,26 @@ export function ProjectsView() {
                         minHeight: "32px",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#7c3aed"
+                        e.currentTarget.style.backgroundColor = "#7c3aed";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#8b5cf6"
+                        e.currentTarget.style.backgroundColor = "#8b5cf6";
                       }}
                       onClick={() => console.log("Resume clicked")}
                     >
                       <Play className="w-4 h-4" style={{ color: "#ffffff" }} />
                       <span style={{ color: "#ffffff" }}>Resume</span>
                     </button>
-                    <Button variant="ghost" size="sm" className="hover:bg-destructive/10 hover:text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {project.ownerId === user?.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => handleDeleteProject(project.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -315,11 +455,31 @@ export function ProjectsView() {
             <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-muted" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No projects found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or filter criteria</p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              No projects found
+            </h3>
+            <p className="text-muted-foreground">
+              Try adjusting your search or filter criteria
+            </p>
           </div>
         )}
       </div>
+      {showCreateDialog && (
+        <ProjectForm
+          teams={teams}
+          onSubmit={handleCreateProject}
+          onCancel={() => setShowCreateDialog(false)}
+        />
+      )}
+      {showEditDialog && editProject && (
+        <ProjectForm
+          teams={teams}
+          initialData={editProject}
+          isEditing
+          onSubmit={handleEditProject}
+          onCancel={() => setShowEditDialog(false)}
+        />
+      )}
     </div>
-  )
+  );
 }
