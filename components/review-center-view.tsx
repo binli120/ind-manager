@@ -49,7 +49,7 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
   const documents: Document[] = [
     {
       id: "doc1",
-      title: "XYZ-123 Investigator...",
+      title: "ONX-2019 Phase 1 Dose...",
       module: "Module 1.6",
       status: "In Review",
       daysLeft: 6,
@@ -57,7 +57,7 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
     },
     {
       id: "doc2",
-      title: "XYZ-123 Phase 1 P...",
+      title: "ONX-2019 Protocol...",
       module: "Module 1.7",
       status: "In Review",
       daysLeft: 3,
@@ -73,7 +73,7 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
     },
     {
       id: "doc4",
-      title: "FDA Form 1571 - X...",
+      title: "FDA Form 1571 - ONX...",
       module: "Module 1.3",
       status: "Approved",
       daysLeft: 0,
@@ -88,33 +88,33 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
       author: "Dr. Smith",
       role: "Clinical Lead",
       content:
-        "The dosing rationale in section 4.2 needs to be updated to reflect the latest PK data from Study XYZ-123-001.",
+        "The dose escalation scheme in section 6.1 should include intermediate dose levels between 4.0 and 8.0 mg/kg based on the steep PK curve observed in preclinical studies.",
       timestamp: "2 hours ago",
       avatar: "S",
     },
     {
       id: "2",
       author: "J. Martinez",
-      role: "",
+      role: "Biostatistician",
       content:
-        "I agree. The PK data shows a different half-life than what was originally assumed. We should update the dosing schedule accordingly.",
+        "I recommend adding a Bayesian logistic regression model (BLRM) as an alternative to the 3+3 design to optimize dose escalation decisions and reduce patient exposure to subtherapeutic doses.",
       timestamp: "1 hour ago",
       avatar: "M",
     },
     {
       id: "3",
       author: "Dr. Chen",
-      role: "CMC Lead",
+      role: "Safety Lead",
       content:
-        "The manufacturing process details in section 3.2.P.5 are incomplete. Please provide the batch records and validation data.",
+        "The DLT definition should include Grade 2 pneumonitis given the mechanism of action and pulmonary toxicity observed with similar compounds in this class.",
       timestamp: "Yesterday",
       avatar: "C",
     },
     {
       id: "4",
       author: "Dr. Wilson",
-      role: "",
-      content: "Looks good now, thank you.",
+      role: "Principal Investigator",
+      content: "The PK sampling schedule looks comprehensive. This should provide adequate data for dose selection.",
       timestamp: "Yesterday",
       avatar: "W",
     },
@@ -220,27 +220,27 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
           <div className="bg-background border-b border-border px-6 py-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <Select defaultValue="IND-104567-XYZ-123">
+                <Select defaultValue="IND-104567-ONX-2019">
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="IND-104567-XYZ-123">IND-104567-XYZ-123</SelectItem>
+                    <SelectItem value="IND-104567-ONX-2019">IND-104567-ONX-2019</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select defaultValue="investigator">
+                <Select defaultValue="dose-escalation">
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="investigator">Investigator...</SelectItem>
+                    <SelectItem value="dose-escalation">Dose Escalation...</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-semibold">XYZ-123 Investigator Brochure v2.1</h1>
+              <h1 className="text-xl font-semibold">ONX-2019 Phase 1 Dose-Escalation Study v2.1</h1>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm">
                   <History className="w-4 h-4 mr-2" />
@@ -281,40 +281,42 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
 
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold">4.2 Dosing Rationale</h3>
+                <h3 className="text-lg font-semibold">6.1 Dose Escalation Design</h3>
               </CardHeader>
               <CardContent className="prose max-w-none">
                 <p className="mb-4">
-                  The recommended starting dose of 50 mg BID was selected based on preclinical efficacy data and safety
-                  margins established in toxicology studies. This dose achieves steady-state plasma concentrations of
-                  2.5-3.0 μg/mL, which corresponds to 85-90% target engagement in vitro.
+                  This Phase 1 dose-escalation study employs a modified 3+3 design to determine the maximum tolerated dose (MTD) 
+                  and recommended Phase 2 dose (RP2D) of ONX-2019 in patients with advanced solid tumors. The starting dose of 
+                  0.5 mg/kg was selected based on 1/10th of the severely toxic dose in 10% of animals (STD10) from non-human 
+                  primate studies, providing an adequate safety margin.
                 </p>
 
                 <p className="mb-4">
-                  Dose escalation to 100 mg BID may be considered based on individual patient response and tolerability.
-                  The maximum tolerated dose (MTD) was established at 150 mg BID in the Phase 1 study, with dose-
-                  limiting toxicities including grade 3 transaminase elevations in 2/6 patients.
+                  Dose escalation will proceed through the following cohorts: 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, and 12.0 mg/kg 
+                  administered intravenously every 21 days. Each cohort will enroll a minimum of 3 patients, with expansion to 
+                  6 patients if one dose-limiting toxicity (DLT) occurs during the first cycle. Escalation to the next dose 
+                  level requires completion of the DLT evaluation period by all patients in the current cohort.
                 </p>
 
                 <p className="mb-4">
-                  Population PK modeling indicates that the 100 mg BID dose provides optimal exposure in the target
-                  patient population, with predicted trough concentrations of 1.8-2.2 μg/mL at steady state. This
-                  exposure level is associated with &gt;90% target engagement and maintains the established safety
-                  margin of 5-fold below the NOAEL.
+                  Dose-limiting toxicities are defined as any Grade 4 hematologic toxicity lasting >7 days, Grade 3 
+                  thrombocytopenia with bleeding, Grade 3 or 4 non-hematologic toxicity (excluding nausea/vomiting responsive 
+                  to standard care), or any toxicity requiring dose delay >14 days during Cycle 1. The MTD is defined as the 
+                  highest dose level at which ≤1 of 6 patients experiences a DLT.
                 </p>
 
                 <p className="mb-4">
-                  The dosing interval of twice daily (BID) was selected based on the compound's half-life of 8-12 hours
-                  and the need to maintain consistent target engagement throughout the dosing period. PK simulations
-                  demonstrate that BID dosing provides more stable exposure compared to once-daily dosing, with reduced
-                  peak-to-trough ratios and improved efficacy in preclinical models.
+                  Pharmacokinetic sampling will be performed at multiple timepoints during Cycle 1 to characterize ONX-2019 
+                  exposure across dose levels. Blood samples will be collected pre-dose and at 0.5, 1, 2, 4, 8, 24, 48, 72, 
+                  168, 336, and 504 hours post-infusion. PK parameters including Cmax, AUC, half-life, and clearance will be 
+                  calculated using non-compartmental analysis.
                 </p>
 
                 <p>
-                  Special populations including elderly patients (&gt;=65 years) and those with mild hepatic impairment
-                  (Child-Pugh A) do not require dose adjustment based on population PK analysis. However, patients with
-                  moderate hepatic impairment (Child-Pugh B) should receive 50 mg BID instead of the standard 100 mg
-                  dose based on increased exposure observed in this population.
+                  An expansion cohort of up to 20 patients will be enrolled at the MTD or RP2D to further evaluate safety, 
+                  tolerability, and preliminary efficacy. Patients in the expansion cohort must have measurable disease per 
+                  RECIST v1.1 criteria and will undergo tumor assessments every 6 weeks for the first 24 weeks, then every 
+                  12 weeks thereafter until disease progression or treatment discontinuation.
                 </p>
               </CardContent>
             </Card>
