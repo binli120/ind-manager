@@ -39,7 +39,7 @@ interface DocumentViewProps {
 export function DocumentView({ onViewChange }: DocumentViewProps) {
   const dispatch = useAppDispatch()
   const { documents, currentDocument, isLoading } = useAppSelector((state) => state.documents)
-  const { currentTeam } = useAppSelector((state) => state.teams)
+  const { teams, currentTeam } = useAppSelector((state) => state.teams)
   const { user } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
