@@ -20,6 +20,7 @@ export default function Page() {
   const dispatch = useAppDispatch()
   const { isLoading, error } = useAppSelector((state) => state.auth)
   const router = useRouter()
+  const [signUpError, setSignUpError] = useState<string | null>(null);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,8 +31,9 @@ export default function Page() {
     }
 
     try {
+      setSignUpError(null);
       const result = await dispatch(signUpUser({ email, password, name })).unwrap()
-      if (result) {
+      if (result?.user) {
         router.push("/auth/sign-up-success")
       }
     } catch (error) {

@@ -107,6 +107,19 @@ export const signUpUser = createAsyncThunk(
         },
       });
 
+      //Email already registered
+      if (error) {
+        const msg = error.message?.toLowerCase() || "";
+        if (msg.includes("already registered") || msg.includes("user already exists")) {
+          return rejectWithValue("This email is already registered. Try signing in or resetting your password.");
+        }
+        return rejectWithValue(error.message || "Sign up failed");
+      }
+      const identities = (data?.user as any)?.identities ?? [];
+      if (Array.isArray(identities) && identities.length === 0) {
+        return rejectWithValue("This email is already registered. Try signing in or resetting your password.");
+      }
+
       if (error) throw error;
 
       return { user: data.user, session: data.session };
