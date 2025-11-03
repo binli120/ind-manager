@@ -7,8 +7,8 @@ import {
   setLoading as setAuthLoading,
   setSession as setAuthSession,
   setUser as setAuthUser,
-} from '@/store/authSlice';
-import { useAppDispatch } from '@/store/store';
+} from '@/lib/store/slices/authSlice';
+import { useAppDispatch } from '@/lib/store/store';
 import { createBrowserClient } from '@supabase/ssr';
 import { Session, User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
