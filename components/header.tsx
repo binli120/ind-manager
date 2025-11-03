@@ -9,7 +9,7 @@ import { UserMenu } from "@/components/auth/user-menu"
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
-////
+
 import { useAppSelector, useAppDispatch } from "@/lib/store"
 import { fetchProjects, fetchProjectDetails, setSelectedProjectId } from "@/lib/store/slices/projectsSlice"
 import { fetchUserTeams, setSelectedTeamId } from "@/lib/store/slices/teamsSlice"
