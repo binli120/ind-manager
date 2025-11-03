@@ -62,13 +62,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
       const isAuthPage =
         pathname?.startsWith("/auth/") || pathname === "/login";
       const isApiPage = pathname?.startsWith("/api/");
+      const isResetPage = pathname?.startsWith("/auth/reset-password");
 
       if ((!user || !isAuthenticated) && !isAuthPage && !isApiPage) {
         // Not authenticated and trying to access protected page
         setTimeout(() => {
           router.replace("/auth/login");
         }, 100);
-      } else if (user && (isAuthPage || pathname === "/")) {
+      } else if (user && (isAuthPage || pathname === "/") && !isResetPage) {
         // Authenticated and trying to access auth page or root page
         setTimeout(() => {
           router.replace("/");
@@ -91,10 +92,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // Check if current path is an auth page or API page
   const isAuthPage = pathname?.startsWith("/auth/") || pathname === "/login";
+  const isResetPage = pathname?.startsWith("/auth/reset-password") && user;
   const isApiPage = pathname?.startsWith("/api/");
 
   // For auth pages, render children if not authenticated
-  if (isAuthPage) {
+  if (isAuthPage && !isResetPage) {
     if (!user) {
       return <>{children}</>;
     } else {
