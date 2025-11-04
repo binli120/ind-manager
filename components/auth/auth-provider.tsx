@@ -1,7 +1,6 @@
 'use client';
 
 import { ErrorNullable } from '@/lib/common/types';
-import { getSupabaseEnv } from '@/lib/env';
 import {
   clearAuth,
   setLoading as setAuthLoading,
@@ -9,9 +8,9 @@ import {
   setUser as setAuthUser,
 } from '@/lib/store/slices/authSlice';
 import { useAppDispatch } from '@/lib/store/store';
-import { createBrowserClient } from '@supabase/ssr';
 import { Session, User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { authServices } from '@/app/api/auth/auth-services';
 
 interface AuthContextType {
   user: User | null;
@@ -32,52 +31,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
   const dispatch = useAppDispatch();
-
-  const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
   const signIn = async (email: string, password: string) => {
     dispatch(setAuthLoading(true));
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await authServices.signIn(email, password);
     dispatch(setAuthLoading(false));
     return { error };
   };
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: metadata },
-    });
-    setAuthLoading(false);
+    const { error } = await authServices.signUp(email, password, metadata);
+    dispatch(setAuthLoading(false));
     return { error };
   };
 
   const signOut = async () => {
     dispatch(setAuthLoading(true));
-    const { error } = await supabase.auth.signOut();
+    const { error } = await authServices.signOut();
     dispatch(clearAuth());
     return { error };
   };
 
   const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}`,
-    });
+    const { error } = await authServices.resetPassword(email);
     return { error };
   };
 
   const updatePassword = async (password: string) => {
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await authServices.updatePassword(password);
     return { error };
   };
-  //DUMMY FUNCTION
+
+  // DUMMY FUNCTION
   const resendConfirmation = async (_: string): Promise<{ error?: ErrorNullable }> => {
-    // Implement the resend confirmation logic here
     try {
-      // add dummy calls
-      await supabase.auth.getUser();
+      await authServices.getUser();
       return {};
     } catch (error: unknown) {
       return { error: error as ErrorNullable };
@@ -85,10 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+
+    const applyAuth = (session: Session | null) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -97,17 +84,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       dispatch(setAuthLoading(false));
     };
 
+    const getInitialSession = async () => {
+      const { session } = await authServices.getSession();
+      applyAuth(session);
+    };
+
     getInitialSession();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      dispatch(setAuthSession(session ?? null));
-      dispatch(setAuthUser(session?.user ?? null));
-      dispatch(setAuthLoading(false));
+    const subscription = authServices.onAuthStateChange((event, session) => {
+      applyAuth(session);
 
       if (event === 'TOKEN_REFRESHED') {
         // Token was refreshed successfully
@@ -119,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth, dispatch]);
+  }, [dispatch]);
 
   const value = {
     user,

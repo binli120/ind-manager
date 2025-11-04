@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/components/auth/auth-provider';
+import { validatePassword } from '@/utils/validatePassword';
 
 export function ResetPasswordForm() {
   const [password, setPassword] = useState('');
@@ -22,14 +23,9 @@ export function ResetPasswordForm() {
     setError(null);
     setMessage(null);
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    const validationError = validatePassword(password, confirmPassword);
+    if (validationError) {
+      setError(validationError);
       setLoading(false);
       return;
     }

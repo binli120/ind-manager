@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import { createClient } from "@/lib/supabase/client";
 import type { Session } from "@supabase/supabase-js";
+import { auth_text } from "@/utils/constants";
 
 export interface User {
   id: string;
@@ -114,13 +115,14 @@ export const signUpUser = createAsyncThunk(
       if (error) {
         const msg = error.message?.toLowerCase() || "";
         if (msg.includes("already registered") || msg.includes("user already exists")) {
-          return rejectWithValue("This email is already registered. Try signing in or resetting your password.");
+          return rejectWithValue(auth_text.email_registered);
         }
-        return rejectWithValue(error.message || "Sign up failed");
+        return rejectWithValue(error.message || auth_text.sign_up_failed);
       }
+
       const identities = (data?.user as any)?.identities ?? [];
       if (Array.isArray(identities) && identities.length === 0) {
-        return rejectWithValue("This email is already registered. Try signing in or resetting your password.");
+        return rejectWithValue(auth_text.email_registered);
       }
 
       if (error) throw error;
@@ -218,29 +220,40 @@ export const updateUserProfile = createAsyncThunk(
   },
 );
 
+//Reducer Functions
+const handleClearError = (state: AuthState) => {
+  state.error = null;
+};
+
+const handleSetUser = (state: AuthState, action: PayloadAction<User | null>) => {
+  state.user = action.payload;
+  state.isAuthenticated = !!action.payload;
+};
+
+const handleSetSession = (state: AuthState, action: PayloadAction<Session | null>) => {
+  state.session = action.payload;
+};
+
+const handleSetLoading = (state: AuthState, action: PayloadAction<boolean>) => {
+  state.isLoading = action.payload;
+};
+
+const handleClearAuth = (state: AuthState) => {
+  state.user = null;
+  state.session = null;
+  state.isAuthenticated = false;
+  state.isLoading = false;
+};
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    clearError: (state) => {
-      state.error = null;
-    },
-    setUser: (state, action: PayloadAction<User | null>) => {
-      state.user = action.payload;
-      state.isAuthenticated = !!action.payload;
-    },
-    setSession: (state, action: PayloadAction<Session | null>) => {
-      state.session = action.payload;
-    },
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload;
-    },
-    clearAuth: (state) => {
-      state.user = null;
-      state.session = null;
-      state.isAuthenticated = false;
-      state.isLoading = false;
-    },
+    clearError: handleClearError,
+    setUser: handleSetUser,
+    setSession: handleSetSession,
+    setLoading: handleSetLoading,
+    clearAuth: handleClearAuth,
   },
   extraReducers: (builder) => {
     builder
