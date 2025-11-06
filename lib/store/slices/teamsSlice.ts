@@ -462,6 +462,16 @@ const teamsSlice = createSlice({
       state.selectedTeamId = action.payload;
       state.currentTeam =
         state.teams.find((team) => team.id === action.payload) || null;
+      
+      if (action.payload) localStorage.setItem("selectedTeamId", action.payload);
+      else localStorage.removeItem("selectedTeamId");
+    },
+    hydrateSelectedTeamFromStorage: (state) => {
+      const saved = typeof window !== "undefined"
+        ? localStorage.getItem("selectedTeamId")
+        : null;
+      state.selectedTeamId = saved ?? null;
+      //hydrate current team will be 
     },
     clearError: (state) => {
       state.error = null;
@@ -491,10 +501,21 @@ const teamsSlice = createSlice({
       .addCase(fetchUserTeams.fulfilled, (state, action) => {
         state.isLoading = false;
         state.teams = action.payload;
-        // Set first team as current if none selected
-        if (!state.selectedTeamId && action.payload.length > 0) {
-          state.currentTeam = action.payload[0];
-          state.selectedTeamId = action.payload[0].id;
+        // if hydrated selection
+        if (state.selectedTeamId) {
+        // If we have a saved selection, sync currentTeam to it (if it still exists)
+          state.currentTeam =
+            state.teams.find(team => team.id === state.selectedTeamId) || null;
+
+          // If the saved selection no longer exists, fall back to the first team
+          if (!state.currentTeam && state.teams.length > 0) {
+            state.currentTeam = state.teams[0];
+            state.selectedTeamId = state.teams[0].id;   // keep ID/UI consistent
+          }
+        } else if (state.teams.length > 0) {
+          // No saved selection → IM-2 rule: first loaded item is selected
+          state.currentTeam = state.teams[0];
+          state.selectedTeamId = state.teams[0].id;
         }
       })
       .addCase(fetchUserTeams.rejected, (state, action) => {
@@ -642,5 +663,6 @@ export const {
   setSelectedTeamId,
   clearError,
   updateTeamLocally,
+  hydrateSelectedTeamFromStorage
 } = teamsSlice.actions;
 export default teamsSlice.reducer;

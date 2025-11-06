@@ -10,9 +10,11 @@ import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 
-import { useAppSelector, useAppDispatch } from "@/lib/store"
-import { fetchProjects, fetchProjectDetails, setSelectedProjectId } from "@/lib/store/slices/projectsSlice"
-import { fetchUserTeams, setSelectedTeamId } from "@/lib/store/slices/teamsSlice"
+import { useAppDispatch } from "@/lib/store"
+import { fetchProjects, fetchProjectDetails} from "@/lib/store/slices/projectsSlice"
+import { fetchUserTeams} from "@/lib/store/slices/teamsSlice"
+import { useTeam } from "@/hooks/useTeam"
+import { useProject } from "@/hooks/useProject"
 import { fetchUserDocuments } from "@/lib/store/slices/documentsSlice"
 
 
@@ -36,8 +38,8 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar, onToggleComments, currentView }: HeaderProps) {
   const dispatch = useAppDispatch()
-  const { projects, currentProject } = useAppSelector((state) => state.projects)
-  const { teams, currentTeam } = useAppSelector((state) => state.teams)
+  const { projects, currentProject, selectedProjectId, setProject } = useProject()
+  const { teams, currentTeam, selectedTeamId, setTeam } = useTeam()
 
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -62,81 +64,53 @@ export function Header({ onToggleSidebar, onToggleComments, currentView }: Heade
     return () => subscription.unsubscribe()
   }, [])
 
-  // Fetch user teams
+
+
+
+  // Fetch user teams when user loads
   useEffect(() => {
-    //***placeholder for IM-9 user state***
     if (user?.id) {
       dispatch(fetchUserTeams(user.id))
     }
   }, [dispatch, user?.id])
-
-  //Restore previous selection
+  
+  // 2) If teams are loaded and we have no selection (not hydrated or invalid), pick the first
   useEffect(() => {
-    const savedTeamId = localStorage.getItem("selectedTeamId")
-    if (savedTeamId) {
-      // uses existing reducer
-      dispatch(setSelectedTeamId(savedTeamId))
+    if (!teams.length) return;
+    if (!selectedTeamId) {
+      setTeam(teams[0].id);
+    } else if (!teams.some(t => t.id === selectedTeamId)) {
+      // saved id no longer valid in this list -> fallback to first
+      setTeam(teams[0].id);
     }
-    
-  }, [dispatch])
+  }, [teams, selectedTeamId, setTeam]);
 
-  // auto select if team avaliable and none selected
+  // 3) When team changes, fetch its projects
   useEffect(() => {
-    //***placeholder for IM-9 owned logic***
-    if (!currentTeam?.id && teams.length > 0) {
-      console.log("Auto-select first available team:", teams[0])
-      dispatch(setSelectedTeamId(teams[0].id))
+    if (selectedTeamId) {
+      dispatch(fetchProjects(selectedTeamId));
     }
-  }, [teams, currentTeam, dispatch])
+  }, [dispatch, selectedTeamId]);
 
-// Auto-fetch Projects when team changes
+  // 4) When projects arrive and no project selected (not hydrated or invalid), pick the first
   useEffect(() => {
-    if (currentTeam?.id) {
-      dispatch(fetchProjects(currentTeam.id))
+    if (!projects.length) return;
+    if (!selectedProjectId || !projects.some(p => p.id === selectedProjectId)) {
+      setProject(projects[0].id);
     }
-  }, [dispatch, currentTeam?.id])
+  }, [projects, selectedProjectId, setProject]);
 
-// Restore Saved Project if avaliable
+  // 5) When project selection changes, hydrate detail + any dependent data
   useEffect(() => {
-    if (projects.length === 0) return
-    //This is blocked by IM-9 logic
-    const savedProjectId = localStorage.getItem("selectedProjectId")
-    //
-    if (
-      savedProjectId &&
-      projects.some((p) => p.id === savedProjectId)
-    ) {
-      dispatch(setSelectedProjectId(savedProjectId))
-      dispatch(fetchProjectDetails(savedProjectId))
-      if (user?.id) dispatch(fetchUserDocuments(user.id))
+    if (selectedProjectId) {
+      dispatch(fetchProjectDetails(selectedProjectId));
+      if (user?.id) dispatch(fetchUserDocuments(user.id));
     }
-  }, [projects, dispatch, user?.id])
-
-  //Auto select first if none restored
-  useEffect(() => {
-    //***placeholder for IM-9 owned logic***
-    if (!currentProject?.id && projects.length > 0) {
-      const fallback = projects[0].id
-      //console.log("Auto-select fallback project:", fallback)
-      dispatch(setSelectedProjectId(fallback))
-      dispatch(fetchProjectDetails(fallback))
-      if (user?.id) dispatch(fetchUserDocuments(user.id))
-    }
-  }, [currentProject, projects, dispatch, user?.id])
+  }, [dispatch, selectedProjectId, user?.id]);
 
 
-  useEffect(() => {
-    //console.log("currentTeam changed:", currentTeam);
-    //***This is blocked by IM-9 logic***
-    //
-    if (currentTeam?.id) localStorage.setItem("selectedTeamId", currentTeam.id)
-  }, [currentTeam?.id])
 
-  useEffect(() => {
-    //console.log("currentProject changed:", currentProject);
-    //***This is blocked by IM-9 logic***
-    if (currentProject?.id) localStorage.setItem("selectedProjectId", currentProject.id)
-  }, [currentProject?.id])
+  
 
 
 
@@ -183,8 +157,8 @@ export function Header({ onToggleSidebar, onToggleComments, currentView }: Heade
           <div className="flex items-center gap-3">
             {/* TEAM SELECT DROPDOWN */}
             <Select
-              value={currentTeam?.id ?? ""}
-              onValueChange={(teamId) => dispatch(setSelectedTeamId(teamId))}
+              value={selectedTeamId ?? ""}
+              onValueChange={(teamId) => setTeam(teamId)}
             >
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select team" />
@@ -202,13 +176,13 @@ export function Header({ onToggleSidebar, onToggleComments, currentView }: Heade
                 )}
               </SelectContent>
             </Select>
-            {/*PROJECT SELECT DROPDOWN */}
+
+            {/* PROJECT SELECT DROPDOWN */}
             <Select
-              value={currentProject?.id || ""}
+              value={selectedProjectId || ""}
               onValueChange={(projectId) => {
-                dispatch(setSelectedProjectId(projectId))
-                dispatch(fetchProjectDetails(projectId))
-                if (user?.id) dispatch(fetchUserDocuments(user.id))
+                setProject(projectId)
+                // details + docs fetched by effect above
               }}
             >
               <SelectTrigger className="w-56">
@@ -227,6 +201,7 @@ export function Header({ onToggleSidebar, onToggleComments, currentView }: Heade
             </Select>
           </div>
         )}
+
 
         {/* Right side */}
         <div className="flex items-center gap-3">
