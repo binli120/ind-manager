@@ -441,6 +441,9 @@ const projectsSlice = createSlice({
       state.selectedProjectId = action.payload;
       state.currentProject =
         state.projects.find((project) => project.id === action.payload) || null;
+      //
+      if (action.payload) localStorage.setItem("selectedProjectId", action.payload);
+      else localStorage.removeItem("selectedProjectId");
     },
     setViewMode: (state, action: PayloadAction<"grid" | "list">) => {
       state.viewMode = action.payload;
@@ -472,6 +475,13 @@ const projectsSlice = createSlice({
         state.currentProject = { ...state.currentProject, ...action.payload };
       }
     },
+    hydrateSelectedProjectFromStorage: (state) => {
+      const saved = typeof window !== "undefined"
+        ? localStorage.getItem("selectedProjectId")
+        : null;
+      state.selectedProjectId = saved ?? null;
+      // current project fixed up
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -483,6 +493,19 @@ const projectsSlice = createSlice({
       .addCase(fetchProjects.fulfilled, (state, action) => {
         state.isLoading = false;
         state.projects = action.payload;
+
+        if (state.selectedProjectId) {
+          state.currentProject =
+            state.projects.find(project => project.id === state.selectedProjectId) || null;
+
+          if (!state.currentProject && state.projects.length > 0) {
+            state.currentProject = state.projects[0];
+            state.selectedProjectId = state.projects[0].id;
+          }
+        } else if (state.projects.length > 0) {
+          state.currentProject = state.projects[0];
+          state.selectedProjectId = state.projects[0].id;
+        }
       })
       .addCase(fetchProjects.rejected, (state, action) => {
         state.isLoading = false;
@@ -652,6 +675,7 @@ export const {
   clearFilters,
   clearError,
   updateProjectLocally,
+  hydrateSelectedProjectFromStorage
 } = projectsSlice.actions;
 
 export default projectsSlice.reducer;

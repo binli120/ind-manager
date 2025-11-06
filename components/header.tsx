@@ -10,6 +10,17 @@ import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 
+import { useAppDispatch } from "@/lib/store"
+import { fetchProjects, fetchProjectDetails} from "@/lib/store/slices/projectsSlice"
+import { fetchUserTeams} from "@/lib/store/slices/teamsSlice"
+import { useTeam } from "@/hooks/useTeam"
+import { useProject } from "@/hooks/useProject"
+import { fetchUserDocuments } from "@/lib/store/slices/documentsSlice"
+
+
+//correct identity deployment vercel
+
+
 interface HeaderProps {
   onToggleSidebar: () => void
   onToggleComments: () => void
@@ -26,6 +37,10 @@ interface HeaderProps {
 }
 
 export function Header({ onToggleSidebar, onToggleComments, currentView }: HeaderProps) {
+  const dispatch = useAppDispatch()
+  const { projects, currentProject, selectedProjectId, setProject } = useProject()
+  const { teams, currentTeam, selectedTeamId, setTeam } = useTeam()
+
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -48,6 +63,56 @@ export function Header({ onToggleSidebar, onToggleComments, currentView }: Heade
 
     return () => subscription.unsubscribe()
   }, [])
+
+
+
+
+  // Fetch user teams when user loads
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(fetchUserTeams(user.id))
+    }
+  }, [dispatch, user?.id])
+  
+  // 2) If teams are loaded and we have no selection (not hydrated or invalid), pick the first
+  useEffect(() => {
+    if (!teams.length) return;
+    if (!selectedTeamId) {
+      setTeam(teams[0].id);
+    } else if (!teams.some(t => t.id === selectedTeamId)) {
+      // saved id no longer valid in this list -> fallback to first
+      setTeam(teams[0].id);
+    }
+  }, [teams, selectedTeamId, setTeam]);
+
+  // 3) When team changes, fetch its projects
+  useEffect(() => {
+    if (selectedTeamId) {
+      dispatch(fetchProjects(selectedTeamId));
+    }
+  }, [dispatch, selectedTeamId]);
+
+  // 4) When projects arrive and no project selected (not hydrated or invalid), pick the first
+  useEffect(() => {
+    if (!projects.length) return;
+    if (!selectedProjectId || !projects.some(p => p.id === selectedProjectId)) {
+      setProject(projects[0].id);
+    }
+  }, [projects, selectedProjectId, setProject]);
+
+  // 5) When project selection changes, hydrate detail + any dependent data
+  useEffect(() => {
+    if (selectedProjectId) {
+      dispatch(fetchProjectDetails(selectedProjectId));
+      if (user?.id) dispatch(fetchUserDocuments(user.id));
+    }
+  }, [dispatch, selectedProjectId, user?.id]);
+
+
+
+  
+
+
 
   const getBreadcrumbText = () => {
     switch (currentView) {
@@ -90,44 +155,53 @@ export function Header({ onToggleSidebar, onToggleComments, currentView }: Heade
 
         {currentView === "workspace" && (
           <div className="flex items-center gap-3">
-            <Select defaultValue="harliku-phase-ii">
+            {/* TEAM SELECT DROPDOWN */}
+            <Select
+              value={selectedTeamId ?? ""}
+              onValueChange={(teamId) => setTeam(teamId)}
+            >
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="Select project" />
+                <SelectValue placeholder="Select team" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="harliku-phase-ii" className="!text-gray-900 dark:!text-gray-100">
-                  Harliku Phase II
-                </SelectItem>
-                <SelectItem value="yeztugo-study" className="!text-gray-900 dark:!text-gray-100">
-                  Yeztugo Study
-                </SelectItem>
-                <SelectItem value="abc-test-oncology" className="!text-gray-900 dark:!text-gray-100">
-                  ABC Test In Oncology
-                </SelectItem>
+                {teams.map((team) => (
+                  <SelectItem key={team.id} value={team.id}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+                {teams.length === 0 && (
+                  <div className="px-3 py-2 text-xs text-muted-foreground">
+                    No teams available
+                  </div>
+                )}
               </SelectContent>
             </Select>
 
-            <Select defaultValue="quality-summary">
+            {/* PROJECT SELECT DROPDOWN */}
+            <Select
+              value={selectedProjectId || ""}
+              onValueChange={(projectId) => {
+                setProject(projectId)
+                // details + docs fetched by effect above
+              }}
+            >
               <SelectTrigger className="w-56">
-                <SelectValue placeholder="Select document" />
+                <SelectValue placeholder="Select project" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="quality-summary" className="!text-gray-900 dark:!text-gray-100">
-                  2.3 Quality Overall Summary
-                </SelectItem>
-                <SelectItem value="investigator-brochure" className="!text-gray-900 dark:!text-gray-100">
-                  Investigator Brochure
-                </SelectItem>
-                <SelectItem value="clinical-protocol" className="!text-gray-900 dark:!text-gray-100">
-                  Clinical Protocol
-                </SelectItem>
-                <SelectItem value="manufacturing-info" className="!text-gray-900 dark:!text-gray-100">
-                  Manufacturing Information
-                </SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id} className="!text-gray-900 dark:!text-gray-100">
+                    {project.title}
+                  </SelectItem>
+                ))}
+                {projects.length === 0 && (
+                  <div className="px-3 py-2 text-xs text-muted-foreground">No projects found</div>
+                )}
               </SelectContent>
             </Select>
           </div>
         )}
+
 
         {/* Right side */}
         <div className="flex items-center gap-3">

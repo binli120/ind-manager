@@ -6,7 +6,7 @@ import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+//import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DataTable } from "@/components/data-table"
 import { CommentsPanel } from "@/components/comments-panel"
 import {
@@ -63,29 +63,6 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
     <div className="flex-1 overflow-y-auto">
       {/* Document Header */}
       <div className="bg-background border-b border-border px-8 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <Select
-            defaultValue={currentTeam?.id || ""}
-            onValueChange={(teamId) => {
-              const team = teams.find((t) => t.id === teamId)
-              if (team) {
-                // dispatch(setCurrentTeam(team))
-              }
-            }}
-          >
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select team" />
-            </SelectTrigger>
-            <SelectContent>
-              {teams.map((team) => (
-                <SelectItem key={team.id} value={team.id}>
-                  {team.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
