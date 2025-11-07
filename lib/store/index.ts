@@ -5,6 +5,7 @@ import teamsSlice from "./slices/teamsSlice"
 import projectsSlice from "./slices/projectsSlice"
 import documentsSlice from "./slices/documentsSlice"
 import uiSlice from "./slices/uiSlice"
+import { selectionPersistence } from "./middleware/selectionPersistence"
 
 export const store = configureStore({
   reducer: {
@@ -19,7 +20,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: ["persist/PERSIST"],
       },
-    }),
+    }).concat(selectionPersistence.middleware),
 })
 
 export type RootState = ReturnType<typeof store.getState>

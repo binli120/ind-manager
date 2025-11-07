@@ -462,9 +462,6 @@ const teamsSlice = createSlice({
       state.selectedTeamId = action.payload;
       state.currentTeam =
         state.teams.find((team) => team.id === action.payload) || null;
-      
-      if (action.payload) localStorage.setItem("selectedTeamId", action.payload);
-      else localStorage.removeItem("selectedTeamId");
     },
     hydrateSelectedTeamFromStorage: (state) => {
       const saved = typeof window !== "undefined"

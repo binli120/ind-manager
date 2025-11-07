@@ -441,9 +441,6 @@ const projectsSlice = createSlice({
       state.selectedProjectId = action.payload;
       state.currentProject =
         state.projects.find((project) => project.id === action.payload) || null;
-      //
-      if (action.payload) localStorage.setItem("selectedProjectId", action.payload);
-      else localStorage.removeItem("selectedProjectId");
     },
     setViewMode: (state, action: PayloadAction<"grid" | "list">) => {
       state.viewMode = action.payload;
