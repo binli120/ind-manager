@@ -12,8 +12,8 @@ export function CommentsPanel() {
   const { currentDocument } = useAppSelector((state) => state.documents)
 
   // Get comments for current document (placeholder for now)
-  const openComments = currentDocument?.comments?.filter((comment) => !comment.resolved) || []
-  const resolvedComments = currentDocument?.comments?.filter((comment) => comment.resolved) || []
+  const openComments = currentDocument?.comments?.filter((comment) => !comment.isResolved) || []
+  const resolvedComments = currentDocument?.comments?.filter((comment) => comment.isResolved) || []
 
   const handleClose = () => {
     dispatch(setCommentsPanelOpen(false))
@@ -51,7 +51,7 @@ export function CommentsPanel() {
                   <div key={comment.id} className="p-3 bg-accent/5 rounded-lg border border-border">
                     <p className="text-sm text-card-foreground">{comment.content}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {comment.authorName} • {comment.createdAt}
+                      {comment.userName || "Unknown User"} • {comment.createdAt}
                     </p>
                   </div>
                 ))}
@@ -71,7 +71,7 @@ export function CommentsPanel() {
                   <div key={comment.id} className="p-3 bg-accent/5 rounded-lg border border-border opacity-60">
                     <p className="text-sm text-card-foreground">{comment.content}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {comment.authorName} • {comment.createdAt}
+                      {comment.userName || "Unknown User"} • {comment.createdAt}
                     </p>
                   </div>
                 ))}
