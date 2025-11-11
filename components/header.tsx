@@ -17,8 +17,9 @@ import { useTeam } from "@/hooks/useTeam"
 import { useProject } from "@/hooks/useProject"
 import { fetchUserDocuments } from "@/lib/store/slices/documentsSlice"
 
-
-//correct identity deployment vercel
+//notifications
+import { NotificationsBell } from "@/components/notifications/NotificationsBell"
+import { NotificationsPanel } from "@/components/notifications/NotificationsPanel"
 
 
 interface HeaderProps {
@@ -208,10 +209,9 @@ export function Header({ onToggleSidebar, onToggleComments, currentView }: Heade
           <Button variant="ghost" size="sm">
             <Search className="w-4 h-4" />
           </Button>
-
-          <Button variant="ghost" size="sm">
-            <Bell className="w-4 h-4" />
-          </Button>
+        {/* notification buttons*/}
+         <NotificationsBell userId={user?.id ?? undefined} />
+         <NotificationsPanel userId={user?.id ?? undefined} />
 
           <Button variant="ghost" size="sm" onClick={onToggleComments}>
             <MessageSquare className="w-4 h-4" />

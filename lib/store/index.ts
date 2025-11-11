@@ -5,6 +5,7 @@ import teamsSlice from "./slices/teamsSlice"
 import projectsSlice from "./slices/projectsSlice"
 import documentsSlice from "./slices/documentsSlice"
 import uiSlice from "./slices/uiSlice"
+import notificationsSlice from "./slices/notificationsSlice"
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     projects: projectsSlice,
     documents: documentsSlice,
     ui: uiSlice,
+    notifications: notificationsSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -1185,6 +1185,9 @@ export type Database = {
           id: string
           name: string | null
           phone: string | null
+
+          /* new sequential column added*/ 
+          public_id: number
         }
         Insert: {
           avatar_url?: string | null
@@ -1193,6 +1196,8 @@ export type Database = {
           id: string
           name?: string | null
           phone?: string | null
+          /* new sequential column added*/ 
+          public_id?: never
         }
         Update: {
           avatar_url?: string | null
@@ -1201,8 +1206,51 @@ export type Database = {
           id?: string
           name?: string | null
           phone?: string | null
+
+          /**
+           no client updates
+          */
+          public_id?: never
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          from: string | null
+          resource_id: string | null
+          is_read: boolean
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          from?: string | null
+          resource_id?: string | null
+          is_read?: boolean
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          from?: string | null
+          resource_id?: string | null
+          is_read?: boolean
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
