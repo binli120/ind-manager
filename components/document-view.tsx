@@ -32,7 +32,8 @@ interface DocumentViewProps {
       | "submission"
       | "post-submission"
       | "gap-analysis"
-      | "review-center",
+      | "review-center"
+      | "document-authoring",
   ) => void
 }
 
@@ -78,7 +79,9 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
 
         {/* Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => onViewChange?.("document-authoring")}
+          >
             <CardContent className="p-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">

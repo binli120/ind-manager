@@ -15,6 +15,7 @@ import { ReviewCenterView } from "@/components/review-center-view"
 import { GapAnalysisView } from "@/components/gap-analysis-view"
 import { IndSubmissionView } from "@/components/ind-submission-view"
 import { DesignSystemView } from "@/components/design-system-view"
+import { SmartEditorView } from "@/components/smart-editor-view"
 
 export function WorkspaceLayout() {
   const dispatch = useAppDispatch()
@@ -69,8 +70,9 @@ export function WorkspaceLayout() {
             <IndSubmissionView />
           ) : currentView === "design-system" ? (
             <DesignSystemView />
-          ) : (
-            <DocumentView onViewChange={handleViewChange} />
+          ) : currentView === "document-authoring" ? (
+            <SmartEditorView />
+          ) : ( <DocumentView onViewChange={handleViewChange} />
           )}
         </div>
       </div>
