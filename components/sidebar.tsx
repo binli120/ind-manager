@@ -4,7 +4,20 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, FileText, Users, Calendar, Upload, BarChart3, Home, Brain, CheckSquare, Palette } from "lucide-react"
+import {
+  Search,
+  FileText,
+  Users,
+  Calendar,
+  Upload,
+  BarChart3,
+  Home,
+  Brain,
+  CheckSquare,
+  Palette,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
 
 interface SidebarProps {
   isOpen: boolean
@@ -37,7 +50,7 @@ interface SidebarProps {
   ) => void
 }
 
-export function Sidebar({ isOpen, currentView, onViewChange }: SidebarProps) {
+export function Sidebar({ isOpen, onToggle, currentView, onViewChange }: SidebarProps) {
   const navigationItems = [
     {
       icon: Home,
@@ -116,8 +129,8 @@ export function Sidebar({ isOpen, currentView, onViewChange }: SidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
+      <div className="p-4 border-b border-sidebar-border flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="relative">
             <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-purple-700 rounded-lg flex items-center justify-center shadow-sm">
               <Brain className="w-4 h-4 text-white" />
@@ -131,6 +144,15 @@ export function Sidebar({ isOpen, currentView, onViewChange }: SidebarProps) {
             </div>
           )}
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {isOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </Button>
       </div>
 
       {/* Search */}
