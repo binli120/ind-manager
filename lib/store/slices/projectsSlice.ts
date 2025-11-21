@@ -91,14 +91,14 @@ const initialState: ProjectsState = {
 
 // MOCK: Remove mock mode when Supabase projects are live.
 const useMockProjects = true;
-
+const MOCK_TEAM_ID = "demo-team"
 // Async thunks
 export const fetchProjects = createAsyncThunk(
   "projects/fetchProjects",
   async (teamId: string | null, { rejectWithValue }) => {
     try {
       // MOCK: Remove mock branch once Supabase data is wired up.
-      if (useMockProjects) {
+      if (useMockProjects && teamId === MOCK_TEAM_ID) {
         try {
           const response = await fetch(
             `/api/mock/projects${teamId ? `?teamId=${teamId}` : ""}`,
