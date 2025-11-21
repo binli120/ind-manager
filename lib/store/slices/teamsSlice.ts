@@ -69,6 +69,24 @@ const initialState: TeamsState = {
   selectedTeamId: null,
 };
 
+// MOCK: Remove mock mode when Supabase projects are live.
+
+const useMockProjects = true;
+const DEMO_TEAM: Team = {
+  id: "demo-team",
+  name: "Demo Team",
+  description: "Default demo team for mock projects",
+  avatar: null,
+  ownerId: "mock-owner",
+  memberCount: 3,
+  createdAt: "2024-01-01T00:00:00Z",
+  updatedAt: "2024-01-01T00:00:00Z",
+  settings: { isPublic: true, allowInvites: true, defaultRole: "member" },
+  members: [],
+  projects: []
+};
+//END MOCK
+
 // Async thunks
 export const fetchUserTeams = createAsyncThunk(
   "teams/fetchUserTeams",
@@ -500,7 +518,21 @@ const teamsSlice = createSlice({
       })
       .addCase(fetchUserTeams.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.teams = action.payload;
+
+        //MOCK:  // Always include demo team in mock mode so projects load
+        const teams = useMockProjects
+          ? [...action.payload, DEMO_TEAM]
+          : (action.payload.length ? action.payload : [DEMO_TEAM]);
+
+        state.teams = teams;
+
+        if (useMockProjects) {
+          state.currentTeam = DEMO_TEAM;
+          state.selectedTeamId = DEMO_TEAM.id;
+          return;
+        }
+        //End MOCK
+
         // if hydrated selection
         if (state.selectedTeamId) {
         // If we have a saved selection, sync currentTeam to it (if it still exists)
@@ -542,6 +574,13 @@ const teamsSlice = createSlice({
       .addCase(fetchTeamDetails.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        // MOCK
+         if (!state.teams.length) {
+          state.teams = [DEMO_TEAM];
+          state.currentTeam = DEMO_TEAM;
+          state.selectedTeamId = DEMO_TEAM.id;
+        }
+        //END MOCK
       })
       // Create team
       .addCase(createTeam.fulfilled, (state, action) => {
