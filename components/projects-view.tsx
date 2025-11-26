@@ -15,6 +15,8 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+//class merge for active
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,21 +44,67 @@ import {
 } from "lucide-react";
 import { ProjectForm } from "./ui/projects/project-form";
 
+//IM-61: Add status info
+const statusOptions = [
+  { header: "Pre-Submission" },
+  { value: "draft", label: "Draft" },
+  { value: "pre-ind-meeting-requested", label: "Pre-IND Meeting Requested " },
+  { value: "pre-ind-meeting-completed", label: "Pre-IND Meeting Completed " },
+  { header: "Submission & Review" },
+  { value: "submitted", label: "Submitted " },
+  { value: "under-review", label: "Under Review " },
+  { value: "active", label: "Active " },
+  { header: "Hold States" },
+  { value: "clinical-hold-complete", label: "Clinical Hold - Complete " },
+  { value: "clinical-hold-partial", label: "Clinical Hold - Partial " },
+  { header: "Other States" },
+  { value: "inactive", label: "Inactive - No subjects enrolled for 2+ years OR on clinical hold for ≥1 year" },
+  { value: "withdrawn", label: "Withdrawn - (can be reactivated)" },
+  { value: "terminated", label: "Terminated - (serious deficiencies or inactive ≥5 years)" },
+];
+
 const statusConfig = {
-  draft: { label: "Draft", color: "bg-gray-100 text-gray-700 border-gray-200" },
-  active: {
-    label: "Active",
-    color: "bg-blue-100 text-blue-700 border-blue-200",
+  // Pre-Submission
+  draft: { label: "Draft", color: "bg-slate-100 text-slate-800 border-slate-200" },
+  "pre-ind-meeting-requested": {
+    label: "Pre-IND Requested",
+    color: "bg-amber-100 text-amber-800 border-amber-200",
   },
-  completed: {
-    label: "Completed",
-    color: "bg-green-100 text-green-700 border-green-200",
+  "pre-ind-meeting-completed": {
+    label: "Pre-IND Completed",
+    color: "bg-emerald-100 text-emerald-800 border-emerald-200",
   },
-  paused: {
-    label: "Paused",
-    color: "bg-yellow-100 text-yellow-700 border-yellow-200",
+
+  // Submission & Review
+  submitted: { label: "Submitted", color: "bg-blue-100 text-blue-800 border-blue-200" },
+  "under-review": { label: "Under Review", color: "bg-indigo-100 text-indigo-800 border-indigo-200" },
+  active: { label: "Active", color: "bg-green-100 text-green-800 border-green-200" },
+
+  // Hold States
+  "clinical-hold-complete": {
+    label: "Clinical Hold - Complete",
+    color: "bg-red-100 text-red-800 border-red-200",
   },
+  "clinical-hold-partial": {
+    label: "Clinical Hold - Partial",
+    color: "bg-orange-100 text-orange-800 border-orange-200",
+  },
+
+  // Other States
+  inactive: { label: "Inactive", color: "bg-slate-100 text-slate-800 border-slate-200" },
+  withdrawn: { label: "Withdrawn", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  terminated: { label: "Terminated", color: "bg-rose-100 text-rose-800 border-rose-200" },
 };
+
+
+
+const priorityOptions = [
+  { value: "all", label: "All Priority" },
+  { value: "critical", label: "Critical" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+];
 
 const priorityConfig = {
   low: { label: "Low", color: "bg-gray-100 text-gray-600" },
@@ -77,12 +125,18 @@ export function ProjectsView() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editProject, setEditProject] = useState<ProjectCreation | null>(null);
+  //IM-61 add pagination state
+  const [page, setPage] = useState(1);
+  const pageSize = 6; 
+  useEffect(() => setPage(1), [filters]);
 
   useEffect(() => {
     if (selectedTeamId) {
       dispatch(fetchProjects(selectedTeamId));
     }
   }, [dispatch, selectedTeamId]);
+
+  
 
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
@@ -96,6 +150,10 @@ export function ProjectsView() {
 
     return matchesSearch && matchesStatus && matchesPriority;
   });
+  //IM-61 pagination state
+  const totalPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize));
+  const pagedProjects = filteredProjects.slice((page - 1) * pageSize, page * pageSize);
+
 
   const handleViewModeChange = (mode: "grid" | "list") => {
     dispatch(setViewMode(mode));
@@ -200,16 +258,23 @@ export function ProjectsView() {
             <Select
               value={filters.status}
               onValueChange={handleStatusFilterChange}
-            >
+            > {/*IM-61 Update status dropdown */}
               <SelectTrigger className="w-40 bg-background border-border shadow-sm">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
+                {statusOptions.map((opt, idx) =>
+                  opt.header ? (
+                    <div key={`hdr-${idx}`} className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-default select-none">
+                      {opt.header}
+                    </div>
+                  ) : (
+                    <SelectItem key={opt.value} value={opt.value} className="whitespace-normal text-left">
+                      {opt.label}
+                    </SelectItem>
+                  )
+                )}
               </SelectContent>
             </Select>
 
@@ -220,12 +285,12 @@ export function ProjectsView() {
               <SelectTrigger className="w-40 bg-background border-border shadow-sm">
                 <SelectValue placeholder="All Priority" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priority</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
+               <SelectContent>
+                {priorityOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -261,194 +326,233 @@ export function ProjectsView() {
         ) : (
           <div
             className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3" : "grid-cols-1"}`}
-          >
-            {filteredProjects.map((project) => (
-              <Card
-                key={project.id}
-                className="group hover:shadow-lg transition-all duration-200 border-border bg-card flex flex-col h-full"
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold text-card-foreground group-hover:text-primary transition-colors">
-                          {project.title}
-                        </h3>
-                        <Badge className={statusConfig[project.status].color}>
-                          {statusConfig[project.status].label}
-                        </Badge>
-                        <Badge
-                          className={priorityConfig[project.priority].color}
-                        >
-                          {priorityConfig[project.priority].label}
-                        </Badge>
-                      </div>
-                      {project.code && (
-                        <p className="text-sm text-muted-foreground font-mono">
-                          {project.code}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {project.description}
-                  </p>
-                </CardHeader>
-
-                <CardContent className="space-y-4 flex-1 flex flex-col">
-                  {/* Progress */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">{project.progress}%</span>
-                    </div>
-                    <Progress value={project.progress} className="h-2" />
-                  </div>
-
-                  {/* Project Details */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="w-4 h-4 text-muted" />
-                        <div>
-                          <p className="text-muted-foreground text-xs">
-                            Sponsor:
-                          </p>
-                          <p className="font-medium text-card-foreground">
-                            {project.sponsor}
-                          </p>
+          > {/**IM-61 card active card green gradient styling + resume disable */}
+            {pagedProjects.map((project) => {
+              const isResumeEnabled = project.status === "inactive";
+              return (
+                <Card
+                  key={project.id}
+                  className={cn(
+                    "shadow-sm border transition",
+                    project.status === "active" && "bg-gradient-to-br from-emerald-50 to-white border-emerald-100"
+                  )}
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-xl font-semibold text-card-foreground group-hover:text-primary transition-colors">
+                            {project.title}
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                             <Badge
+                                className={`${statusConfig[project.status].color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[240px]`}
+                              >
+                                {statusConfig[project.status].label}
+                              </Badge>
+                              <Badge
+                                className={`${priorityConfig[project.priority].color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[160px]`}
+                              >
+                                {priorityConfig[project.priority].label}
+                             </Badge>
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Pill className="w-4 h-4 text-muted" />
-                        <div>
-                          <p className="text-muted-foreground text-xs">Drug:</p>
-                          <p className="font-medium text-card-foreground">
-                            {project.drug}
+                        {project.code && (
+                          <p className="text-sm text-muted-foreground font-mono">
+                            {project.code}
                           </p>
-                        </div>
+                        )}
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-muted" />
-                        <div>
-                          <p className="text-muted-foreground text-xs">
-                            Target Date:
-                          </p>
-                          <p className="font-medium text-card-foreground">
-                            {project.targetDate}
-                          </p>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {project.description}
+                    </p>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4 flex-1 flex flex-col">
+                    {/* Progress */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Progress</span>
+                        <span className="font-medium">{project.progress}%</span>
+                      </div>
+                      <Progress value={project.progress} className="h-2" />
+                    </div>
+
+                    {/* Project Details */}
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-muted" />
+                          <div>
+                            <p className="text-muted-foreground text-xs">
+                              Sponsor:
+                            </p>
+                            <p className="font-medium text-card-foreground">
+                              {project.sponsor}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Pill className="w-4 h-4 text-muted" />
+                          <div>
+                            <p className="text-muted-foreground text-xs">Drug:</p>
+                            <p className="font-medium text-card-foreground">
+                              {project.drug}
+                            </p>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted" />
-                        <div>
-                          <p className="text-muted-foreground text-xs">Team:</p>
-                          <p className="font-medium text-card-foreground">
-                            {project.teamSize} members
-                          </p>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Target className="w-4 h-4 text-muted" />
+                          <div>
+                            <p className="text-muted-foreground text-xs">
+                              Target Date:
+                            </p>
+                            <p className="font-medium text-card-foreground">
+                              {project.targetDate}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-muted" />
+                          <div>
+                            <p className="text-muted-foreground text-xs">Team:</p>
+                            <p className="font-medium text-card-foreground">
+                              {project.teamSize} members
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Team Avatars */}
-                  <div className="flex items-center gap-3 pt-2">
-                    <div className="flex -space-x-2">
-                      {project.teamMembers.slice(0, 3).map((member, index) => (
-                        <Avatar
-                          key={index}
-                          className="w-8 h-8 border-2 border-background"
-                        >
-                          <AvatarImage
-                            src={member.avatar || "/placeholder.svg"}
-                          />
-                          <AvatarFallback className="text-xs bg-accent/10 text-accent">
-                            {member.initials}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                      {project.teamMembers.length > 3 && (
-                        <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center">
-                          <span className="text-xs text-muted-foreground">
-                            +{project.teamMembers.length - 3}
-                          </span>
-                        </div>
-                      )}
+                    {/* Team Avatars */}
+                    <div className="flex items-center gap-3 pt-2">
+                      <div className="flex -space-x-2">
+                        {project.teamMembers.slice(0, 3).map((member, index) => (
+                          <Avatar
+                            key={index}
+                            className="w-8 h-8 border-2 border-background"
+                          >
+                            <AvatarImage
+                              src={member.avatar || "/placeholder.svg"}
+                            />
+                            <AvatarFallback className="text-xs bg-accent/10 text-accent">
+                              {member.initials}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {project.teamMembers.length > 3 && (
+                          <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                            <span className="text-xs text-muted-foreground">
+                              +{project.teamMembers.length - 3}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2 pt-4 border-t border-border mt-auto">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-1 hover:bg-accent/10 hover:text-accent"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View
-                    </Button>
-                    {project.ownerId === user?.id && (
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 pt-4 border-t border-border mt-auto">
                       <Button
                         variant="ghost"
                         size="sm"
                         className="flex-1 hover:bg-accent/10 hover:text-accent"
-                        onClick={() => handleClickEdit(project.id)}
                       >
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Edit
+                        <Eye className="w-4 h-4 mr-2" />
+                        View
                       </Button>
-                    )}
-                    <button
-                      style={{
-                        backgroundColor: "#8b5cf6",
-                        color: "#ffffff",
-                        border: "none",
-                        borderRadius: "6px",
-                        padding: "8px 12px",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        cursor: "pointer",
-                        transition: "background-color 0.2s",
-                        flex: "1",
-                        minHeight: "32px",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#7c3aed";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#8b5cf6";
-                      }}
-                      onClick={() => console.log("Resume clicked")}
-                    >
-                      <Play className="w-4 h-4" style={{ color: "#ffffff" }} />
-                      <span style={{ color: "#ffffff" }}>Resume</span>
-                    </button>
-                    {project.ownerId === user?.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => handleDeleteProject(project.id)}
+                      {project.ownerId === user?.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex-1 hover:bg-accent/10 hover:text-accent"
+                          onClick={() => handleClickEdit(project.id)}
+                        >
+                          <Edit3 className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                      )}
+                
+                      <button
+                        disabled={!isResumeEnabled}
+                        style={{
+                          backgroundColor: isResumeEnabled ? "#8b5cf6" : "#e5e7eb",
+                          color: isResumeEnabled ? "#ffffff" : "#9ca3af",
+                          cursor: isResumeEnabled ? "pointer" : "not-allowed",
+                          opacity: isResumeEnabled ? 1 : 0.6,
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "8px 12px",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                          transition: "background-color 0.2s",
+                          flex: "1",
+                          minHeight: "32px",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (isResumeEnabled) e.currentTarget.style.backgroundColor = "#7c3aed";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (isResumeEnabled) e.currentTarget.style.backgroundColor = "#8b5cf6";
+                        }}
+                        onClick={() => {
+                          if (isResumeEnabled) console.log("Resume clicked");
+                        }}
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                        <Play className="w-4 h-4" style={{ color: isResumeEnabled ? "#ffffff" : "#9ca3af" }} />
+                        <span style={{ color: isResumeEnabled ? "#ffffff" : "#9ca3af" }}>Resume</span>
+                      </button>
+
+                      {project.ownerId === user?.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => handleDeleteProject(project.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
+        {/*IM-61 Pagination */}
+        <div className="flex items-center justify-center gap-3 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Prev
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+
 
         {!isLoading && filteredProjects.length === 0 && (
           <div className="text-center py-12">

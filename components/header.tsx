@@ -188,7 +188,8 @@ export function Header({ onToggleSidebar, onToggleComments, currentView }: Heade
               <SelectTrigger className="w-56">
                 <SelectValue placeholder="Select project" />
               </SelectTrigger>
-              <SelectContent>
+              {/**IM-61 Add a overflow and max height */}
+              <SelectContent className = "max-h-42 overflow-y-auto">
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.id} className="!text-gray-900 dark:!text-gray-100">
                     {project.title}

@@ -22,7 +22,19 @@ export interface Project {
   title: string;
   code: string;
   description: string;
-  status: "draft" | "active" | "completed" | "paused";
+  //IM-61 add more status
+  status: 
+  | "draft"
+  | "pre-ind-meeting-requested"
+  | "pre-ind-meeting-completed"
+  | "submitted"
+  | "under-review"
+  | "active"
+  | "clinical-hold-complete"
+  | "clinical-hold-partial"
+  | "inactive"
+  | "withdrawn"
+  | "terminated";
   priority: "low" | "medium" | "high" | "critical";
   progress: number;
   sponsor: string;
