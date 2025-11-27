@@ -17,6 +17,7 @@ export interface StoredDocumentMetadata {
   fileKey: string;
   originalFileName: string;
   extra?: Record<string, unknown>;
+  hasMarkdown?: boolean;
 }
 
 export interface StoredDocumentWithUrl extends StoredDocumentMetadata {
