@@ -18,7 +18,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
-
+//MOCK project counts sidebar
+import { useAppSelector } from "@/lib/store"
+//END MOCK
 interface SidebarProps {
   isOpen: boolean
   onToggle: () => void
@@ -51,6 +53,9 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onToggle, currentView, onViewChange }: SidebarProps) {
+  //MOCK add project count pull
+  const projectCount = useAppSelector((state) => state.projects.projects.length)
+  //END MOCK
   const navigationItems = [
     {
       icon: Home,
@@ -63,7 +68,9 @@ export function Sidebar({ isOpen, onToggle, currentView, onViewChange }: Sidebar
       icon: FileText,
       label: "Projects",
       active: currentView === "projects",
-      badge: "3",
+      //MOCK adjust project counts
+      badge: projectCount > 0 ? projectCount.toString() : null,
+      //END MOCK
       onClick: () => onViewChange("projects"),
     },
     {
