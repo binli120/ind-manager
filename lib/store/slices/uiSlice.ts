@@ -1,87 +1,95 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type ViewType =
-  | "workspace"
-  | "projects"
-  | "teams"
-  | "calendar"
-  | "submission"
-  | "post-submission"
-  | "gap-scoring"
-  | "review-center"
-  | "gap-analysis"
-  | "ind-submission"
-  | "design-system"
+  | 'workspace'
+  | 'projects'
+  | 'teams'
+  | 'calendar'
+  | 'submission'
+  | 'post-submission'
+  | 'gap-scoring'
+  | 'review-center'
+  | 'gap-analysis'
+  | 'ind-submission'
+  | 'design-system'
+  | 'tenants'
+  | 'users';
 
 export interface Modal {
-  id: string
-  type: "create-project" | "create-team" | "invite-member" | "delete-confirm" | "settings" | "custom"
-  title?: string
-  data?: any
-  isOpen: boolean
+  id: string;
+  type:
+    | 'create-project'
+    | 'create-team'
+    | 'invite-member'
+    | 'delete-confirm'
+    | 'settings'
+    | 'custom';
+  title?: string;
+  data?: any;
+  isOpen: boolean;
 }
 
 export interface Notification {
-  id: string
-  type: "success" | "error" | "warning" | "info"
-  title: string
-  message?: string
-  duration?: number
-  isVisible: boolean
-  createdAt: string
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  title: string;
+  message?: string;
+  duration?: number;
+  isVisible: boolean;
+  createdAt: string;
 }
 
 export interface Breadcrumb {
-  label: string
-  href?: string
-  isActive?: boolean
+  label: string;
+  href?: string;
+  isActive?: boolean;
 }
 
 interface UIState {
   // Layout state
-  sidebarOpen: boolean
-  commentsPanelOpen: boolean
-  currentView: ViewType
+  sidebarOpen: boolean;
+  commentsPanelOpen: boolean;
+  currentView: ViewType;
 
   // Modal state
-  modals: Modal[]
+  modals: Modal[];
 
   // Notification state
-  notifications: Notification[]
+  notifications: Notification[];
 
   // Loading states
-  globalLoading: boolean
-  loadingStates: Record<string, boolean>
+  globalLoading: boolean;
+  loadingStates: Record<string, boolean>;
 
   // Navigation state
-  breadcrumbs: Breadcrumb[]
+  breadcrumbs: Breadcrumb[];
 
   // Theme and preferences
-  theme: "light" | "dark" | "system"
-  compactMode: boolean
+  theme: 'light' | 'dark' | 'system';
+  compactMode: boolean;
 
   // Search and filters
-  globalSearch: string
+  globalSearch: string;
 
   // Error handling
-  errors: Record<string, string>
+  errors: Record<string, string>;
 
   // Feature flags
-  features: Record<string, boolean>
+  features: Record<string, boolean>;
 }
 
 const initialState: UIState = {
   sidebarOpen: true,
   commentsPanelOpen: true,
-  currentView: "workspace",
+  currentView: 'workspace',
   modals: [],
   notifications: [],
   globalLoading: false,
   loadingStates: {},
   breadcrumbs: [],
-  theme: "system",
+  theme: 'system',
   compactMode: false,
-  globalSearch: "",
+  globalSearch: '',
   errors: {},
   features: {
     realTimeCollaboration: true,
@@ -89,140 +97,164 @@ const initialState: UIState = {
     aiAssistant: false,
     exportToPdf: true,
   },
-}
+};
 
 const uiSlice = createSlice({
-  name: "ui",
+  name: 'ui',
   initialState,
   reducers: {
     // Layout actions
     setSidebarOpen: (state, action: PayloadAction<boolean>) => {
-      state.sidebarOpen = action.payload
+      state.sidebarOpen = action.payload;
     },
     toggleSidebar: (state) => {
-      state.sidebarOpen = !state.sidebarOpen
+      state.sidebarOpen = !state.sidebarOpen;
     },
     setCommentsPanelOpen: (state, action: PayloadAction<boolean>) => {
-      state.commentsPanelOpen = action.payload
+      state.commentsPanelOpen = action.payload;
     },
     toggleCommentsPanel: (state) => {
-      state.commentsPanelOpen = !state.commentsPanelOpen
+      state.commentsPanelOpen = !state.commentsPanelOpen;
     },
     setCurrentView: (state, action: PayloadAction<ViewType>) => {
-      state.currentView = action.payload
+      state.currentView = action.payload;
     },
 
     // Modal actions
-    openModal: (state, action: PayloadAction<Omit<Modal, "isOpen">>) => {
-      const existingModal = state.modals.find((modal) => modal.id === action.payload.id)
+    openModal: (state, action: PayloadAction<Omit<Modal, 'isOpen'>>) => {
+      const existingModal = state.modals.find(
+        (modal) => modal.id === action.payload.id
+      );
       if (existingModal) {
-        existingModal.isOpen = true
-        existingModal.data = action.payload.data
+        existingModal.isOpen = true;
+        existingModal.data = action.payload.data;
       } else {
-        state.modals.push({ ...action.payload, isOpen: true })
+        state.modals.push({ ...action.payload, isOpen: true });
       }
     },
     closeModal: (state, action: PayloadAction<string>) => {
-      const modal = state.modals.find((modal) => modal.id === action.payload)
+      const modal = state.modals.find((modal) => modal.id === action.payload);
       if (modal) {
-        modal.isOpen = false
+        modal.isOpen = false;
       }
     },
     closeAllModals: (state) => {
       state.modals.forEach((modal) => {
-        modal.isOpen = false
-      })
+        modal.isOpen = false;
+      });
     },
     removeModal: (state, action: PayloadAction<string>) => {
-      state.modals = state.modals.filter((modal) => modal.id !== action.payload)
+      state.modals = state.modals.filter(
+        (modal) => modal.id !== action.payload
+      );
     },
 
     // Notification actions
-    addNotification: (state, action: PayloadAction<Omit<Notification, "id" | "isVisible" | "createdAt">>) => {
+    addNotification: (
+      state,
+      action: PayloadAction<
+        Omit<Notification, 'id' | 'isVisible' | 'createdAt'>
+      >
+    ) => {
       const notification: Notification = {
         ...action.payload,
-        id: `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `notification-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
         isVisible: true,
         createdAt: new Date().toISOString(),
-      }
-      state.notifications.push(notification)
+      };
+      state.notifications.push(notification);
     },
     hideNotification: (state, action: PayloadAction<string>) => {
-      const notification = state.notifications.find((n) => n.id === action.payload)
+      const notification = state.notifications.find(
+        (n) => n.id === action.payload
+      );
       if (notification) {
-        notification.isVisible = false
+        notification.isVisible = false;
       }
     },
     removeNotification: (state, action: PayloadAction<string>) => {
-      state.notifications = state.notifications.filter((n) => n.id !== action.payload)
+      state.notifications = state.notifications.filter(
+        (n) => n.id !== action.payload
+      );
     },
     clearNotifications: (state) => {
-      state.notifications = []
+      state.notifications = [];
     },
 
     // Loading actions
     setGlobalLoading: (state, action: PayloadAction<boolean>) => {
-      state.globalLoading = action.payload
+      state.globalLoading = action.payload;
     },
-    setLoading: (state, action: PayloadAction<{ key: string; loading: boolean }>) => {
-      state.loadingStates[action.payload.key] = action.payload.loading
+    setLoading: (
+      state,
+      action: PayloadAction<{ key: string; loading: boolean }>
+    ) => {
+      state.loadingStates[action.payload.key] = action.payload.loading;
     },
     clearLoading: (state, action: PayloadAction<string>) => {
-      delete state.loadingStates[action.payload]
+      delete state.loadingStates[action.payload];
     },
 
     // Navigation actions
     setBreadcrumbs: (state, action: PayloadAction<Breadcrumb[]>) => {
-      state.breadcrumbs = action.payload
+      state.breadcrumbs = action.payload;
     },
     addBreadcrumb: (state, action: PayloadAction<Breadcrumb>) => {
-      state.breadcrumbs.push(action.payload)
+      state.breadcrumbs.push(action.payload);
     },
     clearBreadcrumbs: (state) => {
-      state.breadcrumbs = []
+      state.breadcrumbs = [];
     },
 
     // Theme and preferences
-    setTheme: (state, action: PayloadAction<"light" | "dark" | "system">) => {
-      state.theme = action.payload
+    setTheme: (state, action: PayloadAction<'light' | 'dark' | 'system'>) => {
+      state.theme = action.payload;
     },
     setCompactMode: (state, action: PayloadAction<boolean>) => {
-      state.compactMode = action.payload
+      state.compactMode = action.payload;
     },
 
     // Search actions
     setGlobalSearch: (state, action: PayloadAction<string>) => {
-      state.globalSearch = action.payload
+      state.globalSearch = action.payload;
     },
     clearGlobalSearch: (state) => {
-      state.globalSearch = ""
+      state.globalSearch = '';
     },
 
     // Error handling
-    setError: (state, action: PayloadAction<{ key: string; error: string }>) => {
-      state.errors[action.payload.key] = action.payload.error
+    setError: (
+      state,
+      action: PayloadAction<{ key: string; error: string }>
+    ) => {
+      state.errors[action.payload.key] = action.payload.error;
     },
     clearError: (state, action: PayloadAction<string>) => {
-      delete state.errors[action.payload]
+      delete state.errors[action.payload];
     },
     clearAllErrors: (state) => {
-      state.errors = {}
+      state.errors = {};
     },
 
     // Feature flags
-    setFeature: (state, action: PayloadAction<{ key: string; enabled: boolean }>) => {
-      state.features[action.payload.key] = action.payload.enabled
+    setFeature: (
+      state,
+      action: PayloadAction<{ key: string; enabled: boolean }>
+    ) => {
+      state.features[action.payload.key] = action.payload.enabled;
     },
     setFeatures: (state, action: PayloadAction<Record<string, boolean>>) => {
-      state.features = { ...state.features, ...action.payload }
+      state.features = { ...state.features, ...action.payload };
     },
 
     // Utility actions
     resetUI: (state) => {
-      return { ...initialState, theme: state.theme, features: state.features }
+      return { ...initialState, theme: state.theme, features: state.features };
     },
   },
-})
+});
 
 export const {
   // Layout
@@ -273,15 +305,19 @@ export const {
 
   // Utility
   resetUI,
-} = uiSlice.actions
+} = uiSlice.actions;
 
-export default uiSlice.reducer
+export default uiSlice.reducer;
 
 // Selectors
-export const selectIsLoading = (state: { ui: UIState }, key: string) => state.ui.loadingStates[key] || false
+export const selectIsLoading = (state: { ui: UIState }, key: string) =>
+  state.ui.loadingStates[key] || false;
 
-export const selectVisibleNotifications = (state: { ui: UIState }) => state.ui.notifications.filter((n) => n.isVisible)
+export const selectVisibleNotifications = (state: { ui: UIState }) =>
+  state.ui.notifications.filter((n) => n.isVisible);
 
-export const selectOpenModals = (state: { ui: UIState }) => state.ui.modals.filter((m) => m.isOpen)
+export const selectOpenModals = (state: { ui: UIState }) =>
+  state.ui.modals.filter((m) => m.isOpen);
 
-export const selectFeatureEnabled = (state: { ui: UIState }, feature: string) => state.ui.features[feature] || false
+export const selectFeatureEnabled = (state: { ui: UIState }, feature: string) =>
+  state.ui.features[feature] || false;
