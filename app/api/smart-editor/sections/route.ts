@@ -102,6 +102,7 @@ const listSectionDocuments = async (
   const documents: StoredDocumentMetadata[] = [];
   const metaFileKeys = new Map<string, StoredDocumentMetadata>();
   const nonMetaFileKeys = [];
+  const allKeys = new Set<string>();
   let continuationToken: string | undefined;
 
   const leaf = (k: string) => k.split("/").filter(Boolean).pop()!;
@@ -137,6 +138,7 @@ const listSectionDocuments = async (
     // files
     for (const item of response.Contents ?? []) {
       const key = item.Key!;
+      allKeys.add(key);
       if (key.endsWith("/")) continue;
 
       if (key.endsWith("metadata.json")) {
@@ -146,6 +148,9 @@ const listSectionDocuments = async (
           const filename = leaf(fileKey || key);
 
           if (!isAllowedFile(filename)) continue;
+          
+          const mdKey = `${fileKey || key}.md`;
+          const hasMarkdown = allKeys.has(mdKey);
 
           metaFileKeys.set(fileKey || key, {
             ...metadata,
@@ -155,6 +160,7 @@ const listSectionDocuments = async (
             originalFileName: filename,
             originalPath: fileKey || key,
             type: inferDocumentType(filename),
+            hasMarkdown,
           });
         } catch (e) {
           console.error(`Failed to parse ${key}:`, e);
@@ -179,6 +185,9 @@ const listSectionDocuments = async (
 
     if (!isAllowedFile(filename)) continue;
 
+    const mdKey = `${key}.md`;
+    const hasMarkdown = allKeys.has(mdKey);
+
     documents.push({
       id: key,
       sectionId,
@@ -190,6 +199,7 @@ const listSectionDocuments = async (
       originalFileName: filename,
       originalPath: key,
       uploadedAt: item.LastModified?.toISOString(),
+      hasMarkdown,
     });
   }
 

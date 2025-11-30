@@ -306,6 +306,7 @@ export function DocumentViewer({
                 sectionId={sectionId}
                 sectionDocuments={sectionDocuments}
                 documentTitle={document.title}
+                document={document}
               />
             </div>
           </ScrollArea>

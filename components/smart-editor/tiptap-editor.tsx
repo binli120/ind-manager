@@ -243,6 +243,8 @@ interface SectionDocumentInfo {
   awaitingExtraction?: boolean;
   paragraphs?: Array<{ id: string; text: string; lowerText: string }>;
   text?: string;
+  hasMarkdown?: boolean;
+  fileUrl?: string;
 }
 
 interface TiptapEditorProps {
@@ -263,6 +265,7 @@ interface TiptapEditorProps {
   sectionDocuments?: SectionDocumentInfo[];
   documentTitle?: string | null;
   pdfSource?: string | null;
+  document?: SectionDocumentInfo | null;
 }
 
 interface DocumentStats {
@@ -365,6 +368,7 @@ export function TiptapEditor({
   sectionDocuments = [],
   documentTitle = null,
   pdfSource = null,
+  document = null,
   onEditorReady,
 }: TiptapEditorProps) {
   const logger = createLogger('TiptapEditor');
@@ -1775,6 +1779,37 @@ export function TiptapEditor({
     };
   }, []);
 
+  async function handleMarkdownViewClick() {
+    if (document?.hasMarkdown && document?.fileKey) {
+      try {
+        const mdKey = document.fileKey + ".md";
+
+        const res = await fetch(
+          `/api/smart-editor/get-md-url?fileKey=${encodeURIComponent(mdKey)}`
+        );
+
+        if (res.ok) {
+          const { content } = await res.json();
+
+          setScannedMarkdown(content);
+          setViewMode("markdown");
+          viewModeRef.current = "markdown";
+          editor.commands.setContent(renderMarkdownAsHtml(content));
+          return;
+        }
+      } catch (err) {
+        console.error("Error loading markdown:", err);
+      }
+    }
+
+    //Go back to just using scannedMarkdown
+    if (scannedMarkdown) {
+      setViewMode("markdown");
+      viewModeRef.current = "markdown";
+      editor.commands.setContent(renderMarkdownAsHtml(scannedMarkdown));
+    }
+  }
+  
   const triggerGapAnalysis = useCallback(async (): Promise<string | null> => {
     if (!gapAnalysisGate.ready) {
       if (gapAnalysisGate.message) {
@@ -3059,17 +3094,12 @@ export function TiptapEditor({
                     </Button>
                   )}
 
-                  {scannedMarkdown && (
+                  {(document?.hasMarkdown || scannedMarkdown) && (
                     <Button
                       variant={viewMode === 'markdown' ? 'default' : 'outline'}
                       size='sm'
                       className='h-8 px-2'
-                      onClick={() => {
-                        if (!scannedMarkdown) return;
-                        setViewMode('markdown');
-                        viewModeRef.current = 'markdown';
-                      }}
-                      disabled={isLoading}
+                      onClick={handleMarkdownViewClick}
                     >
                       Markdown View
                     </Button>

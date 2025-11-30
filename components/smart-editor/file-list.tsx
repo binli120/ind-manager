@@ -243,11 +243,6 @@ export function FileList({
     setUploadDialogOpen(true);
   };
 
-  const handleGeneralWordImport = () => {
-    setSelectedSectionForUpload(null);
-    setWordImportDialogOpen(true);
-  };
-
   const handleWordImportComplete = (
     files: ProcessedUploadedFile[],
     sectionId: string,
@@ -337,17 +332,7 @@ export function FileList({
                 />
               </Button>
             </SimpleTooltip>
-            <SimpleTooltip content='Import Word documents'>
-              <Button
-                size='sm'
-                variant='outline'
-                className='text-xs'
-                onClick={handleGeneralWordImport}
-              >
-                <FileText className='h-4 w-4 mr-1' />
-                Import Word
-              </Button>
-            </SimpleTooltip>
+            
             <SimpleTooltip content='Upload files'>
               <Button
                 size='sm'
