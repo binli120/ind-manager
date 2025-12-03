@@ -27,6 +27,7 @@ export interface AssistantApi {
   runSummary?: (options?: AssistantCommandOptions) => Promise<AssistantCommandResult>;
   listHints?: () => AssistantCommandHint[];
   getContext?: () => AssistantContextSnapshot;
+  openModule?: (moduleName: string) => Promise<AssistantCommandResult>;
 }
 // Author: Bin Lee (blee@filynai.com)
 // Description: Declares shared type definitions for the in-app assistant command system.

@@ -276,6 +276,17 @@ export function ChatInterface({
         }
       }
 
+      const openMatch = normalized.match(/^open\s+(.+)/);
+      if (openMatch) {
+        const moduleName = openMatch[1].trim();
+        if (assistantApi.openModule) {
+          const result = await assistantApi.openModule(moduleName);
+          return buildFromResult(result);
+        }
+        const message = "Module navigation unavailable."
+        return createAssistantMessage(message, "error");
+      }
+
       if (assistantApi.getContext) {
         const context = assistantApi.getContext();
         const contextLine = context?.sectionName

@@ -43,6 +43,7 @@ interface DocumentViewerProps {
   sectionName?: string | null;
   sectionId?: string | null;
   sectionDocuments?: Document[];
+  assistantApi?: AssistantApi;
 }
 
 export function DocumentViewer({
@@ -51,6 +52,7 @@ export function DocumentViewer({
   sectionName,
   sectionId,
   sectionDocuments = [],
+  assistantApi,
 }: DocumentViewerProps) {
   const logger = createLogger('DocumentViewer');
   const [editorMethods, setEditorMethods] = useState<{
@@ -60,7 +62,7 @@ export function DocumentViewer({
     assistant?: AssistantApi;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const assistantApi = editorMethods?.assistant;
+  // const assistantApi = editorMethods?.assistant;
 
   const handleEditorReady = (methods: {
     importWordFile: (file: File) => Promise<void>;
@@ -133,6 +135,7 @@ export function DocumentViewer({
             selectedDocument={selectedDocument}
             documentTitle={null}
             sectionName={sectionName}
+            assistantApi={assistantApi}
           />
         </div>
       </div>

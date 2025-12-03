@@ -277,6 +277,115 @@ const refreshSections = useCallback(
     ? findDocumentContext(selectedDocument)
     : { document: null, section: null };
 
+  //Open the folder that is found in the UI
+  const openFolderById = async (folderId: string) => {
+    const res = await fetch(`/api/smart-editor/sections?prefix=${encodeURIComponent(folderId)}`, {
+      cache: "no-store",
+    });
+    const data = await res.json();
+    if (!data.sections?.length) return false;
+
+    setSections(
+      data.sections.map(sec => ({
+        id: sec.id,
+        name: sec.name,
+        expanded: true,
+        documents: sec.documents.map(transformDocument),
+      }))
+    );
+
+    return true;
+  };
+
+  const selectDocumentById = (id: string) => setSelectedDocument(id);
+
+  const assistantApi = {
+    openModule: async (query: string) => {
+      const cleaned = query
+        .toLowerCase()
+        .replace(/\b(open|module|section)\b/g, "")
+        .trim();
+
+      const score = (str: string, q: string) =>
+        str === q ? 100 : str.includes(q) ? 80 : str.startsWith(q) ? 60 : 0;
+
+      const tryBatch = (nodes: any[]) => {
+        let best = null,
+          bestScore = 0;
+        for (const n of nodes) {
+          const s = score(n.name.toLowerCase(), cleaned);
+          if (s > bestScore) (bestScore = s), (best = n);
+        }
+        return bestScore >= 80 ? best : null;
+      };
+
+      //BFS through all subfolders
+      const buildNodes = (sections: any[], parent: string | null = null) => {
+        const arr: any[] = [];
+        for (const sec of sections) {
+          arr.push({ id: sec.id, name: sec.name, isFolder: true, parentFolderId: parent });
+          for (const d of sec.documents) {
+            const doc = transformDocument(d);
+            arr.push({
+              id: doc.id,
+              name: doc.title,
+              isFolder: doc.type === "folder",
+              parentFolderId: sec.id,
+              docId: doc.type !== "folder" ? doc.id : null,
+            });
+          }
+        }
+        return arr;
+      };
+
+      const fetchSections = (prefix?: string) =>
+        fetch(prefix ? `/api/smart-editor/sections?prefix=${encodeURIComponent(prefix)}` : `/api/smart-editor/sections`, {
+          cache: "no-store",
+        })
+          .then(r => r.json())
+          .then(d => d.sections ?? []);
+
+      const root = await fetchSections();
+      const rootNodes = buildNodes(root);
+
+      const rootHit = tryBatch(rootNodes);
+      if (rootHit) return handleMatch(rootHit);
+      
+      const queue = rootNodes.filter(n => n.isFolder).map(n => n.id);
+      const visited = new Set();
+
+      while (queue.length) {
+        const id = queue.shift();
+        if (!id || visited.has(id)) continue;
+        visited.add(id);
+
+        const sections = await fetchSections(id);
+        const nodes = buildNodes(sections, id);
+
+        const hit = tryBatch(nodes);
+        if (hit) return handleMatch(hit);
+
+        for (const n of nodes) if (n.isFolder) queue.push(n.id);
+      }
+
+      return { status: "error", message: `No module or file matches "${query}".` };
+
+      async function handleMatch(node: any) {
+        if (node.isFolder) {
+          await openFolderById(node.id);
+          const fresh = await fetchSections(node.id);
+          const first = fresh?.[0]?.documents?.[0];
+          if (first) selectDocumentById(first.id);
+          return { status: "success", message: `Opened folder "${node.name}".` };
+        }
+
+        await openFolderById(node.parentFolderId);
+        selectDocumentById(node.docId);
+        return { status: "success", message: `Opened file "${node.name}".` };
+      }
+    },
+  };
+
   return (
     <TooltipProvider>
       <div className="smart-editor-theme flex h-full w-full bg-background">
@@ -324,6 +433,7 @@ const refreshSections = useCallback(
             sectionName={activeSection?.name}
             sectionId={activeSection?.id}
             sectionDocuments={activeSection?.documents}
+            assistantApi={assistantApi}
           />
           <ToolWindow tool={activeTool} onClose={handleToolClose} />
         </div>
