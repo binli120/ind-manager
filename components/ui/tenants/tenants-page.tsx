@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, SearchIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AddTenantDialog } from './add_tenant-dialog';
-import { fetchTenants} from "@/lib/supabase/tenants";
+import { fetchTenants, updateTenantStatus} from "@/lib/supabase/tenants";
 
 export type Tenant = {
   id: string;
@@ -51,13 +51,17 @@ export default function TenantsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleToggleStatus = (tenantId: string) => {
+  const handleToggleStatus = async (tenantId: string) => {
+    const updated = await updateTenantStatus(tenantId, (tenants.find(t => t.id === tenantId)?.status === "active" ? "inactive" : "active"));
+
     setTenants((prevTenants) =>
       prevTenants.map((tenant) =>
         tenant.id === tenantId
           ? {
               ...tenant,
               status: tenant.status === 'active' ? 'inactive' : 'active',
+            ...tenant, 
+            ...updated 
             }
           : tenant
       )
