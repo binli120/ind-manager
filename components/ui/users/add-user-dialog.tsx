@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { User, UserRole } from './users-page';
 import { roleLabels } from './users-page';
 
@@ -42,6 +42,7 @@ export function AddUserDialog({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     phone: '',
     role: '' as UserRole | '',
     company: '',
@@ -52,6 +53,7 @@ export function AddUserDialog({
     if (
       formData.name &&
       formData.email &&
+      formData.password &&
       formData.phone &&
       formData.role &&
       formData.company
@@ -59,17 +61,18 @@ export function AddUserDialog({
       onAdd({
         name: formData.name,
         email: formData.email,
+        password: formData.password,
         phone: formData.phone,
         role: formData.role as UserRole,
         company: formData.company,
       });
-      setFormData({ name: '', email: '', phone: '', role: '', company: '' });
+      setFormData({ name: '', email: '', password: '', phone: '', role: '', company: '' });
       onOpenChange(false);
     }
   };
 
   const handleCancel = () => {
-    setFormData({ name: '', email: '', phone: '', role: '', company: '' });
+    setFormData({ name: '', email: '', password: '', phone: '', role: '', company: '' });
     onOpenChange(false);
   };
 
@@ -92,6 +95,13 @@ export function AddUserDialog({
     'data_manager_biostatistician',
     'document_management_specialist',
   ];
+
+  useEffect(() => {
+    if (open) {
+      const randomPass = crypto.randomUUID().slice(0, 12);
+      setFormData(prev => ({ ...prev, password: randomPass }));
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -127,6 +137,19 @@ export function AddUserDialog({
                   setFormData({ ...formData, email: e.target.value })
                 }
                 placeholder='Enter email address'
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="text"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                placeholder="Enter password"
                 required
               />
             </div>

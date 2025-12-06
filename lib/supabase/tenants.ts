@@ -21,7 +21,9 @@ export async function fetchTenants(): Promise<Tenant[]> {
     contactPhone: row.contact_number?.toString() ?? "",
     status: row.status,
   }));
-}export async function updateTenantStatus(id: string, status: string) {
+}
+
+export async function updateTenantStatus(id: string, status: string) {
   const res = await fetch("/api/database", {
     method: "POST",
     body: JSON.stringify({

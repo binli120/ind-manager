@@ -58,9 +58,7 @@ export default function TenantsPage() {
       prevTenants.map((tenant) =>
         tenant.id === tenantId
           ? {
-              ...tenant,
-              status: tenant.status === 'active' ? 'inactive' : 'active',
-            ...tenant, 
+            ...tenant,
             ...updated 
             }
           : tenant
