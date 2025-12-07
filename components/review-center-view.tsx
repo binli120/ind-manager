@@ -299,9 +299,9 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
                 </p>
 
                 <p className="mb-4">
-                  Dose-limiting toxicities are defined as any Grade 4 hematologic toxicity lasting >7 days, Grade 3 
+                  Dose-limiting toxicities are defined as any Grade 4 hematologic toxicity lasting &gt;7 days, Grade 3 
                   thrombocytopenia with bleeding, Grade 3 or 4 non-hematologic toxicity (excluding nausea/vomiting responsive 
-                  to standard care), or any toxicity requiring dose delay >14 days during Cycle 1. The MTD is defined as the 
+                  to standard care), or any toxicity requiring dose delay &gt;14 days during Cycle 1. The MTD is defined as the 
                   highest dose level at which ≤1 of 6 patients experiences a DLT.
                 </p>
 
