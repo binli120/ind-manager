@@ -43,6 +43,8 @@ import {
   Target,
 } from "lucide-react";
 import { ProjectForm } from "./ui/projects/project-form";
+import { getDefaultProjectData } from "@/lib/metadata/projects";
+import { createClient } from "@/lib/supabase/client";
 
 //IM-61: Add status info
 const statusOptions = [
@@ -121,6 +123,8 @@ export function ProjectsView() {
   const { teams } = useAppSelector((state) => state.teams);
   const { selectedTeamId } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
+  const isFilynAdmin = user?.email?.toLowerCase().endsWith("@filynai.com");
+  const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>([]);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -135,6 +139,28 @@ export function ProjectsView() {
       dispatch(fetchProjects(selectedTeamId));
     }
   }, [dispatch, selectedTeamId]);
+
+  // IM-29: Load tenants for admins to pick
+  useEffect(() => {
+    const loadTenants = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("tenants")
+          .select("id, name")
+          .order("name", { ascending: true });
+        if (error) throw error;
+        setTenants((data || []).map((t) => ({ id: t.id, name: t.name })));
+      } catch (err) {
+        console.warn("Failed to load tenants", err);
+      }
+    };
+    if (isFilynAdmin) {
+      loadTenants();
+    } else {
+      setTenants([]);
+    }
+  }, [isFilynAdmin]);
 
   
 
@@ -172,7 +198,9 @@ export function ProjectsView() {
   };
 
   const handleCreateProject = (data: ProjectCreation) => {
-    dispatch(createProject(data));
+    const tenantid = data.tenantid ?? user?.tenantId;
+    const team_id = data.team_id ?? selectedTeamId ?? "";
+    dispatch(createProject({ ...data, tenantid, team_id }));
     setShowCreateDialog(false);
   };
 
@@ -570,16 +598,25 @@ export function ProjectsView() {
       </div>
       {showCreateDialog && (
         <ProjectForm
-          teams={teams}
+          teams={teams.map(({ id, name }) => ({ id, name }))}
+          tenants={tenants}
+          initialData={{
+            ...getDefaultProjectData(),
+            tenantid: user?.tenantId ?? "",
+            team_id: selectedTeamId ?? "",
+          }}
+          isFilynAdmin={!!isFilynAdmin}
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateDialog(false)}
         />
       )}
       {showEditDialog && editProject && (
         <ProjectForm
-          teams={teams}
+          teams={teams.map(({ id, name }) => ({ id, name }))}
+          tenants={tenants}
           initialData={editProject}
           isEditing
+          isFilynAdmin={!!isFilynAdmin}
           onSubmit={handleEditProject}
           onCancel={() => setShowEditDialog(false)}
         />

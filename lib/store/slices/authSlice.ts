@@ -10,6 +10,7 @@ import { auth_text } from "@/utils/constants";
 export interface User {
   id: string;
   email: string;
+  tenantId?: string; //IM-29 add tenantId
   name?: string | null;
   avatar?: string | null;
   role?: string | null;
@@ -67,6 +68,7 @@ export const loginUser = createAsyncThunk(
         const user: User = {
           id: data.user.id,
           email: data.user.email!,
+          tenantId: profile?.tenantid, //IM-29: add tenantId
           name: profile?.name || data.user.user_metadata?.name,
           avatar: profile?.avatar_url,
           // role: profile?.role || "user",
@@ -175,6 +177,7 @@ export const getCurrentUser = createAsyncThunk(
         const userData: User = {
           id: user.id,
           email: user.email!,
+          tenantId: user.tenantid,
           name: profile?.name || user.user_metadata?.name,
           avatar: profile?.avatar_url,
           // role: profile?.role || "user",
