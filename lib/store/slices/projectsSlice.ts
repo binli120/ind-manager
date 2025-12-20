@@ -41,6 +41,7 @@ export interface Project {
   drug: string;
   targetDate: string;
   teamId: string;
+  tenantId: string; //IM-29 add tenantId
   ownerId: string;
   teamSize: number;
   teamMembers: ProjectMember[];
@@ -102,12 +103,12 @@ const initialState: ProjectsState = {
 };
 
 // MOCK: Remove mock mode when Supabase projects are live.
-const useMockProjects = true;
+const useMockProjects = false;
 const MOCK_TEAM_ID = "demo-team"
 // Async thunks
 export const fetchProjects = createAsyncThunk(
   "projects/fetchProjects",
-  async (teamId: string | null, { rejectWithValue }) => {
+  async (teamId: string | null, { rejectWithValue, getState }) => {
     try {
       // MOCK: Remove mock branch once Supabase data is wired up.
       if (useMockProjects && teamId === MOCK_TEAM_ID) {
@@ -132,6 +133,12 @@ export const fetchProjects = createAsyncThunk(
 
       const supabase = createClient();
 
+      const state = getState() as { 
+        auth: { user: { email?: string; tenantId?: string } | null };
+      };
+      const userTenantId = state.auth.user?.tenantId;
+      const isFilynAdmin = state.auth.user?.email?.toLowerCase().endsWith("@filynai.com");
+
       let query = supabase.from("projects").select(`
           *,
           teams (
@@ -154,6 +161,12 @@ export const fetchProjects = createAsyncThunk(
       if (teamId) {
         query = query.eq("team_id", teamId);
       }
+
+      if (!isFilynAdmin) {
+        if (!userTenantId) throw new Error("No tenant for user");
+        query = query.eq("tenantid", userTenantId);
+      }
+      
 
       const { data: projects, error } = await query.order("updated_at", {
         ascending: false,
@@ -220,11 +233,17 @@ export const fetchProjects = createAsyncThunk(
 
 export const fetchProjectDetails = createAsyncThunk(
   "projects/fetchProjectDetails",
-  async (projectId: string, { rejectWithValue }) => {
+  async (projectId: string, { rejectWithValue, getState }) => {
     try {
       const supabase = createClient();
+      //IM-29
+      const state = getState() as {
+        auth: { user: { email?: string; tenantId?: string } | null };
+      };
+      const tenantId = state.auth.user?.tenantId;
+      const isFilynAdmin = state.auth.user?.email?.toLowerCase().endsWith("@filynai.com");
 
-      const { data: project, error } = await supabase
+      let query = supabase
         .from("projects")
         .select(
           `
@@ -247,9 +266,11 @@ export const fetchProjectDetails = createAsyncThunk(
           )
         `,
         )
-        .eq("id", projectId)
-        .single();
+        .eq("id", projectId);
 
+      if (!isFilynAdmin && tenantId) query = query.eq("tenantid", tenantId);
+
+      const { data: project, error } = await query.single();
       if (error) throw error;
 
       const members: ProjectMember[] =
@@ -314,19 +335,24 @@ export const createProject = createAsyncThunk(
     try {
       const supabase = createClient();
       const state = getState() as {
-        auth: { user: { id: string } | null };
+        auth: { user: { id: string; email?: string; tenantId?: string } | null };
         teams: { selectedTeamId: string | null };
       };
       const userId = state.auth.user?.id;
       const teamId = state.teams.selectedTeamId;
+      const tenantId = state.auth.user?.tenantId;
+      const isFilynAdmin = state.auth.user?.email?.toLowerCase().endsWith("@filynai.com");
 
       if (!userId) throw new Error("User not authenticated");
       if (!teamId) throw new Error("No team selected");
       if (!projectData.ind_title) throw new Error("Project title required");
 
+      const projectTenantId = projectData.tenantid ?? tenantId;
+      if (!projectTenantId && !isFilynAdmin) throw new Error("Tenant required");
+
       const { data: newProject, error } = await supabase
         .from("projects")
-        .insert({ ...projectData, project_creator_id: userId, team_id: teamId })
+        .insert({ ...projectData, tenantid: projectTenantId, project_creator_id: userId, team_id: teamId })
         .select()
         .single();
 
@@ -674,6 +700,7 @@ const dbToClientProject = (
   return {
     ...project,
     description: project.description ?? "",
+    tenantId: project.tenantid ?? "", //IM-29 add tenantid from project
     teamId: project.team_id,
     title: project.ind_title,
     code: project.ind_number ?? "",

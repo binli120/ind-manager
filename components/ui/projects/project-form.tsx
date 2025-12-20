@@ -33,17 +33,21 @@ import { useState } from "react";
 interface ProjectFormProps {
   initialData?: ProjectCreation;
   teams: Array<{ id: string; name: string }>;
+  tenants?: Array<{ id: string; name: string }>;
   onSubmit: (data: ProjectCreation) => void;
   onCancel: () => void;
   isEditing?: boolean;
+  isFilynAdmin?: boolean; // allow tenant entry for filyn admins
 }
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({
   initialData,
   teams,
+  tenants = [],
   onSubmit,
   onCancel,
   isEditing = false,
+  isFilynAdmin = false,
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [projectData, setProjectData] = useState<ProjectCreation>(
@@ -147,6 +151,35 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                   </SelectContent>
                 </Select>
               </div>
+              {isFilynAdmin && (
+                <div>
+                  <Label htmlFor="tenantid">Tenant (admin only)</Label>
+                  {tenants.length ? (
+                    <Select
+                      value={(projectData.tenantid as string) || ""}
+                      onValueChange={(value) => updateProjectData("tenantid", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select tenant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tenants.map((tenant) => (
+                          <SelectItem key={tenant.id} value={tenant.id}>
+                            {tenant.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="tenantid"
+                      value={(projectData.tenantid as string) || ""}
+                      onChange={(e) => updateProjectData("tenantid", e.target.value)}
+                      placeholder="Tenant UUID"
+                    />
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );

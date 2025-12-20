@@ -119,6 +119,7 @@ export const validateProjectStep = (
 // Default project form data
 export const getDefaultProjectData = () =>
   ({
+    tenantid: "", // IM-29 add tenant field
     team_id: "",
     ind_title: "",
     drug_name: "",
