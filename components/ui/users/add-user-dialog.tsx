@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
-import type { User, UserRole } from './users-page';
+import type { User, UserPrivilege, UserRole } from './users-page';
 import { roleLabels } from './users-page';
 
 type AddUserDialogProps = {
@@ -31,6 +31,7 @@ type AddUserDialogProps = {
   onOpenChange: (open: boolean) => void;
   onAdd: (user: Omit<User, 'id' | 'status'>) => void;
   companies: string[];
+  currentUserPrivilege: UserPrivilege;
 };
 
 export function AddUserDialog({
@@ -38,6 +39,7 @@ export function AddUserDialog({
   onOpenChange,
   onAdd,
   companies,
+  currentUserPrivilege,
 }: AddUserDialogProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -45,6 +47,7 @@ export function AddUserDialog({
     password: '',
     phone: '',
     role: '' as UserRole | '',
+    privilege: '' as UserPrivilege | '',
     company: '',
   });
 
@@ -56,6 +59,7 @@ export function AddUserDialog({
       formData.password &&
       formData.phone &&
       formData.role &&
+      formData.privilege &&
       formData.company
     ) {
       onAdd({
@@ -64,15 +68,16 @@ export function AddUserDialog({
         password: formData.password,
         phone: formData.phone,
         role: formData.role as UserRole,
+        privilege: formData.privilege as UserPrivilege,
         company: formData.company,
       });
-      setFormData({ name: '', email: '', password: '', phone: '', role: '', company: '' });
+      setFormData({ name: '', email: '', password: '', phone: '', role: '', privilege: '', company: '' });
       onOpenChange(false);
     }
   };
 
   const handleCancel = () => {
-    setFormData({ name: '', email: '', password: '', phone: '', role: '', company: '' });
+    setFormData({ name: '', email: '', password: '', phone: '', role: '', privilege: '', company: '' });
     onOpenChange(false);
   };
 
@@ -221,6 +226,28 @@ export function AddUserDialog({
                         {roleLabels[role]}
                       </SelectItem>
                     ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="privilege">Privilege</Label>
+              <Select
+                value={formData.privilege}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, privilege: value as UserPrivilege })
+                }
+              >
+                <SelectTrigger id="privilege">
+                  <SelectValue placeholder="Select a privilege" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {currentUserPrivilege === 'system_admin' && (
+                      <SelectItem value="system_admin">System Admin</SelectItem>
+                    )}
+                    <SelectItem value="user_manager">User Manager</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

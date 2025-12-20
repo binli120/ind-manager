@@ -20,12 +20,14 @@ import {
   UserIcon,
   Users,
 } from 'lucide-react';
+import type { UserPrivilege } from '@/components/ui/users/users-page';
 //MOCK project counts sidebar
 import { useAppSelector } from '@/lib/store';
 //END MOCK
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  currentUserPrivilege: UserPrivilege | '';
   currentView:
     | 'workspace'
     | 'projects'
@@ -61,6 +63,7 @@ interface SidebarProps {
 export function Sidebar({
   isOpen,
   onToggle,
+  currentUserPrivilege,
   currentView,
   onViewChange,
 }: SidebarProps) {
@@ -130,6 +133,7 @@ export function Sidebar({
       label: 'tenants',
       active: currentView === 'tenants',
       onClick: () => onViewChange('tenants'),
+      allowedRoles: ['system_admin'],
     },
     {
       title: 'Users',
@@ -137,8 +141,13 @@ export function Sidebar({
       label: 'users',
       active: currentView === 'users',
       onClick: () => onViewChange('users'),
+      allowedRoles: ['system_admin', 'user_manager'],
     },
   ];
+
+  const filteredAdminItems = adminItems.filter((item) =>
+    item.allowedRoles.includes(currentUserPrivilege as string)
+  );
 
   const analysisItems = [
     {
@@ -251,33 +260,35 @@ export function Sidebar({
         </div>
 
         {/* Admin Management */}
-        <div className='p-4'>
-          {isOpen && (
-            <h3 className='text-xs font-semibold text-muted uppercase tracking-wider mb-3'>
-              Admin Space
-            </h3>
-          )}
-          <nav className='space-y-1'>
-            {adminItems.map((item) => (
-              <Button
-                key={item.label}
-                variant={item.active ? 'secondary' : 'ghost'}
-                onClick={item.onClick}
-                className={cn(
-                  'w-full justify-start gap-3 h-10',
-                  !isOpen && 'justify-center px-2',
-                  item.active &&
-                    'bg-sidebar-primary text-sidebar-primary-foreground'
-                )}
-              >
-                <item.icon className='w-4 h-4 flex-shrink-0' />
-                {isOpen && (
-                  <span className='flex-1 text-left'>{item.label}</span>
-                )}
-              </Button>
-            ))}
-          </nav>
-        </div>
+        {filteredAdminItems.length > 0 && (
+          <div className='p-4'>
+            {isOpen && (
+              <h3 className='text-xs font-semibold text-muted uppercase tracking-wider mb-3'>
+                Admin Space
+              </h3>
+            )}
+            <nav className='space-y-1'>
+              {filteredAdminItems.map((item) => (
+                <Button
+                  key={item.label}
+                  variant={item.active ? 'secondary' : 'ghost'}
+                  onClick={item.onClick}
+                  className={cn(
+                    'w-full justify-start gap-3 h-10',
+                    !isOpen && 'justify-center px-2',
+                    item.active &&
+                      'bg-sidebar-primary text-sidebar-primary-foreground'
+                  )}
+                >
+                  <item.icon className='w-4 h-4 flex-shrink-0' />
+                  {isOpen && (
+                    <span className='flex-1 text-left'>{item.label}</span>
+                  )}
+                </Button>
+              ))}
+            </nav>
+          </div>
+        )}
 
         {/* Submission Management */}
         <div className='p-4'>

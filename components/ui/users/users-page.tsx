@@ -15,10 +15,11 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, SearchIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AddUserDialog } from './add-user-dialog';
-import { fetchUsers, updateUserStatus, createUser } from "@/lib/supabase/users";
+import { fetchUsers, updateUserStatus, createUser, fetchCurrentUser } from "@/lib/supabase/users";
 import { fetchTenants } from "@/lib/supabase/tenants";
 import { authServices } from "@/app/api/auth/auth-services";
 
+//These should be made more robust in the future.
 export type UserRole =
   | 'reg_affairs_manager_lead'
   | 'regulatory_writer_medical_writer'
@@ -32,6 +33,8 @@ export type UserRole =
   | 'data_manager_biostatistician'
   | 'document_management_specialist';
 
+export type UserPrivilege = 'system_admin' | 'user_manager' | 'user';
+
 export type User = {
   id: string;
   name: string;
@@ -40,6 +43,11 @@ export type User = {
   role: UserRole;
   company: string;
   status: 'active' | 'inactive' | 'pending';
+};
+
+export type Tenant = {
+  id: string;
+  name: string;
 };
 
 export const roleLabels: Record<UserRole, string> = {
@@ -56,11 +64,6 @@ export const roleLabels: Record<UserRole, string> = {
   document_management_specialist: 'Document Management Specialist',
 };
 
-type Tenant = {
-  id: string;
-  name: string;
-};
-
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,16 +73,46 @@ export default function UsersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [companies, setCompanies] = useState<string[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<UserPrivilege>('');
 
   useEffect(() => {
-    fetchUsers().then(setUsers);
-
-    //To fill companies
-    fetchTenants().then((data) => {
-      setTenants(data);
-      setCompanies(data.map((t) => t.name));
-    });
+    initializeUserData();
   }, []);
+
+  async function initializeUserData() {
+      //Get the currently logged in user ID
+      const authData = await authServices.getUser();
+      const authUser = authData.data?.user;
+      if (!authUser) return;
+      const privilege =(authUser?.user_metadata?.privilege as UserPrivilege) ?? 'system_admin';
+      setCurrentUserPrivilege(privilege);
+
+      //Get the logged in user's tenantid and fetch 
+      const currentUserDbRecord = await fetchCurrentUser(authUser.id);
+      if (privilege === 'system_admin') {
+        fetchUsers().then(setUsers);
+      } else if (currentUserDbRecord?.tenantid) {
+        fetchUsers(currentUserDbRecord.tenantid).then(setUsers);
+      } else {
+        setUsers([]);
+      }
+
+      //To fill companies
+      if (privilege === 'system_admin') {
+        fetchTenants().then((data) => {
+          setTenants(data);
+          setCompanies(data.map((t) => t.name));
+        });
+      } else if (currentUserDbRecord?.tenantid) {
+        fetchTenants(currentUserDbRecord.tenantid).then((data) => {
+          setTenants(data);
+          setCompanies(data.map((t) => t.name));
+        });
+      } else {
+        setTenants([]);
+        setCompanies([]);
+      }
+    }
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -88,8 +121,7 @@ export default function UsersPage() {
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       roleLabels[user.role].toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === 'all' || user.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -104,7 +136,7 @@ export default function UsersPage() {
     setUsers((prevUsers) =>
       prevUsers.map((user) =>
         user.id === userId
-          ? updated
+          ? { ...updated }
           : user
       )
     );
@@ -116,31 +148,29 @@ export default function UsersPage() {
     password: string;
     phone: string;
     role: UserRole;
+    privilege: UserPrivilege;
     company: string;
   }) => {
 
-    const { error: authError } = await authServices.signUp(
+    const { data: signUpData, error: authError } = await authServices.signUp(
       formUser.email,
       formUser.password,
-      { name: formUser.name }
+      {
+        name: formUser.name,
+        privilege: formUser.privilege,
+      }
     );
-    
-    if (authError) {
-      console.error("signup failed:", authError);
+
+    if (authError || !signUpData?.user) {
+      console.error("signup failed or no user returned:", authError);
       return;
     }
 
-    const { data: authUserData } = await authServices.getUser();
-    const authUser = authUserData?.user;
-    if (!authUser) {
-      console.error("Could not retrieve created auth user");
-      return;
-    }
-
+    const authUser = signUpData.user;
     const selectedTenant = tenants.find(t => t.name === formUser.company);
     if (!selectedTenant) {
       console.error("Selected company not found in tenants list");
-      return; 
+      return;
     }
 
     const user = await createUser({
@@ -152,6 +182,8 @@ export default function UsersPage() {
       tenantId: selectedTenant.id,
     });
     setUsers((prevUsers) => [...prevUsers, user]);
+
+    await authServices.resetPassword(formUser.email);
   };
 
   return (
@@ -302,6 +334,7 @@ export default function UsersPage() {
         onOpenChange={setIsAddDialogOpen}
         onAdd={handleAddUser}
         companies={companies}
+        currentUserPrivilege={currentUserPrivilege}
       />
     </div>
   );

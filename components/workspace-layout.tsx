@@ -21,13 +21,29 @@ import {
   setSidebarOpen,
 } from '@/lib/store/slices/uiSlice';
 import TenantsPage from './ui/tenants/tenants-page';
-import UsersPage from './ui/users/users-page';
+import UsersPage, { UserPrivilege } from './ui/users/users-page';
+import { useEffect, useState } from 'react'; 
+import { authServices } from "@/app/api/auth/auth-services";
 
 export function WorkspaceLayout() {
   const dispatch = useAppDispatch();
   const { sidebarOpen, commentsPanelOpen, currentView } = useAppSelector(
     (state) => state.ui
   );
+
+  //Use user privileges to determine what the user can see
+  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<UserPrivilege | ''>('');
+  useEffect(() => {
+    async function getUserPrivilege() {
+      const authData = await authServices.getUser();
+      const authUser = authData.data?.user;
+      if (authUser) {
+        const privilege = (authUser?.user_metadata?.privilege as UserPrivilege) ?? 'user';
+        setCurrentUserPrivilege(privilege);
+      }
+    }
+    getUserPrivilege();
+  }, []);
 
   const handleToggleSidebar = () => {
     dispatch(setSidebarOpen(!sidebarOpen));
@@ -48,6 +64,7 @@ export function WorkspaceLayout() {
         onToggle={handleToggleSidebar}
         currentView={currentView}
         onViewChange={handleViewChange}
+        currentUserPrivilege={currentUserPrivilege}
       />
 
       <div className='flex-1 flex flex-col min-w-0'>

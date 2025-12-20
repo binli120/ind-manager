@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, SearchIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AddTenantDialog } from './add_tenant-dialog';
-import { fetchTenants, updateTenantStatus} from "@/lib/supabase/tenants";
+import { fetchTenants, updateTenantStatus, createTenant } from "@/lib/supabase/tenants";
 
 export type Tenant = {
   id: string;
@@ -66,13 +66,9 @@ export default function TenantsPage() {
     );
   };
 
-  const handleAddTenant = (newTenant: Omit<Tenant, 'id' | 'status'>) => {
-    const tenant: Tenant = {
-      ...newTenant,
-      id: Math.random().toString(36).substr(2, 9),
-      status: 'pending',
-    };
-    setTenants((prevTenants) => [...prevTenants, tenant]);
+  const handleAddTenant = async (newTenant: Tenant) => {
+    const tenant = await createTenant(newTenant);
+    setTenants(prev => [...prev, tenant]);
   };
 
   return (

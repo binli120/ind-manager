@@ -1,51 +1,52 @@
 import { User, UserRole } from "@/components/ui/users/users-page";
 
-export async function fetchUsers(): Promise<User[]> {
-    const res = await fetch("/api/database", {
-        method: "POST",
-        body: JSON.stringify({
-        table: "users",
-        action: "select",
-        data: { select: "*" },
-        }),
-    });
+export async function fetchUsers(tenantId?: string): Promise<User[]> {
+  const res = await fetch("/api/database", {
+    method: "POST",
+    body: JSON.stringify({
+      table: "users",
+      action: "select",
+      data: { select: "*, tenants(name)" },
+      ...(tenantId ? { filters: { tenantid: tenantId } } : {}),
+    }),
+  });
 
-    const { data } = await res.json();
+  const { data } = await res.json();
 
-    return data.map((row: any) => ({
-        id: row.id,
-        name: row.name,
-        email: row.email,
-        phone: row.phone,
-        role: row.role,
-        company: row.company,
-        status: row.status,
-    }));
-    }
+  return data.map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    role: row.role,
+    company: row.tenants?.name ?? "",
+    status: row.status,
+  }));
+}
 
-    export async function updateUserStatus(id: string, status: string) {
-    const res = await fetch("/api/database", {
-        method: "POST",
-        body: JSON.stringify({
-        table: "users",
-        action: "update",
-        data: { values: { status } },
-        filters: { id },
-        }),
-    });
+export async function updateUserStatus(id: string, status: string) {
+  const res = await fetch("/api/database", {
+    method: "POST",
+    body: JSON.stringify({
+      table: "users",
+      action: "update",
+      data: { values: { status }, select: "*, tenants(name)" },
+      filters: { id },
+    }),
+  });
 
-    const { data } = await res.json();
-    const row = data[0];
+  const { data } = await res.json();
+  const row = data[0];
 
-    return {
-        id: row.id,
-        name: row.name,
-        email: row.email,
-        phone: row.phone,
-        role: row.role,
-        company: row.company,
-        status: row.status,
-    };
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    role: row.role,
+    company: row.tenants?.name ?? "",
+    status: row.status,
+  };
 }
 
 export async function createUser(user: {
@@ -71,12 +72,14 @@ export async function createUser(user: {
           tenantid: user.tenantId,
           status: "pending",
         },
+        select: "*, tenants(name)"
       },
     }),
   });
 
   const jsonResponse = await res.json();
-  const { data, error} = jsonResponse;
+  console.log(jsonResponse)
+  const { data, error } = jsonResponse;
   const row = data[0];
 
   return {
@@ -85,7 +88,21 @@ export async function createUser(user: {
     email: row.email,
     phone: row.phone,
     role: row.role,
-    company: row.company,
+    company: row.tenants?.name ?? "",
     status: row.status,
   };
+}
+
+export async function fetchCurrentUser(id: string) {
+  const res = await fetch("/api/database", {
+    method: "POST",
+    body: JSON.stringify({
+      table: "users",
+      action: "select",
+      data: { select: "*" },
+      filters: { id },
+    }),
+  });
+  const { data } = await res.json();
+  return data?.[0] || null;
 }
