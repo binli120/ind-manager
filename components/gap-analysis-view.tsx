@@ -11,7 +11,6 @@ interface GapAnalysisViewProps {
     view:
       | "workspace"
       | "projects"
-      | "teams"
       | "calendar"
       | "submission"
       | "post-submission"

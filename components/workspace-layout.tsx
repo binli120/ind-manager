@@ -13,7 +13,6 @@ import { ReviewCenterView } from '@/components/review-center-view';
 import { Sidebar } from '@/components/sidebar';
 import { SmartEditorView } from '@/components/smart-editor-view';
 import { SubmissionView } from '@/components/submission-view';
-import { TeamsView } from '@/components/teams-view';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 import {
   setCommentsPanelOpen,
@@ -60,8 +59,6 @@ export function WorkspaceLayout() {
         <div className='flex-1 flex min-h-0'>
           {currentView === 'projects' ? (
             <ProjectsView />
-          ) : currentView === 'teams' ? (
-            <TeamsView />
           ) : currentView === 'calendar' ? (
             <CalendarView />
           ) : currentView === 'submission' ? (

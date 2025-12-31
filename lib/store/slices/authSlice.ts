@@ -14,7 +14,6 @@ export interface User {
   avatar?: string | null;
   role?: string | null;
   permissions?: string[] | null;
-  teamId?: string;
   createdAt: string;
   lastLoginAt?: string;
 }

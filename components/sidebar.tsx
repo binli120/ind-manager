@@ -29,7 +29,6 @@ interface SidebarProps {
   currentView:
     | 'workspace'
     | 'projects'
-    | 'teams'
     | 'calendar'
     | 'submission'
     | 'post-submission'
@@ -44,7 +43,6 @@ interface SidebarProps {
     view:
       | 'workspace'
       | 'projects'
-      | 'teams'
       | 'calendar'
       | 'submission'
       | 'post-submission'
@@ -85,13 +83,6 @@ export function Sidebar({
       badge: projectCount > 0 ? projectCount.toString() : null,
       //END MOCK
       onClick: () => onViewChange('projects'),
-    },
-    {
-      icon: Users,
-      label: 'Teams',
-      active: currentView === 'teams',
-      badge: null,
-      onClick: () => onViewChange('teams'),
     },
     {
       icon: Calendar,

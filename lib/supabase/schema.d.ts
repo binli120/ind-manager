@@ -143,19 +143,16 @@ export type Database = {
         Row: {
           document_id: string
           role: string
-          team_id: string
           user_id: string
         }
         Insert: {
           document_id: string
           role: string
-          team_id: string
           user_id: string
         }
         Update: {
           document_id?: string
           role?: string
-          team_id?: string
           user_id?: string
         }
         Relationships: [
@@ -164,13 +161,6 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "ectd_documents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "document_roles_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
           {
@@ -227,7 +217,6 @@ export type Database = {
           owner_id: string | null
           project_id: string | null
           status: string | null
-          team_id: string | null
           tiptap_doc_id: string | null
           version: number
           versioned_at: string | null
@@ -244,7 +233,6 @@ export type Database = {
           owner_id?: string | null
           project_id?: string | null
           status?: string | null
-          team_id?: string | null
           tiptap_doc_id?: string | null
           version?: number
           versioned_at?: string | null
@@ -261,7 +249,6 @@ export type Database = {
           owner_id?: string | null
           project_id?: string | null
           status?: string | null
-          team_id?: string | null
           tiptap_doc_id?: string | null
           version?: number
           versioned_at?: string | null
@@ -295,13 +282,6 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "ectd_document_versions_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
         ]
       }
       ectd_documents: {
@@ -316,7 +296,6 @@ export type Database = {
           owner_id: string | null
           project_id: string
           status: string | null
-          team_id: string
           template_id: string | null
           tiptap_doc_id: string | null
           version: number | null
@@ -332,7 +311,6 @@ export type Database = {
           owner_id?: string | null
           project_id: string
           status?: string | null
-          team_id: string
           template_id?: string | null
           tiptap_doc_id?: string | null
           version?: number | null
@@ -348,7 +326,6 @@ export type Database = {
           owner_id?: string | null
           project_id?: string
           status?: string | null
-          team_id?: string
           template_id?: string | null
           tiptap_doc_id?: string | null
           version?: number | null
@@ -373,13 +350,6 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ectd_documents_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -531,7 +501,6 @@ export type Database = {
           sponsor_name: string
           status: string
           target_ind_submission_date: string
-          team_id: string
           updated_at: string
         }
         Insert: {
@@ -559,7 +528,6 @@ export type Database = {
           sponsor_name: string
           status?: string
           target_ind_submission_date: string
-          team_id: string
           updated_at?: string
         }
         Update: {
@@ -587,7 +555,6 @@ export type Database = {
           sponsor_name?: string
           status?: string
           target_ind_submission_date?: string
-          team_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -631,13 +598,6 @@ export type Database = {
             columns: ["regulatory_owner"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "projects_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -1021,162 +981,6 @@ export type Database = {
         }
         Relationships: []
       }
-      team_invites: {
-        Row: {
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          invited_at: string
-          invited_by: string
-          role: string
-          status: string
-          team_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          expires_at: string
-          id?: string
-          invited_at?: string
-          invited_by: string
-          role?: string
-          status?: string
-          team_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          invited_at?: string
-          invited_by?: string
-          role?: string
-          status?: string
-          team_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_invites_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      team_settings: {
-        Row: {
-          allow_invites: boolean
-          created_at: string
-          default_role: string
-          is_public: boolean
-          team_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          allow_invites?: boolean
-          created_at?: string
-          default_role?: string
-          is_public?: boolean
-          team_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          allow_invites?: boolean
-          created_at?: string
-          default_role?: string
-          is_public?: boolean
-          team_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_settings_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: true
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      teams: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          description: string | null
-          id: string
-          team_creator_id: string
-          team_name: string
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          team_creator_id: string
-          team_name: string
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          team_creator_id?: string
-          team_name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "teams_team_creator_id_fkey"
-            columns: ["team_creator_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_teams: {
-        Row: {
-          joined_at: string
-          role: string
-          team_id: string
-          user_id: string
-        }
-        Insert: {
-          joined_at?: string
-          role?: string
-          team_id: string
-          user_id: string
-        }
-        Update: {
-          joined_at?: string
-          role?: string
-          team_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_teams_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_teams_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       users: {
         Row: {
           avatar_url: string | null
@@ -1244,14 +1048,6 @@ export type Database = {
       hnswhandler: {
         Args: { "": unknown }
         Returns: unknown
-      }
-      is_team_creator: {
-        Args: { p_team_id: string; p_user?: string }
-        Returns: boolean
-      }
-      is_team_member: {
-        Args: { p_team_id: string; p_user?: string }
-        Returns: boolean
       }
       ivfflat_bit_support: {
         Args: { "": unknown }

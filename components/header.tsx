@@ -17,14 +17,12 @@ import { Bell, ChevronDown, Menu, MessageSquare, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useProject } from '@/hooks/useProject';
-import { useTeam } from '@/hooks/useTeam';
 import { useAppDispatch } from '@/lib/store';
 import { fetchUserDocuments } from '@/lib/store/slices/documentsSlice';
 import {
   fetchProjectDetails,
   fetchProjects,
 } from '@/lib/store/slices/projectsSlice';
-import { fetchUserTeams } from '@/lib/store/slices/teamsSlice';
 
 //correct identity deployment vercel
 
@@ -34,7 +32,6 @@ interface HeaderProps {
   currentView:
     | 'workspace'
     | 'projects'
-    | 'teams'
     | 'calendar'
     | 'submission'
     | 'post-submission'
@@ -53,7 +50,6 @@ export function Header({
   const dispatch = useAppDispatch();
   const { projects, currentProject, selectedProjectId, setProject } =
     useProject();
-  const { teams, currentTeam, selectedTeamId, setTeam } = useTeam();
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,31 +74,6 @@ export function Header({
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch user teams when user loads
-  useEffect(() => {
-    if (user?.id) {
-      dispatch(fetchUserTeams(user.id));
-    }
-  }, [dispatch, user?.id]);
-
-  // 2) If teams are loaded and we have no selection (not hydrated or invalid), pick the first
-  useEffect(() => {
-    if (!teams.length) return;
-    if (!selectedTeamId) {
-      setTeam(teams[0].id);
-    } else if (!teams.some((t) => t.id === selectedTeamId)) {
-      // saved id no longer valid in this list -> fallback to first
-      setTeam(teams[0].id);
-    }
-  }, [teams, selectedTeamId, setTeam]);
-
-  // 3) When team changes, fetch its projects
-  useEffect(() => {
-    if (selectedTeamId) {
-      dispatch(fetchProjects(selectedTeamId));
-    }
-  }, [dispatch, selectedTeamId]);
-
   // 4) When projects arrive and no project selected (not hydrated or invalid), pick the first
   useEffect(() => {
     if (!projects.length) return;
@@ -126,8 +97,6 @@ export function Header({
     switch (currentView) {
       case 'projects':
         return 'Projects';
-      case 'teams':
-        return 'Teams';
       case 'calendar':
         return 'Calendar';
       case 'submission':
@@ -169,28 +138,6 @@ export function Header({
 
         {currentView === 'workspace' && (
           <div className='flex items-center gap-3'>
-            {/* TEAM SELECT DROPDOWN */}
-            <Select
-              value={selectedTeamId ?? ''}
-              onValueChange={(teamId) => setTeam(teamId)}
-            >
-              <SelectTrigger className='w-48'>
-                <SelectValue placeholder='Select team' />
-              </SelectTrigger>
-              <SelectContent>
-                {teams.map((team) => (
-                  <SelectItem key={team.id} value={team.id}>
-                    {team.name}
-                  </SelectItem>
-                ))}
-                {teams.length === 0 && (
-                  <div className='px-3 py-2 text-xs text-muted-foreground'>
-                    No teams available
-                  </div>
-                )}
-              </SelectContent>
-            </Select>
-
             {/* PROJECT SELECT DROPDOWN */}
             <Select
               value={selectedProjectId || ''}
