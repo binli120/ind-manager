@@ -1,30 +1,106 @@
-# Document Authoring
+# Filynail IND Manager
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+Filynail IND Manager is a Next.js app for managing IND submissions with a
+workspace UI for projects, teams, documents, reviews, and gap analysis.
+It uses Supabase for auth and data access and includes a document authoring
+experience built on TipTap.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/blee-2267s-projects/v0-document-authoring)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/I6HmnWCR4Z7)
+## Features
+- Workspace views for projects, teams, calendar, submissions, review center, and gap analysis.
+- Document authoring with section-based editing, comments, and PDF upload.
+- IND submission and post-submission tracking views.
+- Tenant and user admin screens (currently local state UI scaffolding).
+- Supabase-backed auth and data access with middleware + client guard.
+- Mock data mode for demo teams/projects (see "Mock data" below).
 
-## Overview
+## Architecture
+- Diagram and system notes live in `ARCHITECTURE.md`.
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## Tech stack
+- Next.js App Router, React 18, TypeScript
+- Redux Toolkit for state management
+- Tailwind CSS + shadcn/ui + Radix UI
+- Supabase (Postgres + Auth) with generated types
+- TipTap editor + PDF utilities
+- Vercel Analytics
 
-## Deployment
+## Project structure
+- `app/`: Next.js routes, layouts, and API handlers.
+- `components/`: UI, views, and feature components.
+- `lib/`: data access, Redux store, and shared utilities.
+- `scripts/`: Supabase tooling scripts.
+- `supabase/`: Supabase config (migrations expected in `supabase/migrations`).
+- `mock/`: mock API data (projects).
 
-Your project is live at:
+## Local development
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Create `.env.local` with the required environment variables.
+3. Start the dev server:
+   ```bash
+   npm run dev
+   ```
 
-**[https://vercel.com/blee-2267s-projects/v0-document-authoring](https://vercel.com/blee-2267s-projects/v0-document-authoring)**
+Available scripts:
+- `npm run dev`: start the dev server.
+- `npm run build`: production build.
+- `npm run start`: run the production server.
+- `npm run lint`: run Next.js linting.
 
-## Build your app
+## Environment variables
+Required:
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL.
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon key.
 
-Continue building your app on:
+Optional:
+- `NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL` - override auth redirect URL in dev.
+- `TIPTAP_CONVERSION_APP_ID` - TipTap conversion app ID.
+- `TIPTAP_CONVERSION_SECRET` - TipTap conversion secret.
+- `CLOUDCONVERT_API_KEY` - CloudConvert API key.
+- `TIPTAP_DOCUMENT_SERVER_SECRET_KEY` - TipTap document server secret.
+- `OPENAI_API_KEY` - used by optional AI features.
+- `NEXT_PUBLIC_LOG_LEVEL` - `debug|info|warn|error` (default is `debug` in dev).
 
-**[https://v0.app/chat/projects/I6HmnWCR4Z7](https://v0.app/chat/projects/I6HmnWCR4Z7)**
+Example template: `.env.example`
 
-## How It Works
+## API routes
+- `POST /api/auth` - sign up/sign in/sign out (Supabase).
+- `GET /api/auth` - get current user (Supabase).
+- `GET /api/users` - list users (Supabase).
+- `POST /api/users` - create user (Supabase).
+- `GET/PUT/DELETE /api/users/[id]` - user CRUD (Supabase).
+- `POST /api/database` - generic database proxy (Supabase).
+- `GET /api/health` - Supabase connectivity check.
+- `GET /api/mock/projects` - mock projects data.
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## Mock data
+Projects and teams can run in mock mode. In `lib/store/slices/projectsSlice.ts`
+and `lib/store/slices/teamsSlice.ts`, a `demo-team` is injected and project
+fetching uses `GET /api/mock/projects`. This is intended for UI scaffolding
+until Supabase data is fully wired.
+
+## Supabase tooling
+- Apply migrations:
+  ```bash
+  bash scripts/apply-migration.sh
+  ```
+  Requires the Supabase CLI and migrations in `supabase/migrations`.
+- Generate typed schema:
+  ```bash
+  bash scripts/gen-types.sh
+  ```
+  Requires Supabase CLI and `PROJECT_ID` in `.env.local`.
+
+## Deployment and operations
+- Build: `npm run build`
+- Start: `npm run start`
+- Health check: `GET /api/health`
+- Set the required env vars in your hosting provider (Vercel recommended).
+- For Supabase schema changes, apply migrations before deploy.
+
+## Ops notes
+- Health check endpoint: `GET /api/health`.
+- Auth protection is enforced by `middleware.ts` and `AuthGuard`.
+- Deploys cleanly to Vercel or any Node hosting that supports Next.js.
