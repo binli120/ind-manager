@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { AlertCircle, AlertTriangle, Info } from "lucide-react"
+import { useMemo } from "react"
 
 interface Module {
   id: number
@@ -57,7 +58,12 @@ const generateIssues = (moduleId: number, count: number) => {
 export function IssueDetailDialog({ open, onClose, module }: IssueDetailDialogProps) {
   if (!module) return null
 
-  const issues = generateIssues(module.id, module.issues)
+  const issues = useMemo(
+    () => (open ? generateIssues(module.id, module.issues) : []),
+    [open, module.id, module.issues],
+  )
+
+
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {

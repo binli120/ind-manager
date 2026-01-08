@@ -18,12 +18,12 @@ interface SectionHeatmapProps {
 
 // Generate mock section data
 const generateSectionData = (moduleId: number, sectionCount: number) => {
-  const statuses = ["complete", "warning", "error", "missing"]
+  const statuses = ["complete", "warning", "critical", "missing"]
   return Array.from({ length: sectionCount }, (_, i) => {
     const rand = Math.random()
     let status = "complete"
     if (rand < 0.1) status = "missing"
-    else if (rand < 0.25) status = "error"
+    else if (rand < 0.25) status = "critical"
     else if (rand < 0.4) status = "warning"
 
     return {
@@ -34,7 +34,7 @@ const generateSectionData = (moduleId: number, sectionCount: number) => {
       details:
         status === "missing"
           ? "Required documentation not uploaded"
-          : status === "error"
+          : status === "critical"
             ? "Critical information missing or inconsistent"
             : status === "warning"
               ? "Recommended improvements needed"
@@ -57,7 +57,7 @@ export function SectionHeatmap({ modules }: SectionHeatmapProps) {
         return "bg-success hover:bg-success/80"
       case "warning":
         return "bg-warning hover:bg-warning/80"
-      case "error":
+      case "critical":
         return "bg-error hover:bg-error/80"
       case "missing":
         return "bg-muted hover:bg-muted/80"
