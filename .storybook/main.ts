@@ -1,18 +1,19 @@
-import path from "path"
+// This file has been automatically migrated to valid ESM format by Storybook.
+import { fileURLToPath } from "node:url";
+import path, { dirname } from "path";
 import { createRequire } from "module"
 import type { StorybookConfig } from "@storybook/react-webpack5"
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const require = createRequire(import.meta.url)
 
 const config: StorybookConfig = {
   stories: ["../components/**/*.mdx", "../components/**/*.stories.@(js|jsx|ts|tsx)"],
   staticDirs: ["../public"],
-  addons: [
-    "@storybook/addon-links",
-    "@storybook/addon-essentials",
-    "@storybook/addon-interactions",
-    "@storybook/addon-a11y",
-  ],
+  addons: ["@storybook/addon-links", "@storybook/addon-a11y", "@storybook/addon-docs"],
+
   framework: {
     name: "@storybook/react-webpack5",
     options: {
@@ -21,9 +22,7 @@ const config: StorybookConfig = {
       },
     },
   },
-  docs: {
-    autodocs: "tag",
-  },
+
   webpackFinal: async (webpackConfig) => {
     const config = webpackConfig
     config.resolve = config.resolve || {}
@@ -59,7 +58,7 @@ const config: StorybookConfig = {
     })
 
     return config
-  },
+  }
 }
 
 export default config
