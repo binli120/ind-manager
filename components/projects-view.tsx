@@ -117,8 +117,6 @@ export function ProjectsView() {
   const { projects, viewMode, filters, isLoading } = useAppSelector(
     (state) => state.projects,
   );
-  const { teams } = useAppSelector((state) => state.teams);
-  const { selectedTeamId } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -130,10 +128,9 @@ export function ProjectsView() {
   useEffect(() => setPage(1), [filters]);
 
   useEffect(() => {
-    if (selectedTeamId) {
-      dispatch(fetchProjects(selectedTeamId));
-    }
-  }, [dispatch, selectedTeamId]);
+    void user;
+    dispatch(fetchProjects("demo-team"));
+  }, [dispatch, user]);
 
   
 
@@ -569,18 +566,18 @@ export function ProjectsView() {
       </div>
       {showCreateDialog && (
         <ProjectForm
-          teams={teams}
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateDialog(false)}
+          defaultTeamId="demo-team"
         />
       )}
       {showEditDialog && editProject && (
         <ProjectForm
-          teams={teams}
           initialData={editProject}
           isEditing
           onSubmit={handleEditProject}
           onCancel={() => setShowEditDialog(false)}
+          defaultTeamId="demo-team"
         />
       )}
     </div>

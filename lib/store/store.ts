@@ -1,23 +1,10 @@
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+// Legacy compatibility layer.
+// Prefer importing from `@/lib/store` (this file exists to avoid breaking old imports).
 
-// Slice reducers
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer from '@/lib/store/slices/authSlice';
-import pageReducer from '@/lib/store/slices/pageSlice';
+export { store, type RootState, type AppDispatch, useAppDispatch, useAppSelector } from "./index"
 
-export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    page: pageReducer,
-  },
-});
+import { useAppSelector } from "./index"
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
-
-// Typed hooks
-export const useAppDispatch: () => AppDispatch = useDispatch;
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-export const useAuthUser = () => useAppSelector(s => s.auth.user);
-export const useIsAuthenticated = () => useAppSelector(s => s.auth.isAuthenticated);
-export const useAuthLoading = () => useAppSelector(s => s.auth.loading);
+export const useAuthUser = () => useAppSelector((s) => s.auth.user)
+export const useIsAuthenticated = () => useAppSelector((s) => s.auth.isAuthenticated)
+export const useAuthLoading = () => useAppSelector((s) => s.auth.isLoading)

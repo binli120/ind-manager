@@ -3,7 +3,7 @@ import { act, render, screen } from '@testing-library/react'
 
 const mockDispatch = jest.fn()
 
-jest.mock('@/lib/store/store', () => ({
+jest.mock('@/lib/store', () => ({
   useAppDispatch: () => mockDispatch,
 }))
 

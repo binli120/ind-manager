@@ -16,6 +16,10 @@ const REQUIRED_ENV_VARS = {
 
   // OpenAI (optional)
   OPENAI_API_KEY: 'OpenAI API key (optional)',
+
+  // Session timeout (optional)
+  NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES: 'Session idle timeout in minutes (optional)',
+  NEXT_PUBLIC_SESSION_WARNING_SECONDS: 'Session warning countdown in seconds (optional)',
 } as const;
 
 const OPTIONAL_ENV_VARS = [
@@ -24,6 +28,8 @@ const OPTIONAL_ENV_VARS = [
   'CLOUDCONVERT_API_KEY',
   'TIPTAP_DOCUMENT_SERVER_SECRET_KEY',
   'OPENAI_API_KEY',
+  'NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES',
+  'NEXT_PUBLIC_SESSION_WARNING_SECONDS',
 ];
 
 export interface EnvValidationResult {

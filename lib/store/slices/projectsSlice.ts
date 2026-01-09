@@ -321,14 +321,14 @@ export const createProject = createAsyncThunk(
       const supabase = createClient();
       const state = getState() as {
         auth: { user: { id: string } | null };
-        teams: { selectedTeamId: string | null };
       };
       const userId = state.auth.user?.id;
-      const teamId = state.teams.selectedTeamId;
 
       if (!userId) throw new Error("User not authenticated");
-      if (!teamId) throw new Error("No team selected");
       if (!projectData.ind_title) throw new Error("Project title required");
+
+      const DEFAULT_TEAM_ID = "demo-team";
+      const teamId = projectData.team_id || DEFAULT_TEAM_ID;
 
       const { data: newProject, error } = await supabase
         .from("projects")
@@ -483,9 +483,6 @@ const projectsSlice = createSlice({
       state.selectedProjectId = action.payload;
       state.currentProject =
         state.projects.find((project) => project.id === action.payload) || null;
-      //
-      if (action.payload) localStorage.setItem("selectedProjectId", action.payload);
-      else localStorage.removeItem("selectedProjectId");
     },
     setViewMode: (state, action: PayloadAction<"grid" | "list">) => {
       state.viewMode = action.payload;

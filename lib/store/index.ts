@@ -1,18 +1,16 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { type TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
-import authSlice from "./slices/authSlice"
-import teamsSlice from "./slices/teamsSlice"
-import projectsSlice from "./slices/projectsSlice"
-import documentsSlice from "./slices/documentsSlice"
-import uiSlice from "./slices/uiSlice"
+import authReducer from "./slices/authSlice"
+import projectsReducer, { hydrateSelectedProjectFromStorage } from "./slices/projectsSlice"
+import documentsReducer, { hydrateSelectedDocumentFromStorage } from "./slices/documentsSlice"
+import uiReducer, { hydrateCurrentViewFromStorage } from "./slices/uiSlice"
 
 export const store = configureStore({
   reducer: {
-    auth: authSlice,
-    teams: teamsSlice,
-    projects: projectsSlice,
-    documents: documentsSlice,
-    ui: uiSlice,
+    auth: authReducer,
+    projects: projectsReducer,
+    documents: documentsReducer,
+    ui: uiReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -21,6 +19,47 @@ export const store = configureStore({
       },
     }),
 })
+
+const canUseDOM = typeof window !== "undefined"
+
+const persistString = (key: string, value: string | null) => {
+  if (!canUseDOM) return
+  try {
+    if (value) localStorage.setItem(key, value)
+    else localStorage.removeItem(key)
+  } catch {
+    // Ignore storage failures (private mode, quota, etc.)
+  }
+}
+
+if (canUseDOM) {
+  store.dispatch(hydrateSelectedProjectFromStorage())
+  store.dispatch(hydrateSelectedDocumentFromStorage())
+  store.dispatch(hydrateCurrentViewFromStorage())
+
+  let lastSelectedProjectId = store.getState().projects.selectedProjectId
+  let lastSelectedDocumentId = store.getState().documents.selectedDocumentId
+  let lastCurrentView = store.getState().ui.currentView
+
+  store.subscribe(() => {
+    const state = store.getState()
+
+    if (state.projects.selectedProjectId !== lastSelectedProjectId) {
+      lastSelectedProjectId = state.projects.selectedProjectId
+      persistString("selectedProjectId", lastSelectedProjectId)
+    }
+
+    if (state.documents.selectedDocumentId !== lastSelectedDocumentId) {
+      lastSelectedDocumentId = state.documents.selectedDocumentId
+      persistString("selectedDocumentId", lastSelectedDocumentId)
+    }
+
+    if (state.ui.currentView !== lastCurrentView) {
+      lastCurrentView = state.ui.currentView
+      persistString("currentView", lastCurrentView)
+    }
+  })
+}
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch

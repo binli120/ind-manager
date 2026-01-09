@@ -27,7 +27,6 @@ interface DocumentViewProps {
     view:
       | 'workspace'
       | 'projects'
-      | 'teams'
       | 'calendar'
       | 'submission'
       | 'post-submission'
@@ -44,7 +43,7 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
   const { currentDocument, isLoading } = useAppSelector(
     (state) => state.documents
   );
-  const { currentTeam } = useAppSelector((state) => state.teams);
+  const { currentProject } = useAppSelector((state) => state.projects);
   const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
@@ -91,7 +90,7 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
               <h1 className='text-2xl font-bold text-foreground'>Workspace</h1>
               <Badge variant='secondary'>
                 <Users className='w-3 h-3 mr-1' />
-                {currentTeam?.name || 'No Team Selected'}
+                {currentProject?.title || 'No Project Selected'}
               </Badge>
             </div>
             <p className='text-muted'>Document authoring and review center</p>

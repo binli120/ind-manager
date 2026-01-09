@@ -155,13 +155,15 @@ export const getCurrentUser = createAsyncThunk(
     try {
       const supabase = createClient();
       const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-      if (error) throw error;
+      if (sessionError) throw sessionError;
+      if (!session?.user) return null;
 
-      if (user) {
+      const user = session.user;
+      {
         // Fetch additional user profile data
         const { data: profile, error: profileError } = await supabase
           .from("users")
@@ -185,7 +187,7 @@ export const getCurrentUser = createAsyncThunk(
           lastLoginAt: user.last_sign_in_at,
         };
 
-        return userData;
+        return { user: userData, session };
       }
 
       return null;
@@ -266,6 +268,7 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
+        state.session = action.payload.session;
         state.isAuthenticated = true;
         state.sessionToken = action.payload.session?.access_token;
         state.error = null;
@@ -293,6 +296,7 @@ const authSlice = createSlice({
       // Logout
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
+        state.session = null;
         state.isAuthenticated = false;
         state.sessionToken = undefined;
         state.error = null;
@@ -306,14 +310,15 @@ const authSlice = createSlice({
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
-        state.isAuthenticated = !!action.payload;
+        state.user = action.payload?.user ?? null;
+        state.session = action.payload?.session ?? null;
+        state.sessionToken = action.payload?.session?.access_token;
+        state.isAuthenticated = !!action.payload?.user;
+        state.error = null;
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-        state.isAuthenticated = false;
-        state.user = null;
       })
       // Update profile
       .addCase(updateUserProfile.fulfilled, (state, action) => {

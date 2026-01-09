@@ -685,6 +685,14 @@ const documentsSlice = createSlice({
       state.currentDocument = action.payload
       state.selectedDocumentId = action.payload?.id || null
     },
+    setSelectedDocumentId: (state, action: PayloadAction<string | null>) => {
+      state.selectedDocumentId = action.payload
+      state.currentDocument = state.documents.find((doc) => doc.id === action.payload) || null
+    },
+    hydrateSelectedDocumentFromStorage: (state) => {
+      const saved = typeof window !== "undefined" ? localStorage.getItem("selectedDocumentId") : null
+      state.selectedDocumentId = saved ?? null
+    },
     setCurrentSection: (state, action: PayloadAction<DocumentSection | null>) => {
       state.currentSection = action.payload
     },
@@ -728,6 +736,19 @@ const documentsSlice = createSlice({
       .addCase(fetchDocuments.fulfilled, (state, action) => {
         state.isLoading = false
         state.documents = action.payload
+
+        if (state.selectedDocumentId) {
+          state.currentDocument =
+            state.documents.find((doc) => doc.id === state.selectedDocumentId) || null
+
+          if (!state.currentDocument && state.documents.length > 0) {
+            state.currentDocument = state.documents[0]
+            state.selectedDocumentId = state.documents[0].id
+          }
+        } else if (state.documents.length > 0) {
+          state.currentDocument = state.documents[0]
+          state.selectedDocumentId = state.documents[0].id
+        }
       })
       .addCase(fetchDocuments.rejected, (state, action) => {
         state.isLoading = false
@@ -740,6 +761,7 @@ const documentsSlice = createSlice({
       .addCase(fetchDocumentDetails.fulfilled, (state, action) => {
         state.isLoading = false
         state.currentDocument = action.payload
+        state.selectedDocumentId = action.payload.id
 
         // Update document in documents array
         const index = state.documents.findIndex((doc) => doc.id === action.payload.id)
@@ -807,6 +829,19 @@ const documentsSlice = createSlice({
       .addCase(fetchUserDocuments.fulfilled, (state, action) => {
         state.isLoading = false
         state.documents = action.payload
+
+        if (state.selectedDocumentId) {
+          state.currentDocument =
+            state.documents.find((doc) => doc.id === state.selectedDocumentId) || null
+
+          if (!state.currentDocument && state.documents.length > 0) {
+            state.currentDocument = state.documents[0]
+            state.selectedDocumentId = state.documents[0].id
+          }
+        } else if (state.documents.length > 0) {
+          state.currentDocument = state.documents[0]
+          state.selectedDocumentId = state.documents[0].id
+        }
       })
       .addCase(fetchUserDocuments.rejected, (state, action) => {
         state.isLoading = false
@@ -817,6 +852,8 @@ const documentsSlice = createSlice({
 
 export const {
   setCurrentDocument,
+  setSelectedDocumentId,
+  hydrateSelectedDocumentFromStorage,
   setCurrentSection,
   setEditingSection,
   setCommentsVisible,

@@ -31,7 +31,7 @@ import { useState } from "react";
 
 interface ProjectFormProps {
   initialData?: ProjectCreation;
-  teams: Array<{ id: string; name: string }>;
+  defaultTeamId?: string;
   onSubmit: (data: ProjectCreation) => void;
   onCancel: () => void;
   isEditing?: boolean;
@@ -39,15 +39,16 @@ interface ProjectFormProps {
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({
   initialData,
-  teams,
+  defaultTeamId = "demo-team",
   onSubmit,
   onCancel,
   isEditing = false,
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [projectData, setProjectData] = useState<ProjectCreation>(
-    initialData || getDefaultProjectData(),
-  );
+  const [projectData, setProjectData] = useState<ProjectCreation>(() => {
+    const base = initialData || getDefaultProjectData();
+    return { ...base, team_id: base.team_id || defaultTeamId };
+  });
 
   const progress = (currentStep / PROJECT_CREATION_STEPS.length) * 100;
 
@@ -68,7 +69,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   };
 
   const handleSubmit = () => {
-    onSubmit(projectData);
+    onSubmit({ ...projectData, team_id: projectData.team_id || defaultTeamId });
     setProjectData(initialData || getDefaultProjectData());
     setCurrentStep(1);
   };
@@ -129,22 +130,12 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="team_id">Team</Label>
-                <Select
-                  value={(projectData.team_id as string) || ""}
-                  onValueChange={(value) => updateProjectData("team_id", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teams.map((team) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        {team.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <input
+                  type="hidden"
+                  name="team_id"
+                  value={(projectData.team_id as string) || defaultTeamId}
+                  readOnly
+                />
               </div>
             </div>
           </div>

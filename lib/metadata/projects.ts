@@ -118,7 +118,7 @@ export const validateProjectStep = (
 // Default project form data
 export const getDefaultProjectData = () =>
   ({
-    team_id: "",
+    team_id: "demo-team",
     ind_title: "",
     drug_name: "",
     product_type: "",

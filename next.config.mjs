@@ -17,13 +17,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  webpack: (config, { dev }) => {
-    if (!dev) {
-      config.infrastructureLogging = {
-        ...config.infrastructureLogging,
-        level: 'error',
-      };
-    }
+  webpack: (config) => {
+    config.infrastructureLogging = {
+      ...config.infrastructureLogging,
+      level: 'error',
+    };
 
     return config;
   },

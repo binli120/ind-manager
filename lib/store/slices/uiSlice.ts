@@ -3,7 +3,6 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 export type ViewType =
   | 'workspace'
   | 'projects'
-  | 'teams'
   | 'calendar'
   | 'submission'
   | 'post-submission'
@@ -118,6 +117,24 @@ const uiSlice = createSlice({
     },
     setCurrentView: (state, action: PayloadAction<ViewType>) => {
       state.currentView = action.payload;
+    },
+    hydrateCurrentViewFromStorage: (state) => {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('currentView') : null;
+      const allowed: ViewType[] = [
+        'workspace',
+        'projects',
+        'calendar',
+        'submission',
+        'post-submission',
+        'gap-scoring',
+        'review-center',
+        'gap-analysis',
+        'ind-submission',
+        'design-system',
+        'tenants',
+        'users',
+      ];
+      if (saved && (allowed as string[]).includes(saved)) state.currentView = saved as ViewType;
     },
 
     // Modal actions
@@ -263,6 +280,7 @@ export const {
   setCommentsPanelOpen,
   toggleCommentsPanel,
   setCurrentView,
+  hydrateCurrentViewFromStorage,
 
   // Modals
   openModal,
