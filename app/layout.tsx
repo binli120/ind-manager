@@ -1,3 +1,6 @@
+import { cookies } from 'next/headers'
+import { ThemeCookieSync } from '@/components/theme-cookie-sync'
+
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { ReduxProvider } from '@/components/providers/redux-provider';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -15,22 +18,26 @@ export const metadata: Metadata = {
   generator: 'Filynail IND Manager',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies()
+  const theme = cookieStore.get('theme')?.value ?? 'light'
+
   return (
-    <html lang='en'>
+    <html lang='en' className={theme} style={{ colorScheme: theme }}>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={null}>
           <ReduxProvider>
             <ThemeProvider
               attribute='class'
-              defaultTheme='system'
-              enableSystem
+              defaultTheme={theme}
+              enableSystem = {false}
               disableTransitionOnChange
             >
+              <ThemeCookieSync />
               <AuthGuard>{children}</AuthGuard>
             </ThemeProvider>
           </ReduxProvider>
