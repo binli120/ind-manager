@@ -25,24 +25,14 @@ import {
   fetchProjects,
 } from '@/lib/store/slices/projectsSlice';
 import { fetchUserTeams } from '@/lib/store/slices/teamsSlice';
+import type { ViewType } from '@/lib/store/slices/uiSlice';
 
 //correct identity deployment vercel
 
 interface HeaderProps {
   onToggleSidebar: () => void;
   onToggleComments: () => void;
-  currentView:
-    | 'workspace'
-    | 'projects'
-    | 'teams'
-    | 'calendar'
-    | 'submission'
-    | 'post-submission'
-    | 'gap-scoring'
-    | 'review-center'
-    | 'tenants'
-    | 'users'
-    | 'gap-analysis';
+  currentView: ViewType;
 }
 
 export function Header({
@@ -203,7 +193,7 @@ export function Header({
                 <SelectValue placeholder='Select project' />
               </SelectTrigger>
               {/**IM-61 Add a overflow and max height */}
-              <SelectContent className = "max-h-42 overflow-y-auto">
+              <SelectContent className='max-h-42 overflow-y-auto'>
                 {projects.map((project) => (
                   <SelectItem
                     key={project.id}

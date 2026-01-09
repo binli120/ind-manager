@@ -1,8 +1,8 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAppSelector } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import {
   AlertTriangle,
@@ -14,28 +14,20 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Home,
   MessageSquare,
   Palette,
   Search,
   Upload,
   UserIcon,
-  Users,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAppSelector } from '@/lib/store';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
 }
 
-export function Sidebar({
-  isOpen,
-  onToggle,
-  currentView,
-  onViewChange,
-}: SidebarProps) {
+export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
