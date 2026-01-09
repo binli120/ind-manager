@@ -6,6 +6,7 @@
 # next.js
 /.next/
 /out/
+storybook-static/
 
 # production
 /build
@@ -28,3 +29,10 @@ next-env.d.ts
 
 # npmrc
 .npmrc
+.npmrc
+
+#supabase
+/supabase
+
+#vscode
+.vscode
