@@ -2,14 +2,18 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+
 interface DataPreparationGaugeProps {
   completionPercentage: number
 }
 
 export function DataPreparationGauge({ completionPercentage }: DataPreparationGaugeProps) {
+  //add safe calculation
+  const safePercentage = Number.isFinite(completionPercentage)
+    ? Math.min(100, Math.max(0, completionPercentage))
+    : 0
   // Calculate gauge angle (180 degrees = 0%, 0 degrees = 100%)
-  const angle = 180 - (completionPercentage / 100) * 180
-
+  const angle = 180 - (safePercentage / 100) * 180
   // Color based on completion thresholds
   const getColor = (percentage: number) => {
     if (percentage === 100) return "hsl(var(--success))"
@@ -18,7 +22,7 @@ export function DataPreparationGauge({ completionPercentage }: DataPreparationGa
     return "hsl(var(--destructive))"
   }
 
-  const color = getColor(completionPercentage)
+  const color = getColor(safePercentage)
 
   return (
     <Card className="h-full">
@@ -45,7 +49,7 @@ export function DataPreparationGauge({ completionPercentage }: DataPreparationGa
               stroke={color}
               strokeWidth="12"
               strokeLinecap="round"
-              strokeDasharray={`${(completionPercentage / 100) * 283} 283`}
+              strokeDasharray={`${(safePercentage/ 100) * 283} 283`}
               className="transition-all duration-1000 ease-out"
             />
             {/* Needle */}
@@ -67,14 +71,14 @@ export function DataPreparationGauge({ completionPercentage }: DataPreparationGa
           <div className="absolute inset-0 flex items-end justify-center pb-2">
             <div className="text-center">
               <div className="text-4xl font-bold" style={{ color }}>
-                {completionPercentage}%
+                {safePercentage}%
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                {completionPercentage === 100
+                {safePercentage === 100
                   ? "Complete"
-                  : completionPercentage >= 85
+                  : safePercentage >= 85
                     ? "On Track"
-                    : completionPercentage >= 60
+                    : safePercentage >= 60
                       ? "At Risk"
                       : "Critical"}
               </div>
@@ -90,7 +94,7 @@ export function DataPreparationGauge({ completionPercentage }: DataPreparationGa
         </div>
 
         {/* Status indicator */}
-        {completionPercentage === 100 && (
+        {safePercentage === 100 && (
           <div className="mt-6 flex items-center gap-2 text-success animate-pulse">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
