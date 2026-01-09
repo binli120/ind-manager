@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 "use client"
 
 import { CheckCircle2, Circle, Clock, Trophy } from "lucide-react"

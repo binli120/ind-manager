@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { createBrowserClient } from "@supabase/ssr"
 import { Database } from "./schema"
 

@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { createServerClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 

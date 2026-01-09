@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 

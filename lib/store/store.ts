@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 // Legacy compatibility layer.
 // Prefer importing from `@/lib/store` (this file exists to avoid breaking old imports).
 

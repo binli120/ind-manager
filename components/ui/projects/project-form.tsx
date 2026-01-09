@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { Button } from "@/components/ui/button";
 import {
   Card,

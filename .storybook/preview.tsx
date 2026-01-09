@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import type { Preview } from "@storybook/react-webpack5"
 import React from "react"
 import { Provider } from "react-redux"

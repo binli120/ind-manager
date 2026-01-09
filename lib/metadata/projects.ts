@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 /**
  * Project-related metadata, constants, and utility functions
  */

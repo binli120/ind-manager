@@ -56,6 +56,7 @@ Required:
 
 Optional:
 - `NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL` - override auth redirect URL in dev.
+- `NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL` - PDF analysis API base URL (defaults to relative paths).
 - `NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES` - idle timeout in minutes (default `30`).
 - `NEXT_PUBLIC_SESSION_WARNING_SECONDS` - warning countdown in seconds (default `60`).
 - `TIPTAP_CONVERSION_APP_ID` - TipTap conversion app ID.

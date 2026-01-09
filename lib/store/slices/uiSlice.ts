@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type ViewType =

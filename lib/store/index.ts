@@ -1,9 +1,13 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { configureStore } from "@reduxjs/toolkit"
 import { type TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
 import authReducer from "./slices/authSlice"
 import projectsReducer, { hydrateSelectedProjectFromStorage } from "./slices/projectsSlice"
 import documentsReducer, { hydrateSelectedDocumentFromStorage } from "./slices/documentsSlice"
 import uiReducer, { hydrateCurrentViewFromStorage } from "./slices/uiSlice"
+import pdfAnalysisApiReducer from "./slices/pdfAnalysisApiSlice"
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +15,7 @@ export const store = configureStore({
     projects: projectsReducer,
     documents: documentsReducer,
     ui: uiReducer,
+    pdfAnalysisApi: pdfAnalysisApiReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

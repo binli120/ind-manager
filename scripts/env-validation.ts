@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { useLogger } from '@/hooks/useLogger';
 
 const logger = useLogger('env-validation');
@@ -17,6 +20,9 @@ const REQUIRED_ENV_VARS = {
   // OpenAI (optional)
   OPENAI_API_KEY: 'OpenAI API key (optional)',
 
+  // PDF analysis API (optional)
+  NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL: 'PDF analysis API base URL (optional)',
+
   // Session timeout (optional)
   NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES: 'Session idle timeout in minutes (optional)',
   NEXT_PUBLIC_SESSION_WARNING_SECONDS: 'Session warning countdown in seconds (optional)',
@@ -28,6 +34,7 @@ const OPTIONAL_ENV_VARS = [
   'CLOUDCONVERT_API_KEY',
   'TIPTAP_DOCUMENT_SERVER_SECRET_KEY',
   'OPENAI_API_KEY',
+  'NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL',
   'NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES',
   'NEXT_PUBLIC_SESSION_WARNING_SECONDS',
 ];

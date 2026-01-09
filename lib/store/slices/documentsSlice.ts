@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
 import { createClient } from "@/lib/supabase/client"
 

@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 

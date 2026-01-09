@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import { useLogger } from '@/hooks/useLogger';
 import { getEnvironmentInfo } from './env-validation';
 

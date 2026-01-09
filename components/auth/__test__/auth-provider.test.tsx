@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import React from 'react'
 import { act, render, screen } from '@testing-library/react'
 

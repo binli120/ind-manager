@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
