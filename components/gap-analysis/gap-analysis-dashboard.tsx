@@ -275,19 +275,19 @@ export default function GapAnalysisDashboard() {
         <CardHeader>
           <CardTitle>Module Status Overview</CardTitle>
           <CardDescription>
-            Compact view of all sections - click "View Sections" to expand and see details
+            Compact view of all sections - click &quot;View Sections&quot; to expand and see details
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ModuleStatusCards
-            modules={mockData.modules.map((m) => ({
-              ...m,
-              sections: m.sectionsDetail,
-            }))}
-            onSectionClick={(moduleId, sectionId) => {
-              setSelectedModule(moduleId)
-            }}
-          />
+            <ModuleStatusCards
+              modules={mockData.modules.map((m) => ({
+                ...m,
+                sections: m.sectionsDetail,
+              }))}
+              onSectionClick={(moduleId) => {
+                setSelectedModule(moduleId)
+              }}
+            />
         </CardContent>
       </Card>
 

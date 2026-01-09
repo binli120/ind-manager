@@ -41,7 +41,7 @@ interface TeamMetric {
 
 export function TeamsView() {
   const dispatch = useAppDispatch();
-  const { teams, isLoading } = useAppSelector((state) => state.teams);
+  const { teams } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
 
   // Dialog state

@@ -41,10 +41,10 @@ interface DocumentViewProps {
 
 export function DocumentView({ onViewChange }: DocumentViewProps) {
   const dispatch = useAppDispatch();
-  const { documents, currentDocument, isLoading } = useAppSelector(
+  const { currentDocument, isLoading } = useAppSelector(
     (state) => state.documents
   );
-  const { teams, currentTeam } = useAppSelector((state) => state.teams);
+  const { currentTeam } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
@@ -228,12 +228,12 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
                   {/* Document Content Area */}
                   <div className='flex-1'>
                     <div className='bg-card rounded-lg p-6 border border-border'>
-                      <div className='flex items-center gap-2 text-sm text-muted mb-4'>
-                        <Play className='w-4 h-4' />
-                        <span>
-                          Click "Start Editing" to begin editing this section
-                        </span>
-                      </div>
+	                      <div className='flex items-center gap-2 text-sm text-muted mb-4'>
+	                        <Play className='w-4 h-4' />
+	                        <span>
+	                          Click &quot;Start Editing&quot; to begin editing this section
+	                        </span>
+	                      </div>
 
                       <div className='space-y-6'>
                         <div>

@@ -46,7 +46,7 @@ export const WithLabel: Story = {
 }
 
 export const Password: Story = {
-  render: () => {
+  render: function Render() {
     const [showPassword, setShowPassword] = useState(false)
 
     return (

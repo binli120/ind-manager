@@ -33,7 +33,7 @@ export function AnalysisProgress({ modules }: AnalysisProgressProps) {
         return newProgress
       })
 
-      setCurrentModule((prev) => {
+      setCurrentModule(() => {
         const moduleIndex = Math.floor((progress / 100) * totalModules)
         return Math.min(moduleIndex, totalModules - 1)
       })

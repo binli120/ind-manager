@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -14,16 +13,13 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Home,
   MessageSquare,
   Palette,
   Search,
   Upload,
   UserIcon,
-  Users,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAppSelector } from '@/lib/store';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -33,15 +29,9 @@ interface SidebarProps {
 export function Sidebar({
   isOpen,
   onToggle,
-  currentView,
-  onViewChange,
 }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-
-  const projectCount = useAppSelector(
-    (state) => state.projects.projects.length
-  );
 
   const navigationItems = [
     {

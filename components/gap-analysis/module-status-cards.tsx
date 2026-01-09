@@ -76,19 +76,6 @@ export function ModuleStatusCards({ modules, onSectionClick }: ModuleStatusCards
     }
   }
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "complete":
-        return "Complete"
-      case "warning":
-        return "Warning"
-      case "issues":
-        return "Issues"
-      case "missing":
-        return "Missing"
-    }
-  }
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {modules.map((module) => {

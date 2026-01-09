@@ -136,7 +136,7 @@ export default function TenantsPage() {
 
             <Tabs
               value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value as any)}
+              onValueChange={(value) => setStatusFilter(value as 'all' | 'active' | 'inactive' | 'pending')}
             >
               <TabsList>
                 <TabsTrigger value='all'>All</TabsTrigger>

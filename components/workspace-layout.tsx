@@ -10,7 +10,7 @@ import {
 
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
-  const { sidebarOpen, commentsPanelOpen, currentView } = useAppSelector(
+  const { sidebarOpen, commentsPanelOpen } = useAppSelector(
     (state) => state.ui
   );
 

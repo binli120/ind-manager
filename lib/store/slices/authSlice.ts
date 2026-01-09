@@ -36,6 +36,12 @@ const initialState: AuthState = {
   error: null,
 };
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message
+  if (typeof error === "string") return error
+  return "Unknown error"
+}
+
 // Async thunks for authentication
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
@@ -80,8 +86,8 @@ export const loginUser = createAsyncThunk(
       }
 
       throw new Error("No user data returned");
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Login failed");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Login failed");
     }
   },
 );
@@ -120,16 +126,11 @@ export const signUpUser = createAsyncThunk(
         return rejectWithValue(error.message || auth_text.sign_up_failed);
       }
 
-      const identities = (data?.user as any)?.identities ?? [];
-      if (Array.isArray(identities) && identities.length === 0) {
-        return rejectWithValue(auth_text.email_registered);
-      }
-
       if (error) throw error;
 
       return { user: data.user, session: data.session };
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Sign up failed");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Sign up failed");
     }
   },
 );
@@ -142,8 +143,8 @@ export const logoutUser = createAsyncThunk(
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       return true;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Logout failed");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Logout failed");
     }
   },
 );
@@ -188,8 +189,8 @@ export const getCurrentUser = createAsyncThunk(
       }
 
       return null;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to get current user");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to get current user");
     }
   },
 );
@@ -214,8 +215,8 @@ export const updateUserProfile = createAsyncThunk(
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Profile update failed");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Profile update failed");
     }
   },
 );
@@ -280,7 +281,7 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(signUpUser.fulfilled, (state, action) => {
+      .addCase(signUpUser.fulfilled, (state) => {
         state.isLoading = false;
         // Don't set user as authenticated until email is confirmed
         state.error = null;

@@ -2,8 +2,7 @@
  * Project-related metadata, constants, and utility functions
  */
 
-import { Project, ProjectCreation } from "../store/slices/projectsSlice";
-import { Exact } from "../utils";
+import { ProjectCreation } from "../store/slices/projectsSlice";
 
 export const PROJECT_STATUSES = {
   DRAFT: "draft",

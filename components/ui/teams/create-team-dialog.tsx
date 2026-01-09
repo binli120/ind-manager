@@ -13,11 +13,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, UserPlus, X } from "lucide-react";
+import { UserPlus, X } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { createTeam, inviteTeamMember } from "@/lib/store/slices/teamsSlice";
 
-export const CreateTeamDialog: React.FC<React.PropsWithChildren<{}>> = ({
+export const CreateTeamDialog: React.FC<React.PropsWithChildren> = ({
   children,
 }) => {
   const { toast } = useToast();
@@ -61,7 +61,7 @@ export const CreateTeamDialog: React.FC<React.PropsWithChildren<{}>> = ({
       for (const email of newTeamData.memberEmails.filter(
         (email) => email.trim().length !== 0 && email !== user?.email,
       )) {
-        const _inviteRes = await dispatch(
+        await dispatch(
           inviteTeamMember({
             teamId: createRes.team.id,
             email: email,

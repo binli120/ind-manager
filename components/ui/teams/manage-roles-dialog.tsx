@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import { Crown } from "lucide-react";
 import {
-  Team,
   TeamMember,
   fetchTeamDetails,
   updateTeamMember,
