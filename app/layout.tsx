@@ -1,9 +1,7 @@
-import { cookies } from 'next/headers'
-import { ThemeCookieSync } from '@/components/theme-cookie-sync'
-
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { ReduxProvider } from '@/components/providers/redux-provider';
 import { ThemeProvider } from '@/components/theme-provider';
+import { WorkspaceLayout } from '@/components/workspace-layout';
 import { Analytics } from '@vercel/analytics/next';
 import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
@@ -18,27 +16,25 @@ export const metadata: Metadata = {
   generator: 'Filynail IND Manager',
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies()
-  const theme = cookieStore.get('theme')?.value ?? 'light'
-
   return (
-    <html lang='en' className={theme} style={{ colorScheme: theme }}>
+    <html lang='en' suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={null}>
           <ReduxProvider>
             <ThemeProvider
               attribute='class'
-              defaultTheme={theme}
-              enableSystem = {false}
+              defaultTheme='system'
+              enableSystem
               disableTransitionOnChange
             >
-              <ThemeCookieSync />
-              <AuthGuard>{children}</AuthGuard>
+              <AuthGuard>
+                <WorkspaceLayout>{children}</WorkspaceLayout>
+              </AuthGuard>
             </ThemeProvider>
           </ReduxProvider>
         </Suspense>
