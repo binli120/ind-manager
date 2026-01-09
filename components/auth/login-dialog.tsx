@@ -17,12 +17,14 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState } from "react"
 import { LogIn, UserPlus } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface LoginDialogProps {
   children?: React.ReactNode
 }
 
 export function LoginDialog({ children }: LoginDialogProps) {
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [repeatPassword, setRepeatPassword] = useState("")
@@ -45,7 +47,7 @@ export function LoginDialog({ children }: LoginDialogProps) {
       if (error) throw error
       setIsOpen(false)
       // Refresh the page to update auth state
-      window.location.reload()
+      router.refresh()
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {

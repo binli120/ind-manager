@@ -13,14 +13,16 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, User } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { logoutUser } from "@/lib/store/slices/authSlice";
+import { useRouter } from "next/navigation";
 
 export function UserMenu() {
   const { user, isLoading } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const handleSignOut = async () => {
     dispatch(logoutUser());
-    window.location.reload();
+    router.refresh();
   };
 
   if (isLoading) {
