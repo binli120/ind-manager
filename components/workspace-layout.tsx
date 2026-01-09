@@ -1,79 +1,44 @@
-"use client"
+'use client';
 
-import { useAppSelector, useAppDispatch } from "@/lib/store"
-import { setSidebarOpen, setCommentsPanelOpen, setCurrentView } from "@/lib/store/slices/uiSlice"
-import { Sidebar } from "@/components/sidebar"
-import { Header } from "@/components/header"
-import { DocumentView } from "@/components/document-view"
-import { ProjectsView } from "@/components/projects-view"
-import { TeamsView } from "@/components/teams-view"
-import { CalendarView } from "@/components/calendar-view"
-import { SubmissionView } from "@/components/submission-view"
-import { PostSubmissionView } from "@/components/post-submission-view"
-import { GapScoringView } from "@/components/gap-scoring-view"
-import { ReviewCenterView } from "@/components/review-center-view"
-import { GapAnalysisView } from "@/components/gap-analysis-view"
-import { IndSubmissionView } from "@/components/ind-submission-view"
-import { DesignSystemView } from "@/components/design-system-view"
+import { Header } from '@/components/header';
+import { Sidebar } from '@/components/sidebar';
+import { useAppDispatch, useAppSelector } from '@/lib/store';
+import {
+  setCommentsPanelOpen,
+  setSidebarOpen,
+} from '@/lib/store/slices/uiSlice';
 
-export function WorkspaceLayout() {
-  const dispatch = useAppDispatch()
-  const { sidebarOpen, commentsPanelOpen, currentView } = useAppSelector((state) => state.ui)
+export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
+  const dispatch = useAppDispatch();
+  const { sidebarOpen, commentsPanelOpen, currentView } = useAppSelector(
+    (state) => state.ui
+  );
 
   const handleToggleSidebar = () => {
-    dispatch(setSidebarOpen(!sidebarOpen))
-  }
+    dispatch(setSidebarOpen(!sidebarOpen));
+  };
 
   const handleToggleComments = () => {
-    dispatch(setCommentsPanelOpen(!commentsPanelOpen))
-  }
-
-  const handleViewChange = (view: typeof currentView) => {
-    dispatch(setCurrentView(view))
-  }
+    dispatch(setCommentsPanelOpen(!commentsPanelOpen));
+  };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className='flex h-screen bg-background'>
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={handleToggleSidebar}
-        currentView={currentView}
-        onViewChange={handleViewChange}
       />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className='flex-1 flex flex-col min-w-0'>
         <Header
           onToggleSidebar={handleToggleSidebar}
           onToggleComments={handleToggleComments}
-          currentView={currentView}
         />
 
-        <div className="flex-1 flex min-h-0">
-          {currentView === "projects" ? (
-            <ProjectsView />
-          ) : currentView === "teams" ? (
-            <TeamsView />
-          ) : currentView === "calendar" ? (
-            <CalendarView />
-          ) : currentView === "submission" ? (
-            <SubmissionView />
-          ) : currentView === "post-submission" ? (
-            <PostSubmissionView />
-          ) : currentView === "gap-scoring" ? (
-            <GapScoringView />
-          ) : currentView === "review-center" ? (
-            <ReviewCenterView onViewChange={handleViewChange} />
-          ) : currentView === "gap-analysis" ? (
-            <GapAnalysisView onViewChange={handleViewChange} />
-          ) : currentView === "ind-submission" ? (
-            <IndSubmissionView />
-          ) : currentView === "design-system" ? (
-            <DesignSystemView />
-          ) : (
-            <DocumentView onViewChange={handleViewChange} />
-          )}
+        <div className='flex-1 flex min-h-0'>
+          {children}
         </div>
       </div>
     </div>
-  )
+  );
 }

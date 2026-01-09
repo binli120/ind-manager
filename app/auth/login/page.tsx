@@ -58,6 +58,9 @@ export default function Page() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="password">Password</Label>
+                    <Link href="/auth/forgot-password" className="text-sm text-muted-foreground hover:underline">
+                      Forgot your password?
+                    </Link>
                     <Input
                       id="password"
                       type="password"

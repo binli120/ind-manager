@@ -26,3 +26,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# npmrc
+.npmrc
+.npmrc
+
+#supabase
+/supabase
+
+#vscode
+.vscode
