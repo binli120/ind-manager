@@ -1,10 +1,11 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAppSelector } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import {
+  AlertTriangle,
   BarChart3,
   Brain,
   Building2Icon,
@@ -13,92 +14,55 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Home,
+  MessageSquare,
   Palette,
   Search,
   Upload,
   UserIcon,
-  Users,
 } from 'lucide-react';
-//MOCK project counts sidebar
-import { useAppSelector } from '@/lib/store';
-//END MOCK
+import { usePathname, useRouter } from 'next/navigation';
+
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  currentView:
-    | 'workspace'
-    | 'projects'
-    | 'teams'
-    | 'calendar'
-    | 'submission'
-    | 'post-submission'
-    | 'users'
-    | 'tenants'
-    | 'gap-scoring'
-    | 'review-center'
-    | 'gap-analysis'
-    | 'ind-submission'
-    | 'design-system';
-  onViewChange: (
-    view:
-      | 'workspace'
-      | 'projects'
-      | 'teams'
-      | 'calendar'
-      | 'submission'
-      | 'post-submission'
-      | 'users'
-      | 'tenants'
-      | 'gap-scoring'
-      | 'review-center'
-      | 'gap-analysis'
-      | 'ind-submission'
-      | 'design-system'
-  ) => void;
 }
 
-export function Sidebar({
-  isOpen,
-  onToggle,
-  currentView,
-  onViewChange,
-}: SidebarProps) {
-  //MOCK add project count pull
+export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const projectCount = useAppSelector(
     (state) => state.projects.projects.length
   );
-  //END MOCK
+
   const navigationItems = [
     {
-      icon: Home,
-      label: 'Workspace',
-      active: currentView === 'workspace',
-      badge: null,
-      onClick: () => onViewChange('workspace'),
+      icon: FileText,
+      label: 'Document Authoring',
+      path: '/workspace/ind_editor',
     },
+    {
+      icon: MessageSquare,
+      label: 'Review Center',
+      path: '/workspace/document_review',
+    },
+    {
+      icon: AlertTriangle,
+      label: 'Gap Analysis',
+      path: '/workspace/gap_analysis',
+    },
+  ];
+
+  const teamItems = [
     {
       icon: FileText,
       label: 'Projects',
-      active: currentView === 'projects',
-      //MOCK adjust project counts
-      badge: projectCount > 0 ? projectCount.toString() : null,
-      //END MOCK
-      onClick: () => onViewChange('projects'),
-    },
-    {
-      icon: Users,
-      label: 'Teams',
-      active: currentView === 'teams',
-      badge: null,
-      onClick: () => onViewChange('teams'),
+      path: '/projects',
     },
     {
       icon: Calendar,
       label: 'Calendar',
-      active: currentView === 'calendar',
-      badge: null,
-      onClick: () => onViewChange('calendar'),
+      path: '/calendar',
     },
   ];
 
@@ -106,20 +70,17 @@ export function Sidebar({
     {
       icon: Upload,
       label: 'IND Submission',
-      active: currentView === 'submission',
-      onClick: () => onViewChange('submission'),
+      path: '/submission/IND',
     },
     {
       icon: CheckSquare,
       label: 'Acknowledge',
-      active: currentView === 'ind-submission',
-      onClick: () => onViewChange('ind-submission'),
+      path: '/submission/acknowledge',
     },
     {
       icon: FileText,
       label: 'Post Submission',
-      active: currentView === 'post-submission',
-      onClick: () => onViewChange('post-submission'),
+      path: '/submission/post',
     },
   ];
 
@@ -128,15 +89,13 @@ export function Sidebar({
       title: 'Tenants',
       icon: Building2Icon,
       label: 'tenants',
-      active: currentView === 'tenants',
-      onClick: () => onViewChange('tenants'),
+      path: '/admin/tenants',
     },
     {
       title: 'Users',
       icon: UserIcon,
       label: 'users',
-      active: currentView === 'users',
-      onClick: () => onViewChange('users'),
+      path: '/admin/users',
     },
   ];
 
@@ -144,8 +103,7 @@ export function Sidebar({
     {
       icon: BarChart3,
       label: 'Gap Scoring',
-      active: currentView === 'gap-scoring',
-      onClick: () => onViewChange('gap-scoring'),
+      path: '/analysis/gap_scoring',
     },
   ];
 
@@ -153,8 +111,7 @@ export function Sidebar({
     {
       icon: Palette,
       label: 'Design System',
-      active: currentView === 'design-system',
-      onClick: () => onViewChange('design-system'),
+      path: '/design/system',
     },
   ];
 
@@ -218,19 +175,47 @@ export function Sidebar({
         <div className='p-4'>
           {isOpen && (
             <h3 className='text-xs font-semibold text-muted uppercase tracking-wider mb-3'>
-              Team Space
+              Workspace
             </h3>
           )}
           <nav className='space-y-1'>
             {navigationItems.map((item) => (
               <Button
                 key={item.label}
-                variant={item.active ? 'secondary' : 'ghost'}
-                onClick={item.onClick}
+                variant={item.path === pathname ? 'secondary' : 'ghost'}
+                onClick={() => router.push(item.path)}
                 className={cn(
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
-                  item.active &&
+                  item.path === pathname &&
+                    'bg-sidebar-primary text-sidebar-primary-foreground'
+                )}
+              >
+                <item.icon className='w-4 h-4 flex-shrink-0' />
+                {isOpen && (
+                  <span className='flex-1 text-left'>{item.label}</span>
+                )}
+              </Button>
+            ))}
+          </nav>
+        </div>
+
+        <div className='p-4'>
+          {isOpen && (
+            <h3 className='text-xs font-semibold text-muted uppercase tracking-wider mb-3'>
+              Team Space
+            </h3>
+          )}
+          <nav className='space-y-1'>
+            {teamItems.map((item) => (
+              <Button
+                key={item.label}
+                variant={item.path === pathname ? 'secondary' : 'ghost'}
+                onClick={() => router.push(item.path)}
+                className={cn(
+                  'w-full justify-start gap-3 h-10',
+                  !isOpen && 'justify-center px-2',
+                  item.path === pathname &&
                     'bg-sidebar-primary text-sidebar-primary-foreground'
                 )}
               >
@@ -238,11 +223,6 @@ export function Sidebar({
                 {isOpen && (
                   <>
                     <span className='flex-1 text-left'>{item.label}</span>
-                    {item.badge && (
-                      <Badge variant='secondary' className='ml-auto'>
-                        {item.badge}
-                      </Badge>
-                    )}
                   </>
                 )}
               </Button>
@@ -261,12 +241,12 @@ export function Sidebar({
             {adminItems.map((item) => (
               <Button
                 key={item.label}
-                variant={item.active ? 'secondary' : 'ghost'}
-                onClick={item.onClick}
+                variant={item.path === pathname ? 'secondary' : 'ghost'}
+                onClick={() => router.push(item.path)}
                 className={cn(
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
-                  item.active &&
+                  item.path === pathname &&
                     'bg-sidebar-primary text-sidebar-primary-foreground'
                 )}
               >
@@ -290,12 +270,12 @@ export function Sidebar({
             {submissionItems.map((item) => (
               <Button
                 key={item.label}
-                variant={item.active ? 'secondary' : 'ghost'}
-                onClick={item.onClick}
+                variant={item.path === pathname ? 'secondary' : 'ghost'}
+                onClick={() => router.push(item.path)}
                 className={cn(
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
-                  item.active &&
+                  item.path === pathname &&
                     'bg-sidebar-primary text-sidebar-primary-foreground'
                 )}
               >
@@ -319,12 +299,12 @@ export function Sidebar({
             {analysisItems.map((item) => (
               <Button
                 key={item.label}
-                variant={item.active ? 'secondary' : 'ghost'}
-                onClick={item.onClick}
+                variant={item.path === pathname ? 'secondary' : 'ghost'}
+                onClick={() => router.push(item.path)}
                 className={cn(
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
-                  item.active &&
+                  item.path === pathname &&
                     'bg-sidebar-primary text-sidebar-primary-foreground'
                 )}
               >
@@ -347,12 +327,12 @@ export function Sidebar({
             {designItems.map((item) => (
               <Button
                 key={item.label}
-                variant={item.active ? 'secondary' : 'ghost'}
-                onClick={item.onClick}
+                variant={item.path === pathname ? 'secondary' : 'ghost'}
+                onClick={() => router.push(item.path)}
                 className={cn(
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
-                  item.active &&
+                  item.path === pathname &&
                     'bg-sidebar-primary text-sidebar-primary-foreground'
                 )}
               >

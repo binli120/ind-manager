@@ -1,6 +1,6 @@
 "use client"
 
-import type { Meta, StoryObj } from "@storybook/react"
+import type { Meta, StoryObj } from "@storybook/react-webpack5"
 import { Progress } from "./progress"
 import { useEffect, useState } from "react"
 

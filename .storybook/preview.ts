@@ -1,4 +1,4 @@
-import type { Preview } from "@storybook/react"
+import type { Preview } from "@storybook/react-webpack5"
 import "../app/globals.css"
 
 const preview: Preview = {
@@ -10,19 +10,20 @@ const preview: Preview = {
       },
     },
     backgrounds: {
-      default: "light",
-      values: [
-        {
+      options: {
+        light: {
           name: "light",
           value: "#ffffff",
         },
-        {
+
+        dark: {
           name: "dark",
           value: "#0a0a0a",
-        },
-      ],
+        }
+      }
     },
   },
+
   globalTypes: {
     theme: {
       description: "Global theme for components",
@@ -35,6 +36,12 @@ const preview: Preview = {
       },
     },
   },
+
+  initialGlobals: {
+    backgrounds: {
+      value: "light"
+    }
+  }
 }
 
 export default preview
