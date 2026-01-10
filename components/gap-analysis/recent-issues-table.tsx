@@ -146,24 +146,28 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
             Latest findings from analysis ordered by time (last analyzed {lastAnalysisDate.toLocaleString()})
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="overflow-x-hidden">
+          <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[120px]">Time</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="w-[120px]">Severity</TableHead>
+                <TableHead className="w-[120px] whitespace-nowrap">Time</TableHead>
+                <TableHead className="w-auto">Description</TableHead>
+                <TableHead className="w-[120px] whitespace-nowrap">Severity</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {recentIssues.map((issue) => (
                 <TableRow key={issue.id} className="cursor-pointer hover:bg-muted/50">
-                  <TableCell className="text-sm text-muted-foreground">{issue.time}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    {issue.time}
+                  </TableCell>
                   <TableCell
                     onClick={() => setSelectedIssue(issue)}
-                    className="font-medium hover:text-primary transition-colors"
+                    className="font-medium hover:text-primary transition-colors max-w-0"
                   >
-                    <div className="truncate max-w-[500px]">{issue.description}</div>
+                    <div className="text-sm line-clamp-2 break-words">
+                      {issue.description}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={getSeverityColor(issue.severity)} className="gap-1">

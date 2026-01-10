@@ -16,9 +16,13 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AddUserDialog } from './add-user-dialog';
+import { fetchUsers, updateUserStatus, createUser, fetchCurrentUser } from "@/lib/supabase/users";
+import { fetchTenants } from "@/lib/supabase/tenants";
+import { authServices } from "@/app/api/auth/auth-services";
 
+//These should be made more robust in the future.
 export type UserRole =
   | 'reg_affairs_manager_lead'
   | 'regulatory_writer_medical_writer'
@@ -32,6 +36,8 @@ export type UserRole =
   | 'data_manager_biostatistician'
   | 'document_management_specialist';
 
+export type UserPrivilege = 'system_admin' | 'user_manager' | 'user';
+
 export type User = {
   id: string;
   name: string;
@@ -40,6 +46,11 @@ export type User = {
   role: UserRole;
   company: string;
   status: 'active' | 'inactive' | 'pending';
+};
+
+export type Tenant = {
+  id: string;
+  name: string;
 };
 
 export const roleLabels: Record<UserRole, string> = {
@@ -56,83 +67,126 @@ export const roleLabels: Record<UserRole, string> = {
   document_management_specialist: 'Document Management Specialist',
 };
 
-const initialUsers: User[] = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@example.com',
-    phone: '+1 (555) 111-2222',
-    role: 'reg_affairs_manager_lead',
-    company: 'Acme Corporation',
-    status: 'active',
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    email: 'michael.chen@example.com',
-    phone: '+1 (555) 333-4444',
-    role: 'clinical_development_lead',
-    company: 'TechVentures Inc',
-    status: 'active',
-  },
-  {
-    id: '3',
-    name: 'Emily Rodriguez',
-    email: 'emily.rodriguez@example.com',
-    phone: '+1 (555) 555-6666',
-    role: 'quality_assurance',
-    company: 'Global Solutions LLC',
-    status: 'inactive',
-  },
-];
-
-const companies = [
-  'Acme Corporation',
-  'TechVentures Inc',
-  'Global Solutions LLC',
-  'BioPharm Solutions',
-];
-
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'inactive' | 'pending'
   >('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [companies, setCompanies] = useState<string[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<UserPrivilege>('');
+
+  useEffect(() => {
+    initializeUserData();
+  }, []);
+
+  async function initializeUserData() {
+      //Get the currently logged in user ID
+      const authData = await authServices.getUser();
+      const authUser = authData.data?.user;
+      if (!authUser) return;
+      const privilege =(authUser?.user_metadata?.privilege as UserPrivilege) ?? 'system_admin';
+      setCurrentUserPrivilege(privilege);
+
+      //Get the logged in user's tenantid and fetch 
+      const currentUserDbRecord = await fetchCurrentUser(authUser.id);
+      if (privilege === 'system_admin') {
+        fetchUsers().then(setUsers);
+      } else if (currentUserDbRecord?.tenantid) {
+        fetchUsers(currentUserDbRecord.tenantid).then(setUsers);
+      } else {
+        setUsers([]);
+      }
+
+      //To fill companies
+      if (privilege === 'system_admin') {
+        fetchTenants().then((data) => {
+          setTenants(data);
+          setCompanies(data.map((t) => t.name));
+        });
+      } else if (currentUserDbRecord?.tenantid) {
+        fetchTenants(currentUserDbRecord.tenantid).then((data) => {
+          setTenants(data);
+          setCompanies(data.map((t) => t.name));
+        });
+      } else {
+        setTenants([]);
+        setCompanies([]);
+      }
+    }
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      //Should make it so that names can't be null in Supabase eventually
+      (user.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       roleLabels[user.role].toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === 'all' || user.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
-  const handleToggleStatus = (userId: string) => {
+  const handleToggleStatus = async (userId: string) => {
+    const u = users.find((x) => x.id === userId);
+    if (!u) return;
+
+    const next = u.status === "active" ? "inactive" : "active";
+    const updated = await updateUserStatus(userId, next);
+
     setUsers((prevUsers) =>
       prevUsers.map((user) =>
         user.id === userId
-          ? {
-              ...user,
-              status: user.status === 'active' ? 'inactive' : 'active',
-            }
+          ? { ...updated }
           : user
       )
     );
   };
 
-  const handleAddUser = (newUser: Omit<User, 'id' | 'status'>) => {
-    const user: User = {
-      ...newUser,
-      id: Math.random().toString(36).substr(2, 9),
-      status: 'pending',
-    };
+  const handleAddUser = async (formUser: {
+    name: string;
+    email: string;
+    password: string;
+    phone: string;
+    role: UserRole;
+    privilege: UserPrivilege;
+    company: string;
+  }) => {
+
+    const { data: signUpData, error: authError } = await authServices.signUp(
+      formUser.email,
+      formUser.password,
+      {
+        name: formUser.name,
+        privilege: formUser.privilege,
+      }
+    );
+
+    if (authError || !signUpData?.user) {
+      console.error("signup failed or no user returned:", authError);
+      return;
+    }
+
+    const authUser = signUpData.user;
+    const selectedTenant = tenants.find(t => t.name === formUser.company);
+    if (!selectedTenant) {
+      console.error("Selected company not found in tenants list");
+      return;
+    }
+
+    const user = await createUser({
+      id: authUser.id, // foreign key → auth.users.id
+      name: formUser.name,
+      email: formUser.email,
+      phone: formUser.phone,
+      role: formUser.role,
+      tenantId: selectedTenant.id,
+    });
     setUsers((prevUsers) => [...prevUsers, user]);
+
+    await authServices.resetPassword(formUser.email);
   };
 
   return (
@@ -283,6 +337,7 @@ export default function UsersPage() {
         onOpenChange={setIsAddDialogOpen}
         onAdd={handleAddUser}
         companies={companies}
+        currentUserPrivilege={currentUserPrivilege}
       />
     </div>
   );

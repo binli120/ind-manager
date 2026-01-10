@@ -20,6 +20,7 @@ export default function Page() {
   const [password, setPassword] = useState("")
   const dispatch = useAppDispatch()
   const { isLoading, error } = useAppSelector((state) => state.auth)
+  const isAuthSessionMissing = error?.toLowerCase().includes("auth session missing")
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -72,7 +73,12 @@ export default function Page() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
+                  {error && !isAuthSessionMissing && (
+                      <Link href="/auth/forgot-password" className="text-sm text-red-500 hover:underline">
+                        Invalid login. Forgot your password?
+                      </Link>
+                  )}
+                  
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>

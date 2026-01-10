@@ -16,8 +16,9 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AddTenantDialog } from './add_tenant-dialog';
+import { fetchTenants, updateTenantStatus, createTenant } from "@/lib/supabase/tenants";
 
 export type Tenant = {
   id: string;
@@ -29,43 +30,17 @@ export type Tenant = {
   status: 'active' | 'inactive' | 'pending';
 };
 
-const initialTenants: Tenant[] = [
-  {
-    id: '1',
-    name: 'Acme Corporation',
-    companyAddress: '123 Business St,\nNew York, NY 10001',
-    contactPerson: 'John Doe',
-    contactEmail: 'john.doe@acme.com',
-    contactPhone: '+1 (555) 123-4567',
-    status: 'active',
-  },
-  {
-    id: '2',
-    name: 'TechVentures Inc',
-    companyAddress: '456 Innovation Ave,\nSan Francisco, CA 94105',
-    contactPerson: 'Jane Smith',
-    contactEmail: 'jane.smith@techventures.com',
-    contactPhone: '+1 (555) 987-6543',
-    status: 'active',
-  },
-  {
-    id: '3',
-    name: 'Global Solutions LLC',
-    companyAddress: '789 Enterprise Blvd,\nBoston, MA 02108',
-    contactPerson: 'Robert Johnson',
-    contactEmail: 'robert.johnson@globalsolutions.com',
-    contactPhone: '+1 (555) 246-8135',
-    status: 'inactive',
-  },
-];
-
 export default function TenantsPage() {
-  const [tenants, setTenants] = useState<Tenant[]>(initialTenants);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'inactive' | 'pending'
   >('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  useEffect(() => {
+    fetchTenants().then(setTenants);
+  }, []);
 
   const filteredTenants = tenants.filter((tenant) => {
     const matchesSearch =
@@ -79,26 +54,24 @@ export default function TenantsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleToggleStatus = (tenantId: string) => {
+  const handleToggleStatus = async (tenantId: string) => {
+    const updated = await updateTenantStatus(tenantId, (tenants.find(t => t.id === tenantId)?.status === "active" ? "inactive" : "active"));
+
     setTenants((prevTenants) =>
       prevTenants.map((tenant) =>
         tenant.id === tenantId
           ? {
-              ...tenant,
-              status: tenant.status === 'active' ? 'inactive' : 'active',
+            ...tenant,
+            ...updated 
             }
           : tenant
       )
     );
   };
 
-  const handleAddTenant = (newTenant: Omit<Tenant, 'id' | 'status'>) => {
-    const tenant: Tenant = {
-      ...newTenant,
-      id: Math.random().toString(36).substr(2, 9),
-      status: 'pending',
-    };
-    setTenants((prevTenants) => [...prevTenants, tenant]);
+  const handleAddTenant = async (newTenant: Tenant) => {
+    const tenant = await createTenant(newTenant);
+    setTenants(prev => [...prev, tenant]);
   };
 
   return (

@@ -22,7 +22,7 @@ interface IssueSeverityChartProps {
 export function IssueSeverityChart({ modules }: IssueSeverityChartProps) {
   // Transform data to count severity by module
   const chartData = modules.map((module) => {
-    const critical = module.sectionsDetail.filter((s) => s.status === "issues").length
+    const critical = module.sectionsDetail.filter((s) => s.status === "critical").length
     const warning = module.sectionsDetail.filter((s) => s.status === "warning").length
     const missing = module.sectionsDetail.filter((s) => s.status === "missing").length
 

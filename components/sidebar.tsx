@@ -29,10 +29,7 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
-export function Sidebar({
-  isOpen,
-  onToggle,
-}: SidebarProps) {
+export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
