@@ -54,9 +54,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
   const [showTimeoutDialog, setShowTimeoutDialog] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(WARNING_SECONDS);
+  const [hasCheckedSession, setHasCheckedSession] = useState(false);
   const warningTimeoutRef = useRef<number | null>(null);
   const logoutTimeoutRef = useRef<number | null>(null);
   const countdownIntervalRef = useRef<number | null>(null);
+  const redirectingRef = useRef(false);
 
   const clearTimers = useCallback(() => {
     if (warningTimeoutRef.current !== null) {
@@ -137,7 +139,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
     const supabase = createClient();
 
     const getInitialSession = async () => {
-      dispatch(getCurrentUser());
+      try {
+        await dispatch(getCurrentUser());
+      } finally {
+        setHasCheckedSession(true);
+      }
     };
 
     getInitialSession();
@@ -181,27 +187,34 @@ export function AuthGuard({ children }: AuthGuardProps) {
     };
   }, [clearTimers, isAuthenticated, startTimers, user]);
 
-  useEffect(() => {
-    if (!isLoading) {
-      // Check if current path is an auth page
-      const isAuthPage =
-        pathname?.startsWith('/auth/') || pathname === '/login';
-      const isApiPage = pathname?.startsWith('/api/');
-      const isResetPage = pathname?.startsWith('/auth/reset-password');
+  const isAuthPage = pathname?.startsWith('/auth/') || pathname === '/login';
+  const isResetPage = pathname?.startsWith('/auth/reset-password') && user;
+  const isApiPage = pathname?.startsWith('/api/');
 
-      if ((!user || !isAuthenticated) && !isAuthPage && !isApiPage) {
-        // Not authenticated and trying to access protected page
-        setTimeout(() => {
-          router.replace('/auth/login');
-        }, 100);
-      } else if (user && (isAuthPage || pathname === '/') && !isResetPage) {
-        // Authenticated and trying to access auth page or root page
-        setTimeout(() => {
-          router.replace('/');
-        }, 100);
-      }
+  useEffect(() => {
+    if (isLoading || !hasCheckedSession) {
+      redirectingRef.current = false;
+      return;
     }
-  }, [user, isAuthenticated, isLoading, pathname, router]);
+
+    if ((!user || !isAuthenticated) && !isAuthPage && !isApiPage) {
+      if (!redirectingRef.current) {
+        redirectingRef.current = true;
+        router.replace('/auth/login');
+      }
+      return;
+    }
+
+    if (user && (isAuthPage || pathname === '/') && !isResetPage) {
+      if (!redirectingRef.current) {
+        redirectingRef.current = true;
+        router.replace('/');
+      }
+      return;
+    }
+
+    redirectingRef.current = false;
+  }, [hasCheckedSession, isApiPage, isAuthPage, isAuthenticated, isLoading, isResetPage, pathname, router, user]);
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -221,11 +234,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
       </>
     );
   }
-
-  // Check if current path is an auth page or API page
-  const isAuthPage = pathname?.startsWith('/auth/') || pathname === '/login';
-  const isResetPage = pathname?.startsWith('/auth/reset-password') && user;
-  const isApiPage = pathname?.startsWith('/api/');
 
   // For auth pages, render children if not authenticated
   if (isAuthPage && !isResetPage) {
