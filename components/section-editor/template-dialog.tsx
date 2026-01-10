@@ -153,10 +153,6 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
     return editingField?.rowId === rowId && editingField?.field === field
   }
 
-  const handleSaveTable = (content: string) => {
-    setTableContent(content)
-  }
-
   const isPharmacologyTableSection =
     ["2.6.3", "2.6.5", "2.6.7"].some((id) => section.number.includes(id)) || section.subsections?.some((sub) => ["2.6.3", "2.6.5", "2.6.7"].some((id) => sub.subsectionNumber.includes(id)))
 
@@ -238,7 +234,7 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
           <ScrollArea className="h-[calc(90vh-200px)]">
             <div className="space-y-6 pr-4">
               {!isPharmacologyTableSection &&
-                editedRows.map((row, index) => (
+                editedRows.map((row) => (
                   <div key={row.id} className="border rounded-lg p-6 bg-card space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
@@ -727,7 +723,7 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                       administration, and key findings.
                     </p>
                     <p>
-                      You can customize this template by clicking the "Edit Table" button to add or remove rows and
+                      You can customize this template by clicking the &quot;Edit Table&quot; button to add or remove rows and
                       columns, modify headers, or update cell content to match your specific study requirements.
                     </p>
                   </div>

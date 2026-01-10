@@ -18,7 +18,6 @@ interface SectionHeatmapProps {
 
 // Generate mock section data
 const generateSectionData = (moduleId: number, sectionCount: number) => {
-  const statuses = ["complete", "warning", "critical", "missing"]
   return Array.from({ length: sectionCount }, (_, i) => {
     const rand = Math.random()
     let status = "complete"

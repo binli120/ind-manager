@@ -41,9 +41,9 @@ export function Header({
   currentView,
 }: HeaderProps) {
   const dispatch = useAppDispatch();
-  const { projects, currentProject, selectedProjectId, setProject } =
+  const { projects, selectedProjectId, setProject } =
     useProject();
-  const { teams, currentTeam, selectedTeamId, setTeam } = useTeam();
+  const { teams, selectedTeamId, setTeam } = useTeam();
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);

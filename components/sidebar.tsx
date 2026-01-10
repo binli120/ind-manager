@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAppSelector } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import {
   AlertTriangle,
@@ -30,10 +29,6 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-
-  const projectCount = useAppSelector(
-    (state) => state.projects.projects.length
-  );
 
   const navigationItems = [
     {

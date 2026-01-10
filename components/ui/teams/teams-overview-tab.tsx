@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import { Activity, Clock, Eye, Plus, Settings, UserPlus } from "lucide-react";

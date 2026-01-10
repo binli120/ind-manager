@@ -36,7 +36,7 @@ export const Default: Story = {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit profile</DialogTitle>
-          <DialogDescription>Make changes to your profile here. Click save when you're done.</DialogDescription>
+          <DialogDescription>Make changes to your profile here. Click save when you&apos;re done.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -172,7 +172,7 @@ export const NoCloseButton: Story = {
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Custom Dialog</DialogTitle>
-          <DialogDescription>This dialog doesn't have a close button in the top right.</DialogDescription>
+          <DialogDescription>This dialog doesn&apos;t have a close button in the top right.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline">Close</Button>

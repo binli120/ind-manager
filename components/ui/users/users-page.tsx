@@ -224,7 +224,7 @@ export default function UsersPage() {
 
             <Tabs
               value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value as any)}
+              onValueChange={(value) => setStatusFilter(value as 'all' | 'active' | 'inactive' | 'pending')}
             >
               <TabsList>
                 <TabsTrigger value='all'>All</TabsTrigger>

@@ -49,7 +49,7 @@ export const TeamsTeamsTab: React.FC<TeamsTeamsTabProps> = ({
   handleDeleteTeam,
 }) => {
   const dispatch = useAppDispatch();
-  const { isLoading, teams } = useAppSelector((state) => state.teams);
+  const { teams } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,7 +90,7 @@ export const TeamsTeamsTab: React.FC<TeamsTeamsTabProps> = ({
             <SelectContent>
               <SelectItem value="all">All Teams</SelectItem>
               <SelectItem value="owned">Teams I Own</SelectItem>
-              <SelectItem value="member">Teams I'm In</SelectItem>
+              <SelectItem value="member">Teams I&apos;m In</SelectItem>
             </SelectContent>
           </Select>
         </div>

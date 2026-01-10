@@ -31,7 +31,7 @@ export const TeamsMembersTab: React.FC<TeamsMembersTabProps> = ({
   setSelectedTeamId,
 }) => {
   const dispatch = useAppDispatch();
-  const { isLoading, teams } = useAppSelector((state) => state.teams);
+  const { teams } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
 
   const handleRemoveMember = (teamId: string, memberId: string) => {

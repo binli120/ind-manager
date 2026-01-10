@@ -1,5 +1,6 @@
 "use client"
 
+import type React from "react"
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -29,6 +30,8 @@ interface Issue {
 interface RecentIssuesTableProps {
   lastAnalysisDate: Date
 }
+
+type BadgeVariant = React.ComponentProps<typeof Badge>["variant"]
 
 // Mock data for recent issues
 const recentIssues: Issue[] = [
@@ -103,7 +106,7 @@ const recentIssues: Issue[] = [
 export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) {
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
 
-  const getSeverityIcon = (severity: string) => {
+  const getSeverityIcon = (severity: Issue["severity"]) => {
     switch (severity) {
       case "critical":
         return <AlertCircle className="w-4 h-4" />
@@ -114,7 +117,7 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
     }
   }
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (severity: Issue["severity"]): BadgeVariant => {
     switch (severity) {
       case "critical":
         return "destructive"
@@ -136,7 +139,9 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
       <Card className="h-full">
         <CardHeader>
           <CardTitle>Recent Issues</CardTitle>
-          <CardDescription>Latest findings from analysis ordered by time</CardDescription>
+          <CardDescription>
+            Latest findings from analysis ordered by time (last analyzed {lastAnalysisDate.toLocaleString()})
+          </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-hidden">
           <Table className="w-full table-fixed">
@@ -162,7 +167,7 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getSeverityColor(issue.severity) as any} className="gap-1">
+                    <Badge variant={getSeverityColor(issue.severity)} className="gap-1">
                       {getSeverityIcon(issue.severity)}
                       {issue.severity}
                     </Badge>
@@ -188,7 +193,7 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
                 </DialogDescription>
               </div>
               {selectedIssue && (
-                <Badge variant={getSeverityColor(selectedIssue.severity) as any} className="gap-1">
+                <Badge variant={getSeverityColor(selectedIssue.severity)} className="gap-1">
                   {getSeverityIcon(selectedIssue.severity)}
                   {selectedIssue.severity}
                 </Badge>

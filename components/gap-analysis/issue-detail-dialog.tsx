@@ -56,12 +56,15 @@ const generateIssues = (moduleId: number, count: number) => {
 }
 
 export function IssueDetailDialog({ open, onClose, module }: IssueDetailDialogProps) {
-  if (!module) return null
-
   const issues = useMemo(
-    () => (open ? generateIssues(module.id, module.issues) : []),
-    [open, module.id, module.issues],
+    () => {
+      if (!module || !open) return []
+      return generateIssues(module.id, module.issues)
+    },
+    [module, open],
   )
+
+  if (!module) return null
 
 
 

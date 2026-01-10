@@ -37,7 +37,7 @@ export const TeamsRolesTab: React.FC<TeamsRolesTabProps> = ({
   setSelectedTeamId,
 }) => {
   const dispatch = useAppDispatch();
-  const { isLoading, teams } = useAppSelector((state) => state.teams);
+  const { teams } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
 
   const handleUpdateRole = (teamId: string, memberId: string, role: string) => {

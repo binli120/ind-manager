@@ -25,7 +25,7 @@ const getModuleColor = (progress: number) => {
 export function RadialProgressChart({ modules }: RadialProgressChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined)
 
-  const data = modules.map((module, index) => ({
+  const data = modules.map((module) => ({
     name: `Module ${module.id}`,
     value: module.progress,
     issues: module.issues,
@@ -34,8 +34,16 @@ export function RadialProgressChart({ modules }: RadialProgressChartProps) {
 
   //console.log("[v0] Chart data with colors:", data)
 
-  const renderActiveShape = (props: any) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload } = props
+  const renderActiveShape = (props: {
+    cx: number
+    cy: number
+    innerRadius: number
+    outerRadius: number
+    startAngle: number
+    endAngle: number
+    fill: string
+  }) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props
 
     return (
       <g>
@@ -83,8 +91,10 @@ export function RadialProgressChart({ modules }: RadialProgressChartProps) {
             ))}
           </Pie>
           <Legend
-            formatter={(value, entry: any) => {
-              return `${value}: ${entry.payload.value}% (${entry.payload.issues} issues)`
+            formatter={(value: string, entry: { payload?: { value?: number; issues?: number } }) => {
+              const percent = entry.payload?.value ?? 0
+              const issues = entry.payload?.issues ?? 0
+              return `${value}: ${percent}% (${issues} issues)`
             }}
           />
         </PieChart>
