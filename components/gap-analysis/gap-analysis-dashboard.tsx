@@ -298,7 +298,7 @@ export default function GapAnalysisDashboard() {
         <CardContent>
           <ModuleStatusCards
             modules={mockData.modules}
-            onSectionClick={(moduleId, sectionId) => {
+            onSectionClick={(moduleId) => {
               setSelectedModule(moduleId)
             }}
           />

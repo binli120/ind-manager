@@ -1,5 +1,15 @@
 import { User, UserRole } from "@/components/ui/users/users-page";
 
+type UserRow = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  role: UserRole;
+  status: string;
+  tenants?: { name?: string | null } | null;
+};
+
 export async function fetchUsers(tenantId?: string): Promise<User[]> {
   const res = await fetch("/api/database", {
     method: "POST",
@@ -11,9 +21,9 @@ export async function fetchUsers(tenantId?: string): Promise<User[]> {
     }),
   });
 
-  const { data } = await res.json();
+  const { data } = (await res.json()) as { data: UserRow[] };
 
-  return data.map((row: any) => ({
+  return data.map((row) => ({
     id: row.id,
     name: row.name,
     email: row.email,
@@ -35,7 +45,7 @@ export async function updateUserStatus(id: string, status: string) {
     }),
   });
 
-  const { data } = await res.json();
+  const { data } = (await res.json()) as { data: UserRow[] };
   const row = data[0];
 
   return {
@@ -77,9 +87,7 @@ export async function createUser(user: {
     }),
   });
 
-  const jsonResponse = await res.json();
-  console.log(jsonResponse)
-  const { data, error } = jsonResponse;
+  const { data } = (await res.json()) as { data: UserRow[] };
   const row = data[0];
 
   return {

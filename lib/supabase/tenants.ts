@@ -1,5 +1,15 @@
 import { Tenant } from "@/components/ui/tenants/tenants-page";
 
+type TenantRow = {
+  id: string;
+  name: string;
+  address: string | null;
+  contact_person: string | null;
+  contact_email: string | null;
+  contact_number: string | number | null;
+  status: string;
+};
+
 export async function fetchTenants(tenantId?: string): Promise<Tenant[]> {
   const res = await fetch("/api/database", {
     method: "POST",
@@ -11,9 +21,9 @@ export async function fetchTenants(tenantId?: string): Promise<Tenant[]> {
     }),
   });
 
-  const { data } = await res.json();
+  const { data } = (await res.json()) as { data: TenantRow[] };
 
-  return data.map((row: any) => ({
+  return data.map((row) => ({
     id: row.id,
     name: row.name,
     companyAddress: row.address ?? "",
@@ -35,7 +45,7 @@ export async function updateTenantStatus(id: string, status: string) {
     }),
   });
 
-  const { data } = await res.json();
+  const { data } = (await res.json()) as { data: TenantRow[] };
   const row = data[0];
 
   return {
@@ -74,8 +84,7 @@ export async function createTenant(tenant: {
     }),
   });
 
-  const jsonResponse = await res.json();
-  const { data, error} = jsonResponse;
+  const { data } = (await res.json()) as { data: TenantRow[] };
   const row = data[0];
 
   return {
