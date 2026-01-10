@@ -37,10 +37,10 @@ export async function fetchUsers(tenantId?: string): Promise<User[]> {
     id: row.id,
     name: row.name,
     email: row.email,
-    phone: row.phone,
+    phone: row.phone ?? "",
     role: row.role,
     company: row.tenants?.name ?? "",
-    status: row.status,
+    status: (row.status as User["status"]) ?? "pending",
   }));
 }
 

@@ -12,8 +12,8 @@ jest.mock('@/lib/store', () => ({
   useAppSelector: (fn: unknown) => mockSelector(fn),
 }))
 
-jest.mock('@/lib/supabase/client', () => ({
-  createClient: () => ({
+jest.mock('@/lib/supabase', () => ({
+  createBrowserClient: () => ({
     auth: {
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: jest.fn() } } }),
     },
@@ -25,16 +25,22 @@ jest.mock('next/navigation', () => ({
   usePathname: () => '/protected',
 }))
 
-jest.mock('@/lib/store/slices/authSlice', () => ({
+jest.mock('@/lib/store/slices', () => ({
   getCurrentUser: () => ({ type: 'auth/getCurrentUser' }),
 }))
 
 import { AuthGuard } from '@/components/auth/auth-guard'
 
 describe('AuthGuard', () => {
+  const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
   beforeEach(() => {
     mockDispatch.mockClear()
     mockSelector.mockReset()
+  })
+
+  afterAll(() => {
+    consoleErrorSpy.mockRestore()
   })
 
   it('shows loading UI when auth is loading', () => {
@@ -47,4 +53,3 @@ describe('AuthGuard', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument()
   })
 })
-

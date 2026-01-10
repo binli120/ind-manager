@@ -4,8 +4,9 @@
 'use client';
 
 import { useAppDispatch, useAppSelector } from '@/lib/store';
-import { getCurrentUser, logoutUser } from '@/lib/store/slices/authSlice';
-import { createClient } from '@/lib/supabase/client';
+import { getCurrentUser, logoutUser } from '@/lib/store/slices';
+import { createBrowserClient } from '@/lib/supabase';
+import { canAccessPath } from '@/lib/auth/access-control';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -136,7 +137,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }, [resetTimers]);
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = createBrowserClient();
 
     const getInitialSession = async () => {
       try {
@@ -197,18 +198,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
       return;
     }
 
-    if ((!user || !isAuthenticated) && !isAuthPage && !isApiPage) {
+    const decision = canAccessPath(pathname, user, isAuthenticated);
+    if (!decision.allowed) {
+      const target = decision.redirectTo ?? '/auth/login';
       if (!redirectingRef.current) {
         redirectingRef.current = true;
-        router.replace('/auth/login');
-      }
-      return;
-    }
-
-    if (user && (isAuthPage || pathname === '/') && !isResetPage) {
-      if (!redirectingRef.current) {
-        redirectingRef.current = true;
-        router.replace('/');
+        router.replace(target);
       }
       return;
     }

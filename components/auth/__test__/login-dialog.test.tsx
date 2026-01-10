@@ -9,8 +9,8 @@ const signInWithPassword = jest.fn()
 const signUp = jest.fn()
 const refresh = jest.fn()
 
-jest.mock('@/lib/supabase/client', () => ({
-  createClient: () => ({
+jest.mock('@/lib/supabase', () => ({
+  createBrowserClient: () => ({
     auth: {
       signInWithPassword,
       signUp,

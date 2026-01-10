@@ -1,11 +1,11 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import { createServerClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase"
 import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const { email, password, action } = await request.json()
 
   try {
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   try {
     const {

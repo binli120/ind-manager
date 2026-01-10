@@ -40,7 +40,7 @@ export async function fetchTenants(tenantId?: string): Promise<Tenant[]> {
     contactPerson: row.contact_person ?? "",
     contactEmail: row.contact_email ?? "",
     contactPhone: row.contact_number?.toString() ?? "",
-    status: row.status,
+    status: (row.status as Tenant["status"]) ?? "pending",
   }));
 }
 
@@ -65,7 +65,7 @@ export async function updateTenantStatus(id: string, status: string) {
     contactPerson: row.contact_person,
     contactEmail: row.contact_email,
     contactPhone: row.contact_number,
-    status: row.status,
+    status: (row.status as Tenant["status"]) ?? "pending",
   };
 }
 
@@ -104,6 +104,6 @@ export async function createTenant(tenant: {
     contactPerson: row.contact_person,
     contactEmail: row.contact_email,
     contactPhone: row.contact_number,
-    status: row.status,
+    status: (row.status as Tenant["status"]) ?? "pending",
   };
 }

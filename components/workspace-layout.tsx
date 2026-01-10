@@ -9,7 +9,7 @@ import { useAppDispatch, useAppSelector } from '@/lib/store';
 import {
   setCommentsPanelOpen,
   setSidebarOpen,
-} from '@/lib/store/slices/uiSlice';
+} from '@/lib/store/slices';
 
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();

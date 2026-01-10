@@ -15,7 +15,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, User } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
-import { logoutUser } from "@/lib/store/slices/authSlice";
+import { logoutUser } from "@/lib/store/slices";
 import { useRouter } from "next/navigation";
 
 export function UserMenu() {

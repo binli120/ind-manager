@@ -6,7 +6,7 @@ import {
   createAsyncThunk,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClient } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { auth_text } from "@/utils/constants";
 
@@ -15,7 +15,8 @@ export interface User {
   email: string;
   name?: string | null;
   avatar?: string | null;
-  role?: string | null;
+  role?: string | null; // submission/project role
+  privilege?: string | null; // system-level privilege
   permissions?: string[] | null;
   teamId?: string;
   createdAt: string;
@@ -53,7 +54,7 @@ export const loginUser = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -78,6 +79,8 @@ export const loginUser = createAsyncThunk(
           email: data.user.email!,
           name: profile?.name || data.user.user_metadata?.name,
           avatar: profile?.avatar_url,
+          privilege: (data.user.user_metadata?.privilege as string) ?? "user",
+          role: (profile?.submission_role as string) ?? (data.user.user_metadata?.role as string) ?? null,
           // role: profile?.role || "user",
           // permissions: profile?.permissions || [],
           // teamId: profile?.team_id,
@@ -106,7 +109,7 @@ export const signUpUser = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -142,7 +145,7 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       return true;
@@ -156,7 +159,7 @@ export const getCurrentUser = createAsyncThunk(
   "auth/getCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const {
         data: { session },
         error: sessionError,
@@ -183,6 +186,8 @@ export const getCurrentUser = createAsyncThunk(
           email: user.email!,
           name: profile?.name || user.user_metadata?.name,
           avatar: profile?.avatar_url,
+          privilege: (user.user_metadata?.privilege as string) ?? "user",
+          role: (profile?.submission_role as string) ?? (user.user_metadata?.role as string) ?? null,
           // role: profile?.role || "user",
           // permissions: profile?.permissions || [],
           // teamId: profile?.team_id,

@@ -1,12 +1,12 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import { createServerClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Test database connection
     const { error } = await supabase.from("users").select("count").limit(1)

@@ -1,7 +1,7 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import { createServerClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -73,13 +73,15 @@ const tablePolicies = {
   },
 } as const
 
+type FilterRecord = Record<string, string | number | boolean>
+
 const filterDisallowedKeys = (filters: Record<string, unknown> | undefined, allowed: readonly string[]) => {
   if (!filters) return undefined
   const entries = Object.entries(filters)
   if (entries.some(([key]) => !allowed.includes(key))) {
     return { error: `Unsupported filter key. Allowed: ${allowed.join(",")}` }
   }
-  return Object.fromEntries(entries)
+  return Object.fromEntries(entries) as FilterRecord
 }
 
 const pickAllowedFields = (

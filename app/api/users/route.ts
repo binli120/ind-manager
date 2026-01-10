@@ -1,7 +1,7 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import { createServerClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -16,7 +16,7 @@ const userProfileSchema = z.object({
 })
 
 export async function GET() {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   try {
     // Check if user is authenticated
@@ -49,7 +49,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   try {
     // Check if user is authenticated

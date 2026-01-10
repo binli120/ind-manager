@@ -4,14 +4,14 @@
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createBrowserClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export function SupabaseExample() {
   const [data, setData] = useState<unknown[]>([])
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
+  const supabase = createBrowserClient()
 
   const fetchData = async () => {
     setLoading(true)

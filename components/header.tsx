@@ -14,18 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createClient } from '@/lib/supabase/client';
+import { createBrowserClient } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { Bell, ChevronDown, Menu, MessageSquare, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useProject } from '@/hooks/useProject';
 import { useAppDispatch } from '@/lib/store';
-import { fetchUserDocuments } from '@/lib/store/slices/documentsSlice';
-import {
-  fetchProjectDetails,
-  fetchProjects,
-} from '@/lib/store/slices/projectsSlice';
+import { fetchUserDocuments, fetchProjectDetails, fetchProjects } from '@/lib/store/slices';
 
 //correct identity deployment vercel
 
@@ -58,7 +54,7 @@ export function Header({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = createBrowserClient();
 
     // Get initial user
     supabase.auth.getUser().then(({ data: { user } }) => {

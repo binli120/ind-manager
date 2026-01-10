@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
-import { fetchUserDocuments } from '@/lib/store/slices/documentsSlice';
+import { fetchUserDocuments } from '@/lib/store/slices';
 import { useEffect } from 'react';
 //import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CommentsPanel } from '@/components/comments-panel';

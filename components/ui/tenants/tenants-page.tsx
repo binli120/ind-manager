@@ -18,7 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, SearchIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AddTenantDialog } from './add_tenant-dialog';
-import { fetchTenants, updateTenantStatus, createTenant } from "@/lib/supabase/tenants";
+import { fetchTenants, updateTenantStatus, createTenant } from "@/lib/supabase";
 
 export type Tenant = {
   id: string;

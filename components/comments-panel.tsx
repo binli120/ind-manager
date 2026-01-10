@@ -4,7 +4,7 @@
 "use client"
 
 import { useAppSelector, useAppDispatch } from "@/lib/store"
-import { setCommentsPanelOpen } from "@/lib/store/slices/uiSlice"
+import { setCommentsPanelOpen } from "@/lib/store/slices"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MessageSquare, CheckCircle, X } from "lucide-react"

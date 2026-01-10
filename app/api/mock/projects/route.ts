@@ -2,7 +2,7 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 import { NextResponse, type NextRequest } from "next/server";
-import type { Project } from "@/lib/store/slices/projectsSlice";
+import type { Project } from "@/lib/store/slices";
 import mockProjects from "@/mock/data/projects.json";
 
 const projects = mockProjects as Project[];

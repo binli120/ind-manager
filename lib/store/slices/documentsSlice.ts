@@ -2,7 +2,7 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
-import { createClient } from "@/lib/supabase/client"
+import { createBrowserClient } from "@/lib/supabase"
 
 export interface DocumentSection {
   id: string
@@ -181,7 +181,7 @@ export const fetchDocuments = createAsyncThunk(
   "documents/fetchDocuments",
   async (projectId?: string, { rejectWithValue }) => {
     try {
-      const supabase = createClient()
+    const supabase = createBrowserClient()
 
       let query = supabase.from("documents").select(`
           *,

@@ -6,8 +6,7 @@ import {
   createAsyncThunk,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { createClient } from "@/lib/supabase/client";
-import { Database } from "@/lib/supabase/schema";
+import { createBrowserClient, type Database } from "@/lib/supabase";
 
 export interface ProjectMember {
   id: string;
@@ -139,7 +138,7 @@ export const fetchProjects = createAsyncThunk(
       //END MOCK
 
 
-      const supabase = createClient();
+      const supabase = createBrowserClient();
 
       let query = supabase.from("projects").select(`
           *,
@@ -231,7 +230,7 @@ export const fetchProjectDetails = createAsyncThunk(
   "projects/fetchProjectDetails",
   async (projectId: string, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
 
       const { data: project, error } = await supabase
         .from("projects")
@@ -321,7 +320,7 @@ export const createProject = createAsyncThunk(
   "projects/createProject",
   async (projectData: ProjectCreation, { rejectWithValue, getState }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const state = getState() as {
         auth: { user: { id: string } | null };
       };
@@ -367,7 +366,7 @@ export const updateProject = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       console.log("updating: ", projectId, updates);
 
       const { data, error } = await supabase
@@ -390,7 +389,7 @@ export const deleteProject = createAsyncThunk(
   "projects/deleteProject",
   async (projectId: string, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
 
       const { error } = await supabase
         .from("projects")
@@ -421,7 +420,7 @@ export const addProjectMember = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
 
       // TODO: Fix query, team member = project member?
       const { data, error } = await supabase
@@ -455,7 +454,7 @@ export const removeProjectMember = createAsyncThunk(
   "projects/removeProjectMember",
   async (memberId: string, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
 
       // TODO: Fix query, team member = project member?
       const { error } = await supabase
@@ -683,10 +682,10 @@ const dbToClientProject = (
     teamId: project.team_id,
     title: project.ind_title,
     code: project.ind_number ?? "",
-    sponsor: project.sponsor_name,
+    sponsor: project.sponsor_name ?? "",
     ownerId: project.project_creator_id ?? "",
-    targetDate: project.target_ind_submission_date,
-    drug: project.drug_name,
+    targetDate: project.target_ind_submission_date ?? "",
+    drug: project.drug_name ?? "",
     createdAt: project.created_at ?? "",
     updatedAt: project.updated_at ?? "",
     teamMembers: [],
@@ -694,18 +693,18 @@ const dbToClientProject = (
     status: (project.status ?? "draft") as Project["status"],
     priority: (project.priority ?? "low") as Project["priority"],
     progress: project.progress ?? 0,
-    metadata: project.metadata as Project["metadata"],
+    metadata: (project.metadata as Project["metadata"]) ?? {},
     settings: {
       allowCollaboration: settings?.allow_collaboration ?? false,
       isPublic: settings?.is_public ?? false,
     },
-    projectStartDate: project.project_start_date,
-    fdaContactEmail: project.fda_contact_email,
-    additionalNotes: project.additional_notes,
-    preIndMeetingDate: project.pre_ind_meeting_date,
-    productType: project.product_type,
-    sponsorContactEmail: project.sponsor_contact_email,
-    targetIndSubmissionDate: project.target_ind_submission_date,
+    projectStartDate: project.project_start_date ?? null,
+    fdaContactEmail: project.fda_contact_email ?? null,
+    additionalNotes: project.additional_notes ?? null,
+    preIndMeetingDate: project.pre_ind_meeting_date ?? null,
+    productType: project.product_type ?? "",
+    sponsorContactEmail: project.sponsor_contact_email ?? "",
+    targetIndSubmissionDate: project.target_ind_submission_date ?? "",
   };
 };
 

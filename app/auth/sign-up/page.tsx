@@ -6,7 +6,7 @@
 import type React from "react"
 
 import { useAppSelector, useAppDispatch } from "@/lib/store"
-import { signUpUser } from "@/lib/store/slices/authSlice"
+import { signUpUser } from "@/lib/store/slices"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"

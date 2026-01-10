@@ -18,8 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, SearchIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AddUserDialog } from './add-user-dialog';
-import { fetchUsers, updateUserStatus, createUser, fetchCurrentUser } from "@/lib/supabase/users";
-import { fetchTenants } from "@/lib/supabase/tenants";
+import { fetchUsers, updateUserStatus, createUser, fetchCurrentUser, fetchTenants } from "@/lib/supabase";
 import { authServices } from "@/app/api/auth/auth-services";
 
 //These should be made more robust in the future.

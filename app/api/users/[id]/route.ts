@@ -1,7 +1,7 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import { createServerClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -15,11 +15,12 @@ const updateUserSchema = z.object({
   status: z.string().optional(),
 })
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = createServerClient()
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const supabase = await createServerClient()
   void _request
 
   try {
+    const { id } = await context.params
     // Check if user is authenticated
     const {
       data: { user },
@@ -33,12 +34,12 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
     const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
 
-    if (!isAdmin && user.id !== params.id) {
+    if (!isAdmin && user.id !== id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     // Get specific user by ID
-    const { data: userData, error } = await supabase.from("users").select("*").eq("id", params.id).single()
+    const { data: userData, error } = await supabase.from("users").select("*").eq("id", id).single()
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
@@ -50,10 +51,11 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = createServerClient()
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const supabase = await createServerClient()
 
   try {
+    const { id } = await context.params
     // Check if user is authenticated
     const {
       data: { user },
@@ -68,7 +70,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
 
     // Only allow users to update their own profile (or admins)
-    if (!isAdmin && user.id !== params.id) {
+    if (!isAdmin && user.id !== id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -81,7 +83,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         ...userData,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
 
     if (error) {
@@ -94,11 +96,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = createServerClient()
+export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const supabase = await createServerClient()
   void _request
 
   try {
+    const { id } = await context.params
     // Check if user is authenticated
     const {
       data: { user },
@@ -113,12 +116,12 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
 
     // Only allow users to delete their own profile (or admins)
-    if (!isAdmin && user.id !== params.id) {
+    if (!isAdmin && user.id !== id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     // Delete user profile
-    const { error } = await supabase.from("users").delete().eq("id", params.id)
+    const { error } = await supabase.from("users").delete().eq("id", id)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })

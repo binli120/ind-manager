@@ -5,7 +5,7 @@
 
 import type React from "react"
 
-import { createClient } from "@/lib/supabase/client"
+import { createBrowserClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -38,7 +38,7 @@ export function LoginDialog({ children }: LoginDialogProps) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
+    const supabase = createBrowserClient()
     setIsLoading(true)
     setError(null)
 
@@ -60,7 +60,7 @@ export function LoginDialog({ children }: LoginDialogProps) {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
+    const supabase = createBrowserClient()
     setIsLoading(true)
     setError(null)
 

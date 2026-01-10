@@ -18,7 +18,7 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ refresh }),
 }))
 
-jest.mock('@/lib/store/slices/authSlice', () => ({
+jest.mock('@/lib/store/slices', () => ({
   logoutUser: () => ({ type: 'auth/logoutUser' }),
 }))
 

@@ -9,7 +9,7 @@ import type { AppDispatch, RootState } from "@/lib/store";
 import {
   hydrateSelectedProjectFromStorage,
   setSelectedProjectId,
-} from "@/lib/store/slices/projectsSlice";
+} from "@/lib/store/slices";
 
 
 export function useProject() {
@@ -41,4 +41,3 @@ export function useProject() {
     setProject,
   };
 }
-

@@ -5,15 +5,15 @@
 
 import { useAppSelector, useAppDispatch } from "@/lib/store";
 import {
-	  setViewMode,
-	  setFilters,
-	  fetchProjects,
-	  createProject,
-	  ProjectCreation,
-	  deleteProject,
-	  updateProject,
-	  ProjectUpdate,
-} from "@/lib/store/slices/projectsSlice";
+  setViewMode,
+  setFilters,
+  fetchProjects,
+  createProject,
+  ProjectCreation,
+  deleteProject,
+  updateProject,
+  ProjectUpdate,
+} from "@/lib/store/slices";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

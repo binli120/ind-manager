@@ -28,7 +28,7 @@ import {
 } from "@/lib/metadata/projects";
 import {
   ProjectCreation,
-} from "@/lib/store/slices/projectsSlice";
+} from "@/lib/store/slices";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
