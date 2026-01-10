@@ -1,7 +1,7 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import { createServerClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -16,7 +16,7 @@ const updateUserSchema = z.object({
 })
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const supabase = await createServerClient()
+  const supabase = await createClient()
   void _request
 
   try {
@@ -52,7 +52,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
 }
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const supabase = await createServerClient()
+  const supabase = await createClient()
 
   try {
     const { id } = await context.params
@@ -97,7 +97,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 }
 
 export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const supabase = await createServerClient()
+  const supabase = await createClient()
   void _request
 
   try {

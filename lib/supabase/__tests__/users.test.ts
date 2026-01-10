@@ -50,7 +50,7 @@ describe("lib/supabase/users", () => {
       name: "Alice",
       email: "alice@example.com",
       phone: "123",
-      role: "project_manager" as any,
+      role: "project_manager" as const,
       tenantId: "t1",
     })
     expect(user.company).toBe("Acme")

@@ -2,10 +2,10 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 import { redirect } from "next/navigation"
-import { createServerClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function ProtectedPage() {
-  const supabase = await createServerClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase.auth.getUser()
   if (error || !data?.user) {

@@ -33,6 +33,15 @@ export {
   default as documentsReducer,
   fetchUserDocuments,
   hydrateSelectedDocumentFromStorage,
+  setCurrentDocument,
+  setSelectedDocumentId as setSelectedDocumentIdDocument,
+  setCurrentSection,
+  setEditingSection,
+  setCommentsVisible,
+  clearError as clearDocumentsError,
+  updateSectionLocally,
+  addSectionLock,
+  removeSectionLock,
 } from "./documentsSlice"
 
 export {
@@ -40,6 +49,24 @@ export {
   setCommentsPanelOpen,
   setSidebarOpen,
   hydrateCurrentViewFromStorage,
+  toggleSidebar,
+  toggleCommentsPanel,
+  setCurrentView,
+  openModal,
+  closeModal,
+  closeAllModals,
+  removeModal,
+  addNotification,
+  hideNotification,
+  removeNotification,
+  setGlobalLoading,
+  setLoadingState,
+  setBreadcrumbs,
+  setTheme,
+  setCompactMode,
+  setGlobalSearch,
+  setError,
+  setFeatureFlag,
 } from "./uiSlice"
 
 export { default as pdfAnalysisApiReducer } from "./pdfAnalysisApiSlice"

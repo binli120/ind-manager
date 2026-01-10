@@ -1,7 +1,7 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import { createServerClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -105,7 +105,7 @@ const pickAllowedFields = (
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createServerClient()
+  const supabase = await createClient()
 
   // Authenticate caller
   const {
