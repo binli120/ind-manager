@@ -3,6 +3,17 @@
 // Email: blee@filynai.com
 import { createServerClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+
+const adminPrivileges = ["system_admin", "user_manager"] as const
+type AdminPrivilege = (typeof adminPrivileges)[number]
+
+const userProfileSchema = z.object({
+  name: z.string().optional(),
+  avatar_url: z.string().url().optional(),
+  phone: z.string().optional(),
+  status: z.string().optional(),
+})
 
 export async function GET() {
   const supabase = createServerClient()
@@ -18,7 +29,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get all users (admin only - you might want to add role checking)
+    const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
+    const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    // Get all users (admin only)
     const { data: users, error } = await supabase.from("users").select("*")
 
     if (error) {
@@ -45,7 +62,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userData = await request.json()
+    const userData = userProfileSchema.parse(await request.json())
 
     // Create or update user profile
     const { data, error } = await supabase

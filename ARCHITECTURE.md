@@ -82,12 +82,12 @@
 │  │                          API Endpoints (/app/api)                           │    │
 │  │                                                                             │    │
 │  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐           │    │
-│  │  │   /api/auth     │  │   /api/users    │  │  /api/database  │           │    │
+│  │  │   /api/auth     │  │   /api/users    │  │ /api/admin/proxy│           │    │
 │  │  │  ────────────   │  │  ────────────   │  │  ────────────   │           │    │
-│  │  │  • Sign up      │  │  • Get users    │  │  • Select       │           │    │
-│  │  │  • Sign in      │  │  • Create user  │  │  • Insert       │           │    │
-│  │  │  • Sign out     │  │  • Update user  │  │  • Update       │           │    │
-│  │  │  • Get user     │  │  • Delete user  │  │  • Delete       │           │    │
+│  │  │  • Sign up      │  │  • Get users    │  │  • Admin CRUD   │           │    │
+│  │  │  • Sign in      │  │  • Create user  │  │    (scoped)     │           │    │
+│  │  │  • Sign out     │  │  • Update user  │  │                 │           │    │
+│  │  │  • Get user     │  │  • Delete user  │  │                 │           │    │
 │  │  └─────────────────┘  └─────────────────┘  └─────────────────┘           │    │
 │  │                                                                             │    │
 │  │  ┌─────────────────────────────────────────────────────────────────────┐  │    │

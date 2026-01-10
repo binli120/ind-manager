@@ -132,7 +132,8 @@ export function ProjectsView() {
 
   useEffect(() => {
     void user;
-    dispatch(fetchProjects("demo-team"));
+    // TODO: wire team selection; default to persisted team in Redux or fetch all when available
+    dispatch(fetchProjects(null));
   }, [dispatch, user]);
 
   

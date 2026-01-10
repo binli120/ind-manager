@@ -74,7 +74,7 @@ Example template: `.env.example`
 - `GET /api/users` - list users (Supabase).
 - `POST /api/users` - create user (Supabase).
 - `GET/PUT/DELETE /api/users/[id]` - user CRUD (Supabase).
-- `POST /api/database` - generic database proxy (Supabase).
+- `POST /api/admin/proxy` - scoped database proxy for users/tenants (Supabase, admin-only for mutations).
 - `GET /api/health` - Supabase connectivity check.
 - `GET /api/mock/projects` - mock projects data.
 

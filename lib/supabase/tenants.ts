@@ -10,8 +10,18 @@ type TenantRow = {
   status: string;
 };
 
+const ADMIN_PROXY_ENDPOINT = "/api/admin/proxy";
+
+const asJson = async <T>(res: Response) => {
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error || "Request failed");
+  }
+  return (await res.json()) as T;
+};
+
 export async function fetchTenants(tenantId?: string): Promise<Tenant[]> {
-  const res = await fetch("/api/database", {
+  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
     method: "POST",
     body: JSON.stringify({
       table: "tenants",
@@ -21,7 +31,7 @@ export async function fetchTenants(tenantId?: string): Promise<Tenant[]> {
     }),
   });
 
-  const { data } = (await res.json()) as { data: TenantRow[] };
+  const { data } = await asJson<{ data: TenantRow[] }>(res);
 
   return data.map((row) => ({
     id: row.id,
@@ -35,7 +45,7 @@ export async function fetchTenants(tenantId?: string): Promise<Tenant[]> {
 }
 
 export async function updateTenantStatus(id: string, status: string) {
-  const res = await fetch("/api/database", {
+  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
     method: "POST",
     body: JSON.stringify({
       table: "tenants",
@@ -45,7 +55,7 @@ export async function updateTenantStatus(id: string, status: string) {
     }),
   });
 
-  const { data } = (await res.json()) as { data: TenantRow[] };
+  const { data } = await asJson<{ data: TenantRow[] }>(res);
   const row = data[0];
 
   return {
@@ -66,7 +76,7 @@ export async function createTenant(tenant: {
   contactEmail: string;
   contactPhone: string;
 }) {
-  const res = await fetch("/api/database", {
+  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
     method: "POST",
     body: JSON.stringify({
       table: "tenants",
@@ -84,7 +94,7 @@ export async function createTenant(tenant: {
     }),
   });
 
-  const { data } = (await res.json()) as { data: TenantRow[] };
+  const { data } = await asJson<{ data: TenantRow[] }>(res);
   const row = data[0];
 
   return {

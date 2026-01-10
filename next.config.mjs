@@ -9,10 +9,10 @@ const __dirname = path.dirname(__filename);
 const nextConfig = {
   outputFileTracingRoot: __dirname,
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     unoptimized: true,

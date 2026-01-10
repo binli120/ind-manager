@@ -3,6 +3,17 @@
 // Email: blee@filynai.com
 import { createServerClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+
+const adminPrivileges = ["system_admin", "user_manager"] as const
+type AdminPrivilege = (typeof adminPrivileges)[number]
+
+const updateUserSchema = z.object({
+  name: z.string().optional(),
+  avatar_url: z.string().url().optional(),
+  phone: z.string().optional(),
+  status: z.string().optional(),
+})
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createServerClient()
@@ -17,6 +28,13 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
+    const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
+
+    if (!isAdmin && user.id !== params.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     // Get specific user by ID
@@ -46,12 +64,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Only allow users to update their own profile (or add admin check)
-    if (user.id !== params.id) {
+    const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
+    const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
+
+    // Only allow users to update their own profile (or admins)
+    if (!isAdmin && user.id !== params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const userData = await request.json()
+    const userData = updateUserSchema.parse(await request.json())
 
     // Update user profile
     const { data, error } = await supabase
@@ -88,8 +109,11 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Only allow users to delete their own profile (or add admin check)
-    if (user.id !== params.id) {
+    const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
+    const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
+
+    // Only allow users to delete their own profile (or admins)
+    if (!isAdmin && user.id !== params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
