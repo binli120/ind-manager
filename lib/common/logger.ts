@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-console */
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LoggerOptions {
@@ -21,27 +19,27 @@ function getTime() {
   return new Date().toISOString();
 }
 
-function format(module: string, level: LogLevel, ...args: any[]) {
+function format(module: string, level: LogLevel, ...args: unknown[]) {
   return [`[${getTime()}] [${module}] [${level.toUpperCase()}]`, ...args];
 }
 
 export function createLogger(options: LoggerOptions = {}) {
-  const module = options.module || "app";
+  const moduleName = options.module || "app";
 
   return {
-    debug: (...args: any[]) => {
+    debug: (...args: unknown[]) => {
       if (shouldLog("debug"))
-        console.debug(...format(module, "debug", ...args));
+        console.debug(...format(moduleName, "debug", ...args));
     },
-    info: (...args: any[]) => {
-      if (shouldLog("info")) console.info(...format(module, "info", ...args));
+    info: (...args: unknown[]) => {
+      if (shouldLog("info")) console.info(...format(moduleName, "info", ...args));
     },
-    warn: (...args: any[]) => {
-      if (shouldLog("warn")) console.warn(...format(module, "warn", ...args));
+    warn: (...args: unknown[]) => {
+      if (shouldLog("warn")) console.warn(...format(moduleName, "warn", ...args));
     },
-    error: (...args: any[]) => {
+    error: (...args: unknown[]) => {
       if (shouldLog("error"))
-        console.error(...format(module, "error", ...args));
+        console.error(...format(moduleName, "error", ...args));
     },
   };
 }

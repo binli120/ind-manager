@@ -69,6 +69,12 @@ const initialState: TeamsState = {
   selectedTeamId: null,
 };
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  return "Unknown error";
+};
+
 // MOCK: Remove mock mode when Supabase projects are live.
 
 const useMockProjects = true;
@@ -165,8 +171,8 @@ export const fetchUserTeams = createAsyncThunk(
         })) || [];
 
       return teams;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch teams");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to fetch teams");
     }
   },
 );
@@ -237,8 +243,8 @@ export const fetchTeamDetails = createAsyncThunk(
       };
 
       return { team: teamData, members: teamData.members };
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch team details");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to fetch team details");
     }
   },
 );
@@ -297,8 +303,8 @@ export const createTeam = createAsyncThunk(
       if (memberError) throw memberError;
 
       return { team, settings: settingsData, members: memberData };
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to create team");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to create team");
     }
   },
 );
@@ -336,8 +342,8 @@ export const updateTeam = createAsyncThunk(
       if (teamError) throw teamError;
 
       return { team };
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to update team");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to update team");
     }
   },
 );
@@ -363,8 +369,8 @@ export const deleteTeam = createAsyncThunk(
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to delete team");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to delete team");
     }
   },
 );
@@ -406,8 +412,8 @@ export const inviteTeamMember = createAsyncThunk(
       if (error) throw error;
 
       return invite;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to invite team member");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to invite team member");
     }
   },
 );
@@ -436,8 +442,8 @@ export const updateTeamMember = createAsyncThunk(
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to update team member");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to update team member");
     }
   },
 );
@@ -462,8 +468,8 @@ export const removeTeamMember = createAsyncThunk(
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to remove team member");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to remove team member");
     }
   },
 );

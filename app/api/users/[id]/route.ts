@@ -1,8 +1,9 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createServerClient()
+  void _request
 
   try {
     // Check if user is authenticated
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     return NextResponse.json({ user: userData })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -64,13 +65,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     return NextResponse.json({ user: data[0] })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createServerClient()
+  void _request
 
   try {
     // Check if user is authenticated
@@ -96,7 +98,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     return NextResponse.json({ message: "User deleted successfully" })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

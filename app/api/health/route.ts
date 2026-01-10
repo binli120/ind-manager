@@ -1,12 +1,12 @@
 import { createServerClient } from "@/lib/supabase/server"
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = createServerClient()
 
     // Test database connection
-    const { data, error } = await supabase.from("users").select("count").limit(1)
+    const { error } = await supabase.from("users").select("count").limit(1)
 
     if (error) {
       return NextResponse.json(
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       database: "connected",
       timestamp: new Date().toISOString(),
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         status: "error",

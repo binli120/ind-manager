@@ -74,6 +74,67 @@ export interface Document {
   }
 }
 
+type SupabaseProfileRow = {
+  name?: string | null
+  avatar_url?: string | null
+}
+
+type SupabaseDocumentSectionRow = {
+  id: string
+  title: string
+  content?: string | null
+  order_index: number
+  is_locked?: boolean | null
+  locked_by?: string | null
+  locked_at?: string | null
+  version?: number | null
+  created_at: string
+  updated_at: string
+}
+
+type SupabaseDocumentCommentRow = {
+  id: string
+  section_id?: string | null
+  user_id: string
+  content: string
+  position?: DocumentComment["position"] | null
+  is_resolved?: boolean | null
+  parent_id?: string | null
+  created_at: string
+  updated_at: string
+  profiles?: SupabaseProfileRow | null
+}
+
+type SupabaseDocumentVersionRow = {
+  id: string
+  version: number
+  title: string
+  changes: string
+  created_by: string
+  created_at: string
+}
+
+type SupabaseDocumentRow = {
+  id: string
+  title: string
+  description?: string | null
+  project_id: string
+  team_id: string
+  owner_id: string
+  status: Document["status"]
+  type: Document["type"]
+  due_date?: string | null
+  updated_at: string
+  active_users?: number | null
+  version?: number | null
+  is_template?: boolean | null
+  document_sections?: SupabaseDocumentSectionRow[] | null
+  document_comments?: SupabaseDocumentCommentRow[] | null
+  document_versions?: SupabaseDocumentVersionRow[] | null
+  profiles?: SupabaseProfileRow | null
+  metadata?: Document["metadata"] | null
+}
+
 export interface SectionLock {
   sectionId: string
   userId: string
@@ -104,6 +165,12 @@ const initialState: DocumentsState = {
   selectedDocumentId: null,
   editingSection: null,
   commentsVisible: true,
+}
+
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message
+  if (typeof error === "string") return error
+  return "Unknown error"
 }
 
 // Async thunks
@@ -155,8 +222,9 @@ export const fetchDocuments = createAsyncThunk(
 
       if (error) throw error
 
+      const rawDocuments = (documents ?? []) as SupabaseDocumentRow[]
       const transformedDocuments: Document[] =
-        documents?.map((doc: any) => ({
+        rawDocuments.map((doc) => ({
           id: doc.id,
           title: doc.title,
           description: doc.description,
@@ -172,7 +240,7 @@ export const fetchDocuments = createAsyncThunk(
           version: doc.version || 1,
           isTemplate: doc.is_template || false,
           sections:
-            doc.document_sections?.map((section: any) => ({
+            doc.document_sections?.map((section) => ({
               id: section.id,
               documentId: doc.id,
               title: section.title,
@@ -186,7 +254,7 @@ export const fetchDocuments = createAsyncThunk(
               updatedAt: section.updated_at,
             })) || [],
           comments:
-            doc.document_comments?.map((comment: any) => ({
+            doc.document_comments?.map((comment) => ({
               id: comment.id,
               documentId: doc.id,
               sectionId: comment.section_id,
@@ -207,11 +275,11 @@ export const fetchDocuments = createAsyncThunk(
             canView: true,
           },
           metadata: doc.metadata,
-        })) || []
+        }))
 
       return transformedDocuments
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch documents")
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to fetch documents")
     }
   },
 )
@@ -270,26 +338,27 @@ export const fetchDocumentDetails = createAsyncThunk(
 
       if (error) throw error
 
+      const rawDocument = document as SupabaseDocumentRow
       const transformedDocument: Document = {
-        id: document.id,
-        title: document.title,
-        description: document.description,
-        projectId: document.project_id,
-        teamId: document.team_id,
-        ownerId: document.owner_id,
-        ownerName: document.profiles?.name || "Unknown User",
-        status: document.status,
-        type: document.type,
-        dueDate: document.due_date,
-        lastModified: document.updated_at,
-        activeUsers: document.active_users || 0,
-        version: document.version || 1,
-        isTemplate: document.is_template || false,
+        id: rawDocument.id,
+        title: rawDocument.title,
+        description: rawDocument.description ?? undefined,
+        projectId: rawDocument.project_id,
+        teamId: rawDocument.team_id,
+        ownerId: rawDocument.owner_id,
+        ownerName: rawDocument.profiles?.name || "Unknown User",
+        status: rawDocument.status,
+        type: rawDocument.type,
+        dueDate: rawDocument.due_date ?? undefined,
+        lastModified: rawDocument.updated_at,
+        activeUsers: rawDocument.active_users || 0,
+        version: rawDocument.version || 1,
+        isTemplate: rawDocument.is_template || false,
         sections:
-          document.document_sections
-            ?.map((section: any) => ({
+          rawDocument.document_sections
+            ?.map((section) => ({
               id: section.id,
-              documentId: document.id,
+              documentId: rawDocument.id,
               title: section.title,
               content: section.content || "",
               order: section.order_index,
@@ -300,11 +369,11 @@ export const fetchDocumentDetails = createAsyncThunk(
               createdAt: section.created_at,
               updatedAt: section.updated_at,
             }))
-            .sort((a: any, b: any) => a.order - b.order) || [],
+            .sort((a, b) => a.order - b.order) || [],
         comments:
-          document.document_comments?.map((comment: any) => ({
+          rawDocument.document_comments?.map((comment) => ({
             id: comment.id,
-            documentId: document.id,
+            documentId: rawDocument.id,
             sectionId: comment.section_id,
             userId: comment.user_id,
             userName: comment.profiles?.name || "Unknown User",
@@ -317,9 +386,9 @@ export const fetchDocumentDetails = createAsyncThunk(
             updatedAt: comment.updated_at,
           })) || [],
         versions:
-          document.document_versions?.map((version: any) => ({
+          rawDocument.document_versions?.map((version) => ({
             id: version.id,
-            documentId: document.id,
+            documentId: rawDocument.id,
             version: version.version,
             title: version.title,
             changes: version.changes,
@@ -331,12 +400,12 @@ export const fetchDocumentDetails = createAsyncThunk(
           canComment: true,
           canView: true,
         },
-        metadata: document.metadata,
+        metadata: rawDocument.metadata ?? undefined,
       }
 
       return transformedDocument
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch document details")
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to fetch document details")
     }
   },
 )
@@ -349,7 +418,7 @@ export const lockSection = createAsyncThunk(
 
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("document_sections")
         .update({
           is_locked: true,
@@ -363,8 +432,8 @@ export const lockSection = createAsyncThunk(
       if (error) throw error
 
       return { sectionId, userId, expiresAt: expiresAt.toISOString() }
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to lock section")
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to lock section")
     }
   },
 )
@@ -387,8 +456,8 @@ export const unlockSection = createAsyncThunk(
       if (error) throw error
 
       return sectionId
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to unlock section")
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to unlock section")
     }
   },
 )
@@ -412,8 +481,8 @@ export const updateSectionContent = createAsyncThunk(
       if (error) throw error
 
       return { sectionId, content, updatedAt: data.updated_at }
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to update section content")
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to update section content")
     }
   },
 )
@@ -477,8 +546,8 @@ export const addComment = createAsyncThunk(
       }
 
       return comment
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to add comment")
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to add comment")
     }
   },
 )
@@ -494,8 +563,8 @@ export const resolveComment = createAsyncThunk(
       if (error) throw error
 
       return commentId
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to resolve comment")
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to resolve comment")
     }
   },
 )
@@ -546,8 +615,9 @@ export const fetchUserDocuments = createAsyncThunk(
 
       if (error) throw error
 
+      const rawDocuments = (documents ?? []) as SupabaseDocumentRow[]
       const transformedDocuments: Document[] =
-        documents?.map((doc: any) => ({
+        rawDocuments.map((doc) => ({
           id: doc.id,
           title: doc.title,
           description: doc.description,
@@ -563,7 +633,7 @@ export const fetchUserDocuments = createAsyncThunk(
           version: doc.version || 1,
           isTemplate: doc.is_template || false,
           sections:
-            doc.document_sections?.map((section: any) => ({
+            doc.document_sections?.map((section) => ({
               id: section.id,
               documentId: doc.id,
               title: section.title,
@@ -577,7 +647,7 @@ export const fetchUserDocuments = createAsyncThunk(
               updatedAt: section.updated_at,
             })) || [],
           comments:
-            doc.document_comments?.map((comment: any) => ({
+            doc.document_comments?.map((comment) => ({
               id: comment.id,
               documentId: doc.id,
               sectionId: comment.section_id,
@@ -598,11 +668,11 @@ export const fetchUserDocuments = createAsyncThunk(
             canView: true,
           },
           metadata: doc.metadata,
-        })) || []
+        }))
 
       return transformedDocuments
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch user documents")
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to fetch user documents")
     }
   },
 )
