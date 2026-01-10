@@ -99,6 +99,12 @@ const initialState: ProjectsState = {
   selectedProjectId: null,
 };
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  return "Unknown error";
+};
+
 // MOCK: Remove mock mode when Supabase projects are live.
 const useMockProjects = true;
 // Async thunks
@@ -179,8 +185,8 @@ export const fetchProjects = createAsyncThunk(
         }) || [];
 
       return transformedProjects;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch projects");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to fetch projects");
     }
   },
 );
@@ -240,9 +246,9 @@ export const fetchProjectDetails = createAsyncThunk(
       };
 
       return transformedProject;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return rejectWithValue(
-        error.message || "Failed to fetch project details",
+        getErrorMessage(error) || "Failed to fetch project details",
       );
     }
   },
@@ -282,8 +288,8 @@ export const createProject = createAsyncThunk(
       // if (memberError) throw memberError;
 
       return newProject;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to create project");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to create project");
     }
   },
 );
@@ -308,8 +314,8 @@ export const updateProject = createAsyncThunk(
       if (error) throw error;
 
       return data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to update project");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to update project");
     }
   },
 );
@@ -328,8 +334,8 @@ export const deleteProject = createAsyncThunk(
       if (error) throw error;
 
       return projectId;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to delete project");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to delete project");
     }
   },
 );
@@ -403,7 +409,7 @@ export const removeProjectMember = createAsyncThunk(
       */
     } catch (error: any) {
       return rejectWithValue(
-        error.message || "Failed to remove project member",
+        getErrorMessage(error) || "Failed to remove project member",
       );
     }
   },

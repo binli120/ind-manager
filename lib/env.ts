@@ -1,13 +1,13 @@
-import { useLogger } from "@/hooks/useLogger";
+import { createLogger } from "@/lib/common/logger";
 
-const logger = useLogger("env");
+const logger = createLogger({ module: "env" });
 
 export function getTiptapEnv() {
   const conversionAppId = process.env.TIPTAP_CONVERSION_APP_ID ?? "";
   const conversionSecret = process.env.TIPTAP_CONVERSION_SECRET ?? "";
   const conversionCloudApiKey = process.env.CLOUDCONVERT_API_KEY ?? "";
-  const documentSerSecretKey =
-    process.env.TIPTAP_DOCUMENT_SERVER_SECRET_KEY ?? "";
+  const documentSerSecretKey = process.env.TIPTAP_DOCUMENT_SERVER_SECRET_KEY ??
+    "";
 
   if (
     !conversionAppId ||

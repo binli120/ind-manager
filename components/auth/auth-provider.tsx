@@ -19,7 +19,11 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: ErrorNullable }>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: ErrorNullable }>;
+  signUp: (
+    email: string,
+    password: string,
+    metadata?: Record<string, unknown>,
+  ) => Promise<{ error: ErrorNullable }>;
   signOut: () => Promise<{ error: ErrorNullable }>;
   resetPassword: (email: string) => Promise<{ error: ErrorNullable }>;
   resendConfirmation: (email: string) => Promise<{ error?: ErrorNullable }>;
@@ -40,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, metadata?: Record<string, unknown>) => {
     const { error } = await authServices.signUp(email, password, metadata);
     dispatch(setAuthLoading(false));
     return { error };
@@ -64,7 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // DUMMY FUNCTION
-  const resendConfirmation = async (_: string): Promise<{ error?: ErrorNullable }> => {
+  const resendConfirmation = async (email: string): Promise<{ error?: ErrorNullable }> => {
+    void email;
     try {
       await authServices.getUser();
       return {};

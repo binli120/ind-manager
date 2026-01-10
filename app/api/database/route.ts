@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   try {
     // Check if user is authenticated
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ data: result.data })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

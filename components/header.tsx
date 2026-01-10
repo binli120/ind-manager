@@ -23,23 +23,14 @@ import {
   fetchProjectDetails,
   fetchProjects,
 } from '@/lib/store/slices/projectsSlice';
+import type { ViewType } from '@/lib/store/slices/uiSlice';
 
 //correct identity deployment vercel
 
 interface HeaderProps {
   onToggleSidebar: () => void;
   onToggleComments: () => void;
-  currentView:
-    | 'workspace'
-    | 'projects'
-    | 'calendar'
-    | 'submission'
-    | 'post-submission'
-    | 'gap-scoring'
-    | 'review-center'
-    | 'tenants'
-    | 'users'
-    | 'gap-analysis';
+  currentView: ViewType;
 }
 
 export function Header({
@@ -48,7 +39,7 @@ export function Header({
   currentView,
 }: HeaderProps) {
   const dispatch = useAppDispatch();
-  const { projects, currentProject, selectedProjectId, setProject } =
+  const { projects, selectedProjectId, setProject } =
     useProject();
 
   const [user, setUser] = useState<User | null>(null);
@@ -150,7 +141,7 @@ export function Header({
                 <SelectValue placeholder='Select project' />
               </SelectTrigger>
               {/**IM-61 Add a overflow and max height */}
-              <SelectContent className = "max-h-42 overflow-y-auto">
+              <SelectContent className='max-h-42 overflow-y-auto'>
                 {projects.map((project) => (
                   <SelectItem
                     key={project.id}

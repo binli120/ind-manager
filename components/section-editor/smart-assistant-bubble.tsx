@@ -35,7 +35,8 @@ export function SmartAssistantBubble({ position, keyword, onClose, onOpenMateria
           <div>
             <p className="text-xs font-semibold mb-1">Related Source Contents Found.</p>
             <p className="text-xs opacity-90">
-              We found {3} source content related to "<span className="font-medium">{keyword}</span>". Click to view.
+              We found {3} source content related to &quot;<span className="font-medium">{keyword}</span>&quot;. Click
+              to view.
             </p>
           </div>
         </button>

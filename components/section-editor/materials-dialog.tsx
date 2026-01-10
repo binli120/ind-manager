@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import Image from "next/image"
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
 
@@ -32,6 +33,15 @@ interface MaterialsDialogProps {
   onMaterialsCountChange?: (count: number) => void // Added callback for materials count
 }
 
+interface MyMaterial {
+  type: string
+  content?: string
+  originalText?: string
+  id?: string
+  data?: unknown
+  timestamp: Date
+}
+
 export function MaterialsDialog({
   open,
   onOpenChange,
@@ -45,7 +55,7 @@ export function MaterialsDialog({
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; text: string } | null>(null)
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set())
-  const [myMaterials, setMyMaterials] = useState<any[]>([])
+  const [myMaterials, setMyMaterials] = useState<MyMaterial[]>([])
   const contentRef = useRef<HTMLDivElement>(null)
   const selectableTextRef = useRef<HTMLDivElement>(null)
   const [isMounted, setIsMounted] = useState(false)
@@ -54,6 +64,12 @@ export function MaterialsDialog({
     setIsMounted(true)
     return () => setIsMounted(false)
   }, [])
+
+  useEffect(() => {
+    if (open && keyword) {
+      setSearchQuery(keyword)
+    }
+  }, [keyword, open])
 
   useEffect(() => {
     const handleMouseUp = (e: MouseEvent) => {
@@ -125,7 +141,7 @@ export function MaterialsDialog({
     setContextMenu(null)
   }
 
-  const toggleTableSelection = (tableId: string, tableData: any) => {
+  const toggleTableSelection = (tableId: string, tableData: unknown) => {
     const newSelection = new Set(selectedTables)
     if (newSelection.has(tableId)) {
       newSelection.delete(tableId)
@@ -138,7 +154,7 @@ export function MaterialsDialog({
     console.log("[v0] Toggled table selection:", tableId)
   }
 
-  const toggleImageSelection = (imageId: string, imageData: any) => {
+  const toggleImageSelection = (imageId: string, imageData: unknown) => {
     const newSelection = new Set(selectedImages)
     if (newSelection.has(imageId)) {
       newSelection.delete(imageId)
@@ -556,9 +572,11 @@ This guideline applies to biotechnology-derived pharmaceuticals including:
                                 </label>
                               </div>
                             </div>
-                            <img
+                            <Image
                               src={image.url || "/placeholder.svg"}
                               alt={image.title}
+                              width={480}
+                              height={320}
                               className="w-full h-auto rounded border bg-muted"
                             />
                             <p className="text-xs text-muted-foreground">{image.caption}</p>

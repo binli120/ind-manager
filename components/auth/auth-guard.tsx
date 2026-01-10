@@ -1,13 +1,12 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
-import { useAppDispatch, useAppSelector } from "@/lib/store";
-import { createClient } from "@/lib/supabase/client";
-import { getCurrentUser } from "@/lib/store/slices/authSlice";
-import { Session } from "@supabase/supabase-js";
+import { useAppDispatch, useAppSelector } from '@/lib/store';
+import { getCurrentUser } from '@/lib/store/slices/authSlice';
+import { createClient } from '@/lib/supabase/client';
+import { Session } from '@supabase/supabase-js';
+import { Loader2 } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -15,7 +14,7 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const { user, isLoading, isAuthenticated } = useAppSelector(
-    (state) => state.auth,
+    (state) => state.auth
   );
   const dispatch = useAppDispatch();
 
@@ -44,11 +43,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
       dispatch(getCurrentUser());
 
-      if (event === "TOKEN_REFRESHED") {
+      if (event === 'TOKEN_REFRESHED') {
         // Token was refreshed successfully
-      } else if (event === "SIGNED_OUT") {
+      } else if (event === 'SIGNED_OUT') {
         // User signed out
-      } else if (event === "SIGNED_IN") {
+      } else if (event === 'SIGNED_IN') {
         // User signed in successfully
       }
     });
@@ -60,40 +59,40 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (!isLoading) {
       // Check if current path is an auth page
       const isAuthPage =
-        pathname?.startsWith("/auth/") || pathname === "/login";
-      const isApiPage = pathname?.startsWith("/api/");
-      const isResetPage = pathname?.startsWith("/auth/reset-password");
+        pathname?.startsWith('/auth/') || pathname === '/login';
+      const isApiPage = pathname?.startsWith('/api/');
+      const isResetPage = pathname?.startsWith('/auth/reset-password');
 
       if ((!user || !isAuthenticated) && !isAuthPage && !isApiPage) {
         // Not authenticated and trying to access protected page
         setTimeout(() => {
-          router.replace("/auth/login");
+          router.replace('/auth/login');
         }, 100);
-      } else if (user && (isAuthPage || pathname === "/") && !isResetPage) {
+      } else if (user && (isAuthPage || pathname === '/') && !isResetPage) {
         // Authenticated and trying to access auth page or root page
         setTimeout(() => {
-          router.replace("/");
+          router.replace('/');
         }, 100);
       }
     }
-  }, [user, isLoading, pathname, router]);
+  }, [user, isAuthenticated, isLoading, pathname, router]);
 
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+      <div className='min-h-screen flex items-center justify-center bg-background'>
+        <div className='flex flex-col items-center space-y-4'>
+          <Loader2 className='h-8 w-8 animate-spin text-primary' />
+          <p className='text-sm text-muted-foreground'>Loading...</p>
         </div>
       </div>
     );
   }
 
   // Check if current path is an auth page or API page
-  const isAuthPage = pathname?.startsWith("/auth/") || pathname === "/login";
-  const isResetPage = pathname?.startsWith("/auth/reset-password") && user;
-  const isApiPage = pathname?.startsWith("/api/");
+  const isAuthPage = pathname?.startsWith('/auth/') || pathname === '/login';
+  const isResetPage = pathname?.startsWith('/auth/reset-password') && user;
+  const isApiPage = pathname?.startsWith('/api/');
 
   // For auth pages, render children if not authenticated
   if (isAuthPage && !isResetPage) {
@@ -101,10 +100,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
       return <>{children}</>;
     } else {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
+        <div className='min-h-screen flex items-center justify-center bg-background'>
+          <div className='flex flex-col items-center space-y-4'>
+            <Loader2 className='h-8 w-8 animate-spin text-primary' />
+            <p className='text-sm text-muted-foreground'>
               Redirecting to workspace...
             </p>
           </div>
@@ -141,10 +140,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return <>{children}</>;
   } else {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">
+      <div className='min-h-screen flex items-center justify-center bg-background'>
+        <div className='flex flex-col items-center space-y-4'>
+          <Loader2 className='h-8 w-8 animate-spin text-primary' />
+          <p className='text-sm text-muted-foreground'>
             Redirecting to login...
           </p>
         </div>

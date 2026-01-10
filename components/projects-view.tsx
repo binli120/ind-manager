@@ -2,15 +2,14 @@
 
 import { useAppSelector, useAppDispatch } from "@/lib/store";
 import {
-  setViewMode,
-  setFilters,
-  fetchProjects,
-  createProject,
-  Project,
-  ProjectCreation,
-  deleteProject,
-  updateProject,
-  ProjectUpdate,
+	  setViewMode,
+	  setFilters,
+	  fetchProjects,
+	  createProject,
+	  ProjectCreation,
+	  deleteProject,
+	  updateProject,
+	  ProjectUpdate,
 } from "@/lib/store/slices/projectsSlice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";

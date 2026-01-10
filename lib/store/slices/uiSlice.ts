@@ -25,7 +25,7 @@ export interface Modal {
     | 'settings'
     | 'custom';
   title?: string;
-  data?: any;
+  data?: unknown;
   isOpen: boolean;
 }
 
