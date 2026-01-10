@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, FileQuestion, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+type SectionStatus = "complete" | "warning" | "missing" | "critical"
+
 interface Section {
   id: string
   name: string
-  status: "complete" | "warning" | "issues" | "missing"
+  status: SectionStatus
   assignee?: string
 }
 
@@ -23,7 +25,7 @@ interface ModuleData {
   warning: number
   issues: number
   missing: number
-  sections: Section[]
+  sectionsDetail: Section[]
 }
 
 interface ModuleStatusCardsProps {
@@ -48,31 +50,42 @@ export function ModuleStatusCards({ modules, onSectionClick }: ModuleStatusCards
     return "destructive"
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: SectionStatus) => {
     switch (status) {
       case "complete":
         return "bg-success"
       case "warning":
         return "bg-warning"
-      case "issues":
+      case "critical":
         return "bg-destructive"
       case "missing":
-        return "bg-muted"
-      default:
         return "bg-muted"
     }
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: SectionStatus) => {
     switch (status) {
       case "complete":
         return <CheckCircle2 className="h-3 w-3" />
       case "warning":
         return <AlertTriangle className="h-3 w-3" />
-      case "issues":
+      case "critical":
         return <AlertCircle className="h-3 w-3" />
       case "missing":
         return <FileQuestion className="h-3 w-3" />
+    }
+  }
+
+  const getStatusLabel = (status: SectionStatus) => {
+    switch (status) {
+      case "complete":
+        return "Complete"
+      case "warning":
+        return "Warning"
+      case "critical":
+        return "Issues"
+      case "missing":
+        return "Missing"
     }
   }
 
@@ -175,7 +188,7 @@ export function ModuleStatusCards({ modules, onSectionClick }: ModuleStatusCards
               {/* Expanded Section List */}
               {isExpanded && (
                 <div className="space-y-1 pt-2 border-t max-h-48 overflow-y-auto">
-                  {module.sections.map((section) => (
+                  {module.sectionsDetail.map((section) => (
                     <button
                       key={section.id}
                       onClick={() => onSectionClick?.(module.id, section.id)}

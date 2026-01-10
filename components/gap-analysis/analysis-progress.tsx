@@ -21,26 +21,38 @@ export function AnalysisProgress({ modules }: AnalysisProgressProps) {
 
   useEffect(() => {
     const totalModules = modules.length
+    if (totalModules === 0) {
+      return 
+    }
     const timePerModule = 8000 / totalModules
-
+   
     const interval = setInterval(() => {
       setProgress((prev) => {
-        const newProgress = prev + 100 / totalModules / 10
-        if (newProgress >= 100) {
+        const nextProgress = Math.min(100, prev + 100 / totalModules / 10 )
+        const moduleIndex = Math.min(
+          Math.floor((nextProgress / 100) * totalModules),
+          totalModules - 1,
+        )
+        setCurrentModule(moduleIndex)
+        if (nextProgress === 100) {
           clearInterval(interval)
-          return 100
         }
-        return newProgress
-      })
-
-      setCurrentModule(() => {
-        const moduleIndex = Math.floor((progress / 100) * totalModules)
-        return Math.min(moduleIndex, totalModules - 1)
+        return nextProgress
       })
     }, timePerModule / 10)
 
     return () => clearInterval(interval)
   }, [modules.length, progress])
+
+  if (modules.length === 0) {
+    return (
+      <Card className="border-primary/50 bg-primary/5">
+        <CardContent className="pt-6 text-sm text-muted-foreground">
+          No modules to analyze yet.
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="border-primary/50 bg-primary/5">

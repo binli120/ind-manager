@@ -27,7 +27,6 @@ interface DocumentViewProps {
     view:
       | 'workspace'
       | 'projects'
-      | 'teams'
       | 'calendar'
       | 'submission'
       | 'post-submission'

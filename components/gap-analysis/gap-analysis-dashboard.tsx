@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -11,6 +11,7 @@ import { RecentIssuesTable } from "./recent-issues-table"
 import { AnalysisProgress } from "./analysis-progress"
 import { IssueDetailDialog } from "./issue-detail-dialog"
 import { SubmissionTimeline } from "./submission-timeline"
+
 
 const projects = [
   { id: "ind-001", name: "IND-001: Oncology Phase I" },
@@ -67,7 +68,7 @@ const mockData = {
         { id: "2.3", name: "Quality Overall Summary", status: "complete", assignee: "Mike R." },
         { id: "2.4", name: "Nonclinical Overview", status: "warning", assignee: "Dr. Patel" },
         { id: "2.5", name: "Clinical Overview", status: "complete", assignee: "Dr. Chen" },
-        { id: "2.6", name: "Nonclinical Summary", status: "issues", assignee: "Dr. Patel" },
+        { id: "2.6", name: "Nonclinical Summary", status: "critical", assignee: "Dr. Patel" },
         { id: "2.7", name: "Clinical Summary", status: "warning", assignee: "Dr. Chen" },
         { id: "2.8", name: "Pharmacology Written Summary", status: "complete", assignee: "Dr. Patel" },
         { id: "2.9", name: "Pharmacokinetics Summary", status: "complete", assignee: "Dr. Patel" },
@@ -125,13 +126,13 @@ const mockData = {
         { id: "4.2", name: "Primary Pharmacodynamics", status: "complete", assignee: "Dr. Patel" },
         { id: "4.3", name: "Secondary Pharmacodynamics", status: "warning", assignee: "Dr. Patel" },
         { id: "4.4", name: "Safety Pharmacology", status: "complete", assignee: "Dr. Patel" },
-        { id: "4.5", name: "PD Drug Interactions", status: "issues", assignee: "Dr. Patel" },
+        { id: "4.5", name: "PD Drug Interactions", status: "critical", assignee: "Dr. Patel" },
         { id: "4.6", name: "Pharmacokinetics Studies", status: "complete", assignee: "Dr. Patel" },
         { id: "4.7", name: "Absorption Studies", status: "warning", assignee: "Dr. Patel" },
         { id: "4.8", name: "Distribution Studies", status: "complete", assignee: "Dr. Patel" },
         { id: "4.9", name: "Metabolism Studies", status: "warning", assignee: "Dr. Patel" },
         { id: "4.10", name: "Excretion Studies", status: "complete", assignee: "Dr. Patel" },
-        { id: "4.11", name: "PK Drug Interactions", status: "issues", assignee: "Dr. Patel" },
+        { id: "4.11", name: "PK Drug Interactions", status: "critical", assignee: "Dr. Patel" },
         { id: "4.12", name: "Toxicology Study Reports", status: "complete", assignee: "Dr. Patel" },
         { id: "4.13", name: "Single-Dose Toxicity", status: "complete", assignee: "Dr. Patel" },
         { id: "4.14", name: "Repeat-Dose Toxicity", status: "warning", assignee: "Dr. Patel" },
@@ -161,7 +162,7 @@ const mockData = {
         { id: "5.3", name: "Clinical Overview", status: "complete", assignee: "Dr. Chen" },
         { id: "5.4", name: "Biopharm/PK Studies", status: "warning", assignee: "Dr. Chen" },
         { id: "5.5", name: "PK Study Reports", status: "warning", assignee: "Dr. Chen" },
-        { id: "5.6", name: "Human Biomaterial", status: "issues", assignee: "Dr. Chen" },
+        { id: "5.6", name: "Human Biomaterial", status: "critical", assignee: "Dr. Chen" },
         { id: "5.7", name: "Healthy Subject PK", status: "complete", assignee: "Dr. Chen" },
         { id: "5.8", name: "Patient PK", status: "warning", assignee: "Dr. Chen" },
         { id: "5.9", name: "Intrinsic Factor Studies", status: "missing", assignee: "Dr. Chen" },
@@ -170,8 +171,8 @@ const mockData = {
         { id: "5.12", name: "Study Reports - PD", status: "complete", assignee: "Dr. Chen" },
         { id: "5.13", name: "Healthy Subject PD", status: "warning", assignee: "Dr. Chen" },
         { id: "5.14", name: "Patient PD", status: "complete", assignee: "Dr. Chen" },
-        { id: "5.15", name: "Efficacy/Safety Studies", status: "issues", assignee: "Dr. Chen" },
-        { id: "5.16", name: "Controlled Studies", status: "issues", assignee: "Dr. Chen" },
+        { id: "5.15", name: "Efficacy/Safety Studies", status: "critical", assignee: "Dr. Chen" },
+        { id: "5.16", name: "Controlled Studies", status: "critical", assignee: "Dr. Chen" },
         { id: "5.17", name: "Uncontrolled Studies", status: "missing", assignee: "Dr. Chen" },
         { id: "5.18", name: "Analyses of Data", status: "missing", assignee: "Dr. Chen" },
         { id: "5.19", name: "Subject Disposition", status: "warning", assignee: "Dr. Chen" },
@@ -193,15 +194,31 @@ export default function GapAnalysisDashboard() {
   const [selectedProject, setSelectedProject] = useState("ind-001")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [selectedModule, setSelectedModule] = useState<number | null>(null)
-  const [lastAnalysisDate, setLastAnalysisDate] = useState<Date>(new Date("2024-11-29T14:30:00"))
+  const [lastAnalysisDate, setLastAnalysisDate] = useState<Date>(new Date())
+  const analysisTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (analysisTimeoutRef.current) {
+        clearTimeout(analysisTimeoutRef.current)
+        analysisTimeoutRef.current = null
+      }
+    }
+  }, [])
 
   const handleRunAnalysis = () => {
+    if (analysisTimeoutRef.current) {
+      clearTimeout(analysisTimeoutRef.current)
+    }
+
     setIsAnalyzing(true)
-    setTimeout(() => {
+    analysisTimeoutRef.current = setTimeout(() => {
       setIsAnalyzing(false)
       setLastAnalysisDate(new Date())
+      analysisTimeoutRef.current = null
     }, 8000)
   }
+
 
   const handleExportReport = () => {
     alert("Exporting comprehensive gap analysis report...")
@@ -279,15 +296,12 @@ export default function GapAnalysisDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <ModuleStatusCards
-              modules={mockData.modules.map((m) => ({
-                ...m,
-                sections: m.sectionsDetail,
-              }))}
-              onSectionClick={(moduleId) => {
-                setSelectedModule(moduleId)
-              }}
-            />
+          <ModuleStatusCards
+            modules={mockData.modules}
+            onSectionClick={(moduleId, sectionId) => {
+              setSelectedModule(moduleId)
+            }}
+          />
         </CardContent>
       </Card>
 
@@ -295,7 +309,11 @@ export default function GapAnalysisDashboard() {
       <IssueDetailDialog
         open={selectedModule !== null}
         onClose={() => setSelectedModule(null)}
-        module={selectedModule ? mockData.modules.find((m) => m.id === selectedModule) : null}
+        module={
+          selectedModule !== null
+            ? mockData.modules.find((m) => m.id === selectedModule) ?? null
+            : null
+        }
       />
     </div>
   )
