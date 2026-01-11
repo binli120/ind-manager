@@ -7,6 +7,7 @@ import {
   type PayloadAction,
 } from "@reduxjs/toolkit";
 import { createBrowserClient, type Database } from "@/lib/supabase";
+import { logoutUser } from "./authSlice";
 
 export interface ProjectMember {
   id: string;
@@ -83,6 +84,7 @@ interface ProjectsState {
   projects: Project[];
   currentProject: Project | null;
   isLoading: boolean;
+  hasLoadedOnce: boolean;
   error: string | null;
   filters: ProjectFilters;
   viewMode: "grid" | "list";
@@ -93,6 +95,7 @@ const initialState: ProjectsState = {
   projects: [],
   currentProject: null,
   isLoading: false,
+  hasLoadedOnce: false,
   error: null,
   filters: {
     search: "",
@@ -220,6 +223,54 @@ export const fetchProjects = createAsyncThunk(
         }) || [];
 
       return transformedProjects;
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to fetch projects");
+    }
+  },
+);
+
+// Fetch projects accessible to current user via user_project or lead/owner roles
+export const fetchProjectsForCurrentUser = createAsyncThunk(
+  "projects/fetchProjectsForCurrentUser",
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const supabase = createBrowserClient();
+      const state = getState() as { auth: { user: { id: string } | null } };
+      const userId = state.auth.user?.id;
+      if (!userId) throw new Error("User not authenticated");
+
+      const { data: userProjects, error: userProjError } = await supabase
+        .from("user_project")
+        .select("projects(*)")
+        .eq("user_id", userId);
+
+      if (userProjError) {
+        console.warn("user_project lookup failed", userProjError);
+      }
+
+      if (userProjects && userProjects.length > 0) {
+        const mapped = userProjects
+          .map((row: { projects: Database["public"]["Tables"]["projects"]["Row"] | null }) => row.projects)
+          .filter((p): p is Database["public"]["Tables"]["projects"]["Row"] => Boolean(p))
+          .map((project) => mapProjectRow(project));
+        return mapped;
+      }
+
+      const { data: projectsByRole, error: fallbackError } = await supabase
+        .from("projects")
+        .select("*")
+        .or(
+          [
+            `cmc_lead.eq.${userId}`,
+            `clinical_lead.eq.${userId}`,
+            `preclinical_lead.eq.${userId}`,
+            `regulary_owner.eq.${userId}`,
+          ].join(","),
+        );
+
+      if (fallbackError) throw fallbackError;
+
+      return (projectsByRole || []).map((project) => mapProjectRow(project));
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to fetch projects");
     }
@@ -533,6 +584,7 @@ const projectsSlice = createSlice({
       })
       .addCase(fetchProjects.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.hasLoadedOnce = true;
         state.projects = action.payload;
 
         if (state.selectedProjectId) {
@@ -551,6 +603,39 @@ const projectsSlice = createSlice({
       .addCase(fetchProjects.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      // Fetch projects for current user
+      .addCase(fetchProjectsForCurrentUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchProjectsForCurrentUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.hasLoadedOnce = true;
+        state.projects = action.payload;
+
+        if (state.projects.length > 0) {
+          state.currentProject = state.projects[0];
+          state.selectedProjectId = state.projects[0].id;
+        } else {
+          state.currentProject = null;
+          state.selectedProjectId = null;
+        }
+      })
+      .addCase(fetchProjectsForCurrentUser.rejected, (state, action) => {
+        state.isLoading = false;
+        const payload = action.payload as string | undefined;
+        state.hasLoadedOnce = payload !== "User not authenticated";
+        state.error = payload || null;
+      })
+      // Clear projects on logout
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.projects = [];
+        state.currentProject = null;
+        state.selectedProjectId = null;
+        state.isLoading = false;
+        state.hasLoadedOnce = false;
+        state.error = null;
       })
       // Fetch project details
       .addCase(fetchProjectDetails.pending, (state) => {
@@ -707,6 +792,39 @@ const dbToClientProject = (
     targetIndSubmissionDate: project.target_ind_submission_date ?? "",
   };
 };
+
+const mapProjectRow = (
+  project: Database["public"]["Tables"]["projects"]["Row"],
+  settings?: Database["public"]["Tables"]["project_settings"]["Row"],
+): Project => {
+  return {
+    id: project.id,
+    title: project.ind_title,
+    code: project.ind_number ?? "",
+    description: project.description ?? "",
+    status: (project.status ?? "draft") as Project["status"],
+    priority: (project.priority ?? "low") as Project["priority"],
+    progress: project.progress ?? 0,
+    sponsor: project.sponsor_name ?? "",
+    drug: project.drug_name ?? "",
+    targetDate: project.target_ind_submission_date ?? "",
+    teamId: project.team_id,
+    ownerId: project.project_creator_id ?? "",
+    teamSize: 0,
+    teamMembers: [],
+    createdAt: project.created_at ?? "",
+    updatedAt: project.updated_at ?? "",
+    settings: project.settings || settings || { isPublic: false, allowCollaboration: true },
+    metadata: project.metadata || {},
+    targetIndSubmissionDate: project.target_ind_submission_date ?? "",
+    preIndMeetingDate: project.pre_ind_meeting_date ?? null,
+    projectStartDate: project.project_start_date ?? "",
+    fdaContactEmail: project.fda_contact_email ?? null,
+    sponsorContactEmail: project.sponsor_contact_email ?? "",
+    additionalNotes: project.additional_notes ?? null,
+    productType: project.product_type ?? "",
+  }
+}
 
 export const {
   setCurrentProject,

@@ -21,7 +21,7 @@ import { useEffect, useState } from 'react';
 
 import { useProject } from '@/hooks/useProject';
 import { useAppDispatch } from '@/lib/store';
-import { fetchUserDocuments, fetchProjectDetails, fetchProjects } from '@/lib/store/slices';
+import { fetchUserDocuments, fetchProjectDetails, fetchProjectsForCurrentUser } from '@/lib/store/slices';
 
 //correct identity deployment vercel
 
@@ -73,11 +73,12 @@ export function Header({
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch projects (mock/default workspace) when user loads
+  // Fetch projects for the current user when auth is ready
   useEffect(() => {
-    void user;
-    dispatch(fetchProjects("demo-team"));
-  }, [dispatch, user]);
+    if (user?.id) {
+      dispatch(fetchProjectsForCurrentUser());
+    }
+  }, [dispatch, user?.id]);
 
   // When projects arrive and no project selected (not hydrated or invalid), pick the first
   useEffect(() => {
@@ -144,34 +145,39 @@ export function Header({
         {currentView === 'workspace' && (
           <div className='flex items-center gap-3'>
             {/* PROJECT SELECT DROPDOWN */}
-            <Select
-              value={selectedProjectId || ''}
-              onValueChange={(projectId) => {
-                setProject(projectId);
-                // details + docs fetched by effect above
-              }}
-            >
-              <SelectTrigger className='w-56'>
-                <SelectValue placeholder='Select project' />
-              </SelectTrigger>
-              {/**IM-61 Add a overflow and max height */}
-              <SelectContent className = "max-h-42 overflow-y-auto">
-                {projects.map((project) => (
-                  <SelectItem
-                    key={project.id}
-                    value={project.id}
-                    className='!text-gray-900 dark:!text-gray-100'
-                  >
-                    {project.title}
-                  </SelectItem>
-                ))}
-                {projects.length === 0 && (
-                  <div className='px-3 py-2 text-xs text-muted-foreground'>
-                    No projects found
-                  </div>
-                )}
-              </SelectContent>
-            </Select>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm font-semibold text-foreground'>
+                Project
+              </span>
+              <Select
+                value={selectedProjectId || ''}
+                onValueChange={(projectId) => {
+                  setProject(projectId);
+                  // details + docs fetched by effect above
+                }}
+              >
+                <SelectTrigger className='w-56'>
+                  <SelectValue placeholder='Select project' />
+                </SelectTrigger>
+                {/**IM-61 Add a overflow and max height */}
+                <SelectContent className = "max-h-42 overflow-y-auto">
+                  {projects.map((project) => (
+                    <SelectItem
+                      key={project.id}
+                      value={project.id}
+                      className='!text-gray-900 dark:!text-gray-100'
+                    >
+                      {project.title}
+                    </SelectItem>
+                  ))}
+                  {projects.length === 0 && (
+                    <div className='px-3 py-2 text-xs text-muted-foreground'>
+                      No projects found
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
 

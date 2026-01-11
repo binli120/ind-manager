@@ -15,6 +15,7 @@ export {
 export {
   default as projectsReducer,
   fetchProjects,
+  fetchProjectsForCurrentUser,
   fetchProjectDetails,
   createProject,
   updateProject,

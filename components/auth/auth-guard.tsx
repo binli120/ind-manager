@@ -198,6 +198,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
       return;
     }
 
+    const baseWorkspace = '/workspace/ind_editor';
+
+    // If authenticated and sitting on root, push to workspace
+    if (user && pathname === '/') {
+      if (!redirectingRef.current) {
+        redirectingRef.current = true;
+        router.replace(baseWorkspace);
+      }
+      return;
+    }
+
     const decision = canAccessPath(pathname, user, isAuthenticated);
     if (!decision.allowed) {
       const target = decision.redirectTo ?? '/auth/login';

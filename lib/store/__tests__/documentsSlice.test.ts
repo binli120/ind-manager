@@ -2,7 +2,6 @@ import {
   documentsReducer,
   setCurrentDocument,
   updateSectionLocally,
-  setSelectedDocumentIdDocument,
   type Document,
   type DocumentSection,
 } from "../slices"
@@ -49,7 +48,7 @@ describe("documentsSlice reducers", () => {
 
   it("updates section content locally and keeps selection", () => {
     const initialized = {
-      ...documentsReducer(undefined, { type: "@@INIT" } as any),
+      ...documentsReducer(undefined, { type: "@@INIT" } as { type: string }),
       currentDocument: baseDocument,
       selectedDocumentId: "d1",
     }

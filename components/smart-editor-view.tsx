@@ -246,6 +246,7 @@ export function SmartEditorView() {
     }
   }, [])
 
+
   useEffect(() => {
     const updatedSection = sectionData.find((s) => s.id === selectedSection.id)
     if (updatedSection) {

@@ -37,7 +37,7 @@ const baseProject: Project = {
 describe("projectsSlice reducers", () => {
   it("selects project and updates view mode", () => {
     const populated = projectsReducer(
-      { projects: [baseProject], currentProject: null, selectedProjectId: null, isLoading: false, error: null, filters: { search: "", status: "all", priority: "all" }, viewMode: "grid" },
+      { projects: [baseProject], currentProject: null, selectedProjectId: null, isLoading: false, hasLoadedOnce: false, error: null, filters: { search: "", status: "all", priority: "all" }, viewMode: "grid" },
       setSelectedProjectId("p1"),
     )
     expect(populated.selectedProjectId).toBe("p1")
