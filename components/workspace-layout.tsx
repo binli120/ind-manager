@@ -30,7 +30,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const { sidebarOpen, commentsPanelOpen, currentView } = useAppSelector(
     (state) => state.ui
   );
-  const { projects, isLoading: isProjectsLoading, hasLoadedOnce } = useAppSelector(
+  const { projects, isLoading: isProjectsLoading, hasLoadedOnce, error: projectsError } = useAppSelector(
     (state) => state.projects
   );
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAppSelector((state) => state.auth);
@@ -40,6 +40,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     isAuthenticated &&
     !isProjectsLoading &&
     hasLoadedOnce &&
+    !projectsError &&
     projects.length === 0;
 
   const greetingName = useMemo(() => {
@@ -96,7 +97,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {isAuthenticated && (!hasLoadedOnce || isProjectsLoading || isAuthLoading) && (
+      {isAuthenticated && ((!hasLoadedOnce && !projectsError) || isProjectsLoading || isAuthLoading) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <div className="h-10 w-10 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />

@@ -8,7 +8,7 @@ export {
   clearError as clearAuthError,
   setUser,
   setSession,
-  setLoading,
+  setLoading as setAuthLoading,
   clearAuth,
 } from "./authSlice"
 
@@ -61,13 +61,13 @@ export {
   hideNotification,
   removeNotification,
   setGlobalLoading,
-  setLoadingState,
+  setLoading as setUiLoading,
   setBreadcrumbs,
   setTheme,
   setCompactMode,
   setGlobalSearch,
   setError,
-  setFeatureFlag,
+  setFeature,
 } from "./uiSlice"
 
 export { default as pdfAnalysisApiReducer } from "./pdfAnalysisApiSlice"

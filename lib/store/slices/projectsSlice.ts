@@ -1,12 +1,12 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
+import { createBrowserClient, type Database } from "@/lib/supabase";
 import {
-  createSlice,
   createAsyncThunk,
+  createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { createBrowserClient, type Database } from "@/lib/supabase";
 import { logoutUser } from "./authSlice";
 
 export interface ProjectMember {
@@ -26,18 +26,18 @@ export interface Project {
   code: string;
   description: string;
   //IM-61 add more status
-  status: 
-  | "draft"
-  | "pre-ind-meeting-requested"
-  | "pre-ind-meeting-completed"
-  | "submitted"
-  | "under-review"
-  | "active"
-  | "clinical-hold-complete"
-  | "clinical-hold-partial"
-  | "inactive"
-  | "withdrawn"
-  | "terminated";
+  status:
+    | "draft"
+    | "pre-ind-meeting-requested"
+    | "pre-ind-meeting-completed"
+    | "submitted"
+    | "under-review"
+    | "active"
+    | "clinical-hold-complete"
+    | "clinical-hold-partial"
+    | "inactive"
+    | "withdrawn"
+    | "terminated";
   priority: "low" | "medium" | "high" | "critical";
   progress: number;
   sponsor: string;
@@ -114,7 +114,7 @@ const getErrorMessage = (error: unknown) => {
 
 // MOCK: Remove mock mode when Supabase projects are live.
 const useMockProjects = false;
-const MOCK_TEAM_ID = "demo-team"
+const MOCK_TEAM_ID = "demo-team";
 // Async thunks
 export const fetchProjects = createAsyncThunk(
   "projects/fetchProjects",
@@ -134,12 +134,13 @@ export const fetchProjects = createAsyncThunk(
           return data as Project[];
         } catch (error) {
           return rejectWithValue(
-            error instanceof Error ? error.message : "Mock project fetch failed",
+            error instanceof Error
+              ? error.message
+              : "Mock project fetch failed",
           );
         }
       }
       //END MOCK
-
 
       const supabase = createBrowserClient();
 
@@ -172,59 +173,59 @@ export const fetchProjects = createAsyncThunk(
 
       if (error) throw error;
 
-      const transformedProjects: Project[] =
-        projects?.map((project) => {
-          const members: ProjectMember[] =
-            project.teams?.user_teams?.map((member) => ({
-              id: member.user_id,
-              userId: member.user_id,
-              projectId: project.id,
-              name: member.users?.name || "Unknown User",
-              avatar: member.users?.avatar_url,
-              initials:
-                member.users?.name
-                  ?.split(" ")
-                  .map((n: string) => n[0])
-                  .join("") || "U",
-              role: member.role as ProjectMember["role"],
-              joinedAt: member.joined_at,
-            })) || [];
+      const transformedProjects: Project[] = projects?.map((project) => {
+        const members: ProjectMember[] =
+          project.teams?.user_teams?.map((member) => ({
+            id: member.user_id,
+            userId: member.user_id,
+            projectId: project.id,
+            name: member.users?.name || "Unknown User",
+            avatar: member.users?.avatar_url,
+            initials: member.users?.name
+              ?.split(" ")
+              .map((n: string) => n[0])
+              .join("") || "U",
+            role: member.role as ProjectMember["role"],
+            joinedAt: member.joined_at,
+          })) || [];
 
-          return {
-            id: project.id,
-            title: project.ind_title,
-            code: project.ind_number || "",
-            description: project.description || "No description available",
-            status: project.status as Project["status"],
-            priority: project.priority as Project["priority"],
-            progress: project.progress || 0,
-            sponsor: project.sponsor_name || "",
-            drug: project.drug_name || "",
-            targetDate: project.target_ind_submission_date || "",
-            teamId: project.team_id,
-            ownerId: project.project_creator_id ?? "",
-            teamSize: members.length,
-            teamMembers: members,
-            createdAt: project.created_at,
-            updatedAt: project.updated_at,
-            settings: project.settings || {
-              isPublic: false,
-              allowCollaboration: true,
-            },
-            metadata: {},
-            targetIndSubmissionDate: project.target_ind_submission_date,
-            preIndMeetingDate: project.pre_ind_meeting_date,
-            projectStartDate: project.project_start_date,
-            fdaContactEmail: project.fda_contact_email,
-            sponsorContactEmail: project.sponsor_contact_email,
-            additionalNotes: project.additional_notes,
-            productType: project.product_type,
-          };
-        }) || [];
+        return {
+          id: project.id,
+          title: project.ind_title,
+          code: project.ind_number || "",
+          description: project.description || "No description available",
+          status: project.status as Project["status"],
+          priority: project.priority as Project["priority"],
+          progress: project.progress || 0,
+          sponsor: project.sponsor_name || "",
+          drug: project.drug_name || "",
+          targetDate: project.target_ind_submission_date || "",
+          teamId: project.team_id,
+          ownerId: project.project_creator_id ?? "",
+          teamSize: members.length,
+          teamMembers: members,
+          createdAt: project.created_at,
+          updatedAt: project.updated_at,
+          settings: project.settings || {
+            isPublic: false,
+            allowCollaboration: true,
+          },
+          metadata: {},
+          targetIndSubmissionDate: project.target_ind_submission_date,
+          preIndMeetingDate: project.pre_ind_meeting_date,
+          projectStartDate: project.project_start_date,
+          fdaContactEmail: project.fda_contact_email,
+          sponsorContactEmail: project.sponsor_contact_email,
+          additionalNotes: project.additional_notes,
+          productType: project.product_type,
+        };
+      }) || [];
 
       return transformedProjects;
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to fetch projects");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to fetch projects",
+      );
     }
   },
 );
@@ -240,47 +241,126 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
       if (!userId) throw new Error("User not authenticated");
 
       // Lookup project memberships first
-      const { data: userProjects, error: userProjError } = await supabase
-        .from("user_project")
-        .select("project_id")
-        .eq("user_id", userId);
+      const {
+        data: userProjects,
+        error: userProjError,
+        status: userProjectsStatus,
+      } = await supabase.from("user_project").select("project_id").eq(
+        "user_id",
+        userId,
+      );
 
       if (userProjError) {
-        console.warn("user_project lookup failed", userProjError);
+        console.error("user_project lookup failed", {
+          message: userProjError.message,
+          code: userProjError.code,
+          hint: userProjError.hint,
+          details: userProjError.details,
+          status: userProjectsStatus,
+        });
+        throw new Error(
+          `user_project lookup failed: ${
+            userProjError.message || "unknown error"
+          } (${userProjError.code || "no-code"})`,
+        );
       }
 
+      if (!userProjects) {
+        console.error("user_project returned null data", {
+          status: userProjectsStatus,
+        });
+        throw new Error("user_project returned no data");
+      }
+
+      const isMembershipRow = (row: unknown): row is { project_id: string | null } =>
+        typeof row === "object" && row !== null && "project_id" in row;
+
       const projectIds =
-        userProjects?.map((row: { project_id: string | null }) => row.project_id).filter(Boolean) ??
-        [];
+        userProjects
+          ?.map((row) => (isMembershipRow(row) ? row.project_id : null))
+          .filter((id): id is string => Boolean(id)) ?? [];
+
+      console.info(
+        "[projects] membership rows",
+        userProjects?.length || 0,
+        "ids",
+        projectIds,
+      );
 
       if (projectIds.length > 0) {
-        const { data: projectsByMembership, error: projectsByMembershipError } = await supabase
+        const {
+          data: projectsByMembership,
+          error: projectsByMembershipError,
+          status: projectsByMembershipStatus,
+        } = await supabase
           .from("projects")
           .select("*")
           .in("id", projectIds as string[]);
 
-        if (projectsByMembershipError) throw projectsByMembershipError;
+        if (projectsByMembershipError) {
+          console.error("projects lookup by membership failed", {
+            message: projectsByMembershipError.message,
+            code: projectsByMembershipError.code,
+            hint: projectsByMembershipError.hint,
+            details: projectsByMembershipError.details,
+            status: projectsByMembershipStatus,
+          });
+          throw projectsByMembershipError;
+        }
 
-        return (projectsByMembership || []).map((project) => mapProjectRow(project));
+        const projectCount = projectsByMembership?.length || 0;
+        console.info("[projects] fetched via membership", projectCount);
+
+        if (projectCount === 0) {
+          throw new Error(
+            "Projects not returned for memberships; check database policies and project visibility",
+          );
+        }
+
+        return (projectsByMembership || []).map((project) =>
+          mapProjectRow(project)
+        );
       }
 
-      const { data: projectsByRole, error: fallbackError } = await supabase
+      // If no memberships, fall back to legacy lead/owner role fields
+      const {
+        data: projectsByRole,
+        error: projectsByRoleError,
+        status: projectsByRoleStatus,
+      } = await supabase
         .from("projects")
         .select("*")
         .or(
-          [
-            `cmc_lead.eq.${userId}`,
-            `clinical_lead.eq.${userId}`,
-            `preclinical_lead.eq.${userId}`,
-            `regulary_owner.eq.${userId}`,
-          ].join(","),
+          `cmc_lead.eq.${userId},clinical_lead.eq.${userId},preclinical_lead.eq.${userId},regulary_owner.eq.${userId}`,
         );
 
-      if (fallbackError) throw fallbackError;
+      if (projectsByRoleError) {
+        console.error("projects lookup by lead/owner failed", {
+          message: projectsByRoleError.message,
+          code: projectsByRoleError.code,
+          hint: projectsByRoleError.hint,
+          details: projectsByRoleError.details,
+          status: projectsByRoleStatus,
+        });
+        throw projectsByRoleError;
+      }
 
-      return (projectsByRole || []).map((project) => mapProjectRow(project));
+      const roleCount = projectsByRole?.length || 0;
+      console.info("[projects] fetched via lead/owner roles", roleCount);
+      if (roleCount > 0) {
+        return (projectsByRole || []).map((project) => mapProjectRow(project));
+      }
+
+      console.info(
+        "[projects] no memberships or lead/owner roles found, returning empty list",
+      );
+      return [];
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to fetch projects");
+      const message = getErrorMessage(error);
+      console.error("fetchProjectsForCurrentUser failed", message, {
+        raw: error,
+      });
+      return rejectWithValue(message || "Failed to fetch projects");
     }
   },
 );
@@ -326,11 +406,10 @@ export const fetchProjectDetails = createAsyncThunk(
           projectId: project.id,
           name: member.users?.name || "Unknown User",
           avatar: member.users?.avatar_url,
-          initials:
-            member.users?.name
-              ?.split(" ")
-              .map((n: string) => n[0])
-              .join("") || "U",
+          initials: member.users?.name
+            ?.split(" ")
+            .map((n: string) => n[0])
+            .join("") || "U",
           role: member.role as ProjectMember["role"],
           joinedAt: member.joined_at,
         })) || [];
@@ -413,7 +492,9 @@ export const createProject = createAsyncThunk(
 
       return newProject;
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to create project");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to create project",
+      );
     }
   },
 );
@@ -439,7 +520,9 @@ export const updateProject = createAsyncThunk(
 
       return data;
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to update project");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to update project",
+      );
     }
   },
 );
@@ -459,7 +542,9 @@ export const deleteProject = createAsyncThunk(
 
       return projectId;
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to delete project");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to delete project",
+      );
     }
   },
 );
@@ -504,7 +589,9 @@ export const addProjectMember = createAsyncThunk(
 
       return data;
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to add project member");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to add project member",
+      );
     }
   },
 );
@@ -542,8 +629,9 @@ const projectsSlice = createSlice({
     },
     setSelectedProjectId: (state, action: PayloadAction<string | null>) => {
       state.selectedProjectId = action.payload;
-      state.currentProject =
-        state.projects.find((project) => project.id === action.payload) || null;
+      state.currentProject = state.projects.find((project) =>
+        project.id === action.payload
+      ) || null;
     },
     setViewMode: (state, action: PayloadAction<"grid" | "list">) => {
       state.viewMode = action.payload;
@@ -596,8 +684,9 @@ const projectsSlice = createSlice({
         state.projects = action.payload;
 
         if (state.selectedProjectId) {
-          state.currentProject =
-            state.projects.find(project => project.id === state.selectedProjectId) || null;
+          state.currentProject = state.projects.find((project) =>
+            project.id === state.selectedProjectId
+          ) || null;
 
           if (!state.currentProject && state.projects.length > 0) {
             state.currentProject = state.projects[0];
@@ -610,6 +699,7 @@ const projectsSlice = createSlice({
       })
       .addCase(fetchProjects.rejected, (state, action) => {
         state.isLoading = false;
+        state.hasLoadedOnce = true;
         state.error = action.payload as string;
       })
       // Fetch projects for current user
@@ -632,9 +722,8 @@ const projectsSlice = createSlice({
       })
       .addCase(fetchProjectsForCurrentUser.rejected, (state, action) => {
         state.isLoading = false;
-        const payload = action.payload as string | undefined;
-        state.hasLoadedOnce = payload !== "User not authenticated";
-        state.error = payload || null;
+        state.hasLoadedOnce = true;
+        state.error = (action.payload as string) || null;
       })
       // Clear projects on logout
       .addCase(logoutUser.fulfilled, (state) => {
@@ -716,11 +805,10 @@ const projectsSlice = createSlice({
           projectId: action.payload.project_id,
           name: action.payload.profiles?.name || "Unknown User",
           avatar: action.payload.profiles?.avatar_url,
-          initials:
-            action.payload.profiles?.name
-              ?.split(" ")
-              .map((n: string) => n[0])
-              .join("") || "U",
+          initials: action.payload.profiles?.name
+            ?.split(" ")
+            .map((n: string) => n[0])
+            .join("") || "U",
           role: action.payload.role,
           joinedAt: action.payload.created_at,
         };
@@ -744,8 +832,8 @@ const projectsSlice = createSlice({
       .addCase(removeProjectMember.fulfilled, (state, action) => {
         // Update current project
         if (state.currentProject) {
-          state.currentProject.teamMembers =
-            state.currentProject.teamMembers.filter(
+          state.currentProject.teamMembers = state.currentProject.teamMembers
+            .filter(
               (member) => member.id !== action.payload,
             );
           state.currentProject.teamSize = Math.max(
@@ -822,7 +910,8 @@ const mapProjectRow = (
     teamMembers: [],
     createdAt: project.created_at ?? "",
     updatedAt: project.updated_at ?? "",
-    settings: project.settings || settings || { isPublic: false, allowCollaboration: true },
+    settings: project.settings || settings ||
+      { isPublic: false, allowCollaboration: true },
     metadata: project.metadata || {},
     targetIndSubmissionDate: project.target_ind_submission_date ?? "",
     preIndMeetingDate: project.pre_ind_meeting_date ?? null,
@@ -831,8 +920,8 @@ const mapProjectRow = (
     sponsorContactEmail: project.sponsor_contact_email ?? "",
     additionalNotes: project.additional_notes ?? null,
     productType: project.product_type ?? "",
-  }
-}
+  };
+};
 
 export const {
   setCurrentProject,
@@ -842,7 +931,7 @@ export const {
   clearFilters,
   clearError,
   updateProjectLocally,
-  hydrateSelectedProjectFromStorage
+  hydrateSelectedProjectFromStorage,
 } = projectsSlice.actions;
 
 export default projectsSlice.reducer;
