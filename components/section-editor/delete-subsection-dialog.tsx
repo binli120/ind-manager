@@ -16,24 +16,24 @@ import { AlertTriangle } from "lucide-react"
 
 interface DeleteSubsectionDialogProps {
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChangeAction: (open: boolean) => void
   subsectionNumber: string
   onConfirm: () => void
 }
 
 export function DeleteSubsectionDialog({
   open,
-  onOpenChange,
+  onOpenChangeAction,
   subsectionNumber,
   onConfirm,
 }: DeleteSubsectionDialogProps) {
   const handleConfirm = () => {
     onConfirm()
-    onOpenChange(false)
+    onOpenChangeAction(false)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChangeAction={onOpenChangeAction}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -46,7 +46,7 @@ export function DeleteSubsectionDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChangeAction(false)}>
             Cancel
           </Button>
           <Button variant="destructive" onClick={handleConfirm}>

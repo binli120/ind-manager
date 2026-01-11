@@ -183,7 +183,7 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
       </Card>
 
       {/* Issue Detail Dialog */}
-      <Dialog open={selectedIssue !== null} onOpenChange={(open) => !open && setSelectedIssue(null)}>
+      <Dialog open={selectedIssue !== null} onOpenChangeAction={(open) => !open && setSelectedIssue(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <div className="flex items-start justify-between">

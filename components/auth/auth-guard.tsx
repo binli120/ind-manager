@@ -3,10 +3,6 @@
 // Email: blee@filynai.com
 'use client';
 
-import { useAppDispatch, useAppSelector } from '@/lib/store';
-import { getCurrentUser, logoutUser } from '@/lib/store/slices';
-import { createBrowserClient } from '@/lib/supabase';
-import { canAccessPath } from '@/lib/auth/access-control';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,6 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { canAccessPath } from '@/lib/auth/access-control';
+import { useAppDispatch, useAppSelector } from '@/lib/store';
+import { getCurrentUser, logoutUser } from '@/lib/store/slices';
+import { createBrowserClient } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { Loader2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -28,18 +28,21 @@ const parseEnvNumber = (value: string | undefined, fallback: number) => {
 
 const IDLE_TIMEOUT_MINUTES = parseEnvNumber(
   process.env.NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES,
-  30,
+  30
 );
 const IDLE_TIMEOUT_MS = IDLE_TIMEOUT_MINUTES * 60 * 1000;
 const RAW_WARNING_SECONDS = parseEnvNumber(
   process.env.NEXT_PUBLIC_SESSION_WARNING_SECONDS,
-  60,
+  60
 );
 const WARNING_SECONDS = Math.min(
   RAW_WARNING_SECONDS,
-  Math.max(1, Math.floor(IDLE_TIMEOUT_MS / 1000)),
+  Math.max(1, Math.floor(IDLE_TIMEOUT_MS / 1000))
 );
-const WARNING_TIMEOUT_MS = Math.max(0, IDLE_TIMEOUT_MS - WARNING_SECONDS * 1000);
+const WARNING_TIMEOUT_MS = Math.max(
+  0,
+  IDLE_TIMEOUT_MS - WARNING_SECONDS * 1000
+);
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -220,7 +223,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
 
     redirectingRef.current = false;
-  }, [hasCheckedSession, isApiPage, isAuthPage, isAuthenticated, isLoading, isResetPage, pathname, router, user]);
+  }, [
+    hasCheckedSession,
+    isApiPage,
+    isAuthPage,
+    isAuthenticated,
+    isLoading,
+    isResetPage,
+    pathname,
+    router,
+    user,
+  ]);
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -289,25 +302,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // For root page, redirect authenticated users
-  // if (pathname === "/") {
-  //   if (user) {
-  //     return (
-  //       <div className="min-h-screen flex items-center justify-center bg-background">
-  //         <div className="flex flex-col items-center space-y-4">
-  //           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-  //           <p className="text-sm text-muted-foreground">
-  //             Redirecting to workspace...
-  //           </p>
-  //         </div>
-  //       </div>
-  //     );
-  //   } else {
-  //     return <>{children}</>; // Show root page for unauthenticated users
-  //   }
-  // }
-
-  // For protected pages, render children if authenticated
   if (user) {
     return (
       <>

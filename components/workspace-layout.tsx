@@ -105,7 +105,10 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <Dialog open={showNoProjectDialog} onOpenChange={setShowNoProjectDialog}>
+      <Dialog
+        open={showNoProjectDialog}
+        onOpenChangeAction={setShowNoProjectDialog}
+      >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>No project assigned</DialogTitle>

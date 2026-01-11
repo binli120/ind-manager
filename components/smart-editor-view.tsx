@@ -511,7 +511,7 @@ export function SmartEditorView() {
       <OnboardingTour isOpen={showTour} onClose={handleCloseTour} />
       <PdfUploadDialog
         open={showUploadDialog}
-        onOpenChange={setShowUploadDialog}
+        onOpenChangeAction={setShowUploadDialog}
         onUploadComplete={handleUploadComplete}
       />
     </div>

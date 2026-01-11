@@ -1,53 +1,66 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-"use client"
+'use client';
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Sector } from "recharts"
-import { useState } from "react"
+import { useState } from 'react';
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Sector,
+} from 'recharts';
 
 interface Module {
-  id: number
-  name: string
-  progress: number
-  issues: number
+  id: number;
+  name: string;
+  progress: number;
+  issues: number;
 }
 
 interface RadialProgressChartProps {
-  modules: Module[]
+  modules: Module[];
 }
 
 const getModuleColor = (progress: number) => {
   //console.log("[v0] Module progress:", progress)
-  if (progress === 100) return "#166534" // Dark green
-  if (progress >= 80) return "#22c55e" // Light green
-  if (progress >= 60) return "#eab308" // Yellow
-  return "#ef4444" // Red
-}
+  if (progress === 100) return '#166534'; // Dark green
+  if (progress >= 80) return '#22c55e'; // Light green
+  if (progress >= 60) return '#eab308'; // Yellow
+  return '#ef4444'; // Red
+};
 
 export function RadialProgressChart({ modules }: RadialProgressChartProps) {
-  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined)
+  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
 
   const data = modules.map((module) => ({
     name: `Module ${module.id}`,
     value: module.progress,
     issues: module.issues,
     color: getModuleColor(module.progress),
-  }))
+  }));
 
   //console.log("[v0] Chart data with colors:", data)
 
-  const renderActiveShape = (props: {
-    cx: number
-    cy: number
-    innerRadius: number
-    outerRadius: number
-    startAngle: number
-    endAngle: number
-    fill: string
+  const renderActiveShape = ({
+    cx,
+    cy,
+    innerRadius,
+    outerRadius,
+    startAngle,
+    endAngle,
+    fill,
+  }: PieSectorDataItem & {
+    cx: number;
+    cy: number;
+    innerRadius: number;
+    outerRadius: number;
+    startAngle: number;
+    endAngle: number;
+    fill: string;
   }) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props
-
     return (
       <g>
         <Sector
@@ -69,21 +82,21 @@ export function RadialProgressChart({ modules }: RadialProgressChartProps) {
           fill={fill}
         />
       </g>
-    )
-  }
+    );
+  };
 
   return (
-    <div className="w-full">
-      <ResponsiveContainer width="100%" height={300}>
+    <div className='w-full'>
+      <ResponsiveContainer width='100%' height={300}>
         <PieChart>
           <Pie
             data={data}
-            cx="50%"
-            cy="50%"
+            cx='50%'
+            cy='50%'
             innerRadius={60}
             outerRadius={80}
             paddingAngle={5}
-            dataKey="value"
+            dataKey='value'
             activeIndex={activeIndex}
             activeShape={renderActiveShape}
             onMouseEnter={(_, index) => setActiveIndex(index)}
@@ -94,14 +107,17 @@ export function RadialProgressChart({ modules }: RadialProgressChartProps) {
             ))}
           </Pie>
           <Legend
-            formatter={(value: string, entry: { payload?: { value?: number; issues?: number } }) => {
-              const percent = entry.payload?.value ?? 0
-              const issues = entry.payload?.issues ?? 0
-              return `${value}: ${percent}% (${issues} issues)`
+            formatter={(
+              value: string,
+              entry: { payload?: { value?: number; issues?: number } }
+            ) => {
+              const percent = entry.payload?.value ?? 0;
+              const issues = entry.payload?.issues ?? 0;
+              return `${value}: ${percent}% (${issues} issues)`;
             }}
           />
         </PieChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }

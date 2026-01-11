@@ -239,21 +239,29 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
       const userId = state.auth.user?.id;
       if (!userId) throw new Error("User not authenticated");
 
+      // Lookup project memberships first
       const { data: userProjects, error: userProjError } = await supabase
         .from("user_project")
-        .select("projects(*)")
+        .select("project_id")
         .eq("user_id", userId);
 
       if (userProjError) {
         console.warn("user_project lookup failed", userProjError);
       }
 
-      if (userProjects && userProjects.length > 0) {
-        const mapped = userProjects
-          .map((row: { projects: Database["public"]["Tables"]["projects"]["Row"] | null }) => row.projects)
-          .filter((p): p is Database["public"]["Tables"]["projects"]["Row"] => Boolean(p))
-          .map((project) => mapProjectRow(project));
-        return mapped;
+      const projectIds =
+        userProjects?.map((row: { project_id: string | null }) => row.project_id).filter(Boolean) ??
+        [];
+
+      if (projectIds.length > 0) {
+        const { data: projectsByMembership, error: projectsByMembershipError } = await supabase
+          .from("projects")
+          .select("*")
+          .in("id", projectIds as string[]);
+
+        if (projectsByMembershipError) throw projectsByMembershipError;
+
+        return (projectsByMembership || []).map((project) => mapProjectRow(project));
       }
 
       const { data: projectsByRole, error: fallbackError } = await supabase
