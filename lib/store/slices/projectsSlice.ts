@@ -135,7 +135,7 @@ export const fetchProjects = createAsyncThunk(
 
       const supabase = createClient();
 
-      let query = supabase.from("projects").select(`
+      const query = supabase.from("projects").select(`
           *,
           settings:project_settings (
             isPublic:is_public,
@@ -343,11 +343,7 @@ export const deleteProject = createAsyncThunk(
 export const addProjectMember = createAsyncThunk(
   "projects/addProjectMember",
   async (
-    {
-      projectId,
-      userId,
-      role,
-    }: {
+    {}: {
       projectId: string;
       userId: string;
       role: "lead" | "member" | "viewer";
@@ -383,8 +379,8 @@ export const addProjectMember = createAsyncThunk(
 
       return data;
       */
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to add project member");
+    } catch (error) {
+      return rejectWithValue((error as Error).message || "Failed to add project member");
     }
   },
 );
@@ -407,10 +403,8 @@ export const removeProjectMember = createAsyncThunk(
 
       return memberId;
       */
-    } catch (error: any) {
-      return rejectWithValue(
-        getErrorMessage(error) || "Failed to remove project member",
-      );
+    } catch (error) {
+      return rejectWithValue((error as Error).message || "Failed to remove project member");
     }
   },
 );

@@ -12,12 +12,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, SearchIcon } from 'lucide-react';
+import { Plus, SearchIcon, FolderGit2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AddUserDialog } from './add-user-dialog';
 import { fetchUsers, updateUserStatus, createUser, fetchCurrentUser } from "@/lib/supabase/users";
 import { fetchTenants } from "@/lib/supabase/tenants";
 import { authServices } from "@/app/api/auth/auth-services";
+import { AssignProjectDialog } from './assign-project-dialog';
+import { fetchProjects } from "@/lib/supabase/projects";
+import { Project } from '@/components/projects-view';
 
 //These should be made more robust in the future.
 export type UserRole =
@@ -74,6 +77,9 @@ export default function UsersPage() {
   const [companies, setCompanies] = useState<string[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [currentUserPrivilege, setCurrentUserPrivilege] = useState<UserPrivilege>('');
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [selectedUserForAssignment, setSelectedUserForAssignment] = useState<User | null>(null);
+  const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     initializeUserData();
@@ -89,22 +95,21 @@ export default function UsersPage() {
 
       //Get the logged in user's tenantid and fetch 
       const currentUserDbRecord = await fetchCurrentUser(authUser.id);
-      if (privilege === 'system_admin') {
-        fetchUsers().then(setUsers);
-      } else if (currentUserDbRecord?.tenantid) {
-        fetchUsers(currentUserDbRecord.tenantid).then(setUsers);
+      let targetTenantId: string | undefined = undefined;
+      if (privilege !== 'system_admin' && currentUserDbRecord?.tenantid) {
+        targetTenantId = currentUserDbRecord.tenantid;
+      }
+      if (privilege === 'system_admin' || targetTenantId) {
+        fetchUsers(targetTenantId).then(setUsers);
+        fetchProjects(targetTenantId).then((data) => setAvailableProjects(data as unknown as Project[]));
       } else {
         setUsers([]);
+        setAvailableProjects([]);
       }
 
       //To fill companies
-      if (privilege === 'system_admin') {
-        fetchTenants().then((data) => {
-          setTenants(data);
-          setCompanies(data.map((t) => t.name));
-        });
-      } else if (currentUserDbRecord?.tenantid) {
-        fetchTenants(currentUserDbRecord.tenantid).then((data) => {
+      if (privilege === 'system_admin' || targetTenantId) {
+        fetchTenants(targetTenantId).then((data) => {
           setTenants(data);
           setCompanies(data.map((t) => t.name));
         });
@@ -184,6 +189,11 @@ export default function UsersPage() {
     setUsers((prevUsers) => [...prevUsers, user]);
 
     await authServices.resetPassword(formUser.email);
+  };
+
+  const handleAssignProjects = (user: User) => {
+    setSelectedUserForAssignment(user);
+    setIsAssignDialogOpen(true);
   };
 
   return (
@@ -302,24 +312,36 @@ export default function UsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className='text-right'>
-                      {user.status !== 'pending' && (
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => handleToggleStatus(user.id)}
-                        >
-                          {user.status === 'active' ? 'Deactivate' : 'Activate'}
-                        </Button>
-                      )}
-                      {user.status === 'pending' && (
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => handleToggleStatus(user.id)}
-                        >
-                          Activate
-                        </Button>
-                      )}
+                      <div className="flex justify-end gap-2">
+                        {user.status === 'active' && (
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => handleAssignProjects(user)}
+                            title="Assign Projects"
+                          >
+                            <FolderGit2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {user.status !== 'pending' && (
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => handleToggleStatus(user.id)}
+                          >
+                            {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                          </Button>
+                        )}
+                        {user.status === 'pending' && (
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={() => handleToggleStatus(user.id)}
+                          >
+                            Activate
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -335,6 +357,13 @@ export default function UsersPage() {
         onAdd={handleAddUser}
         companies={companies}
         currentUserPrivilege={currentUserPrivilege}
+      />
+
+      <AssignProjectDialog
+        open={isAssignDialogOpen}
+        onOpenChange={setIsAssignDialogOpen}
+        user={selectedUserForAssignment}
+        projects={availableProjects}
       />
     </div>
   );

@@ -21,7 +21,6 @@ import { useAppDispatch } from '@/lib/store';
 import { fetchUserDocuments } from '@/lib/store/slices/documentsSlice';
 import {
   fetchProjectDetails,
-  fetchProjects,
 } from '@/lib/store/slices/projectsSlice';
 import type { ViewType } from '@/lib/store/slices/uiSlice';
 

@@ -67,8 +67,6 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
 
   const handleSubmit = () => {
     onSubmit(projectData);
-    setProjectData(initialData || getDefaultProjectData());
-    setCurrentStep(1);
   };
 
   const updateProjectData = <T extends keyof ProjectCreation>(
