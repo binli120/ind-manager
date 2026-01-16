@@ -379,8 +379,8 @@ export const addProjectMember = createAsyncThunk(
 
       return data;
       */
-    } catch (error) {
-      return rejectWithValue((error as Error).message || "Failed to add project member");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to add project member");
     }
   },
 );
@@ -403,8 +403,10 @@ export const removeProjectMember = createAsyncThunk(
 
       return memberId;
       */
-    } catch (error) {
-      return rejectWithValue((error as Error).message || "Failed to remove project member");
+    } catch (error: unknown) {
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to remove project member",
+      );
     }
   },
 );
