@@ -161,12 +161,13 @@ export function ProjectsView() {
       if (authUser) {
         setCurrentUser(authUser);
         const userRecord = await fetchCurrentUser(authUser.id);
-        //This will need to change eventually
-        const privilege = (authUser.user_metadata?.privilege as string) ?? 'system_admin';
+        const privilege = (authUser.user_metadata?.privilege as string) ?? 'user';
         
         if (userRecord?.tenantid) {
           setCurrentTenantId(userRecord.tenantid);
-          const userIdFilter = privilege === 'user' ? authUser.id : undefined;
+          const isSystemAdmin = privilege === 'system_admin';
+          const userIdFilter = isSystemAdmin ? undefined : authUser.id;
+
           const data = await fetchProjects(userRecord.tenantid, userIdFilter);
           setProjects(data as Project[]);
         }
