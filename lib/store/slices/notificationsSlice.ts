@@ -167,7 +167,7 @@ const notificationsSlice = createSlice({
         }
     });
 
-    b.addCase(markAllAsRead.fulfilled, (s, a) => {
+    b.addCase(markAllAsRead.fulfilled, (s) => {
       s.items = s.items.map((n) => ({ ...n, is_read: true }));
       s.unread = 0;
     });

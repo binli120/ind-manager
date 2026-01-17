@@ -109,8 +109,8 @@ const getErrorMessage = (error: unknown) => {
 };
 
 // MOCK: Remove mock mode when Supabase projects are live.
-const useMockProjects = true;
-const MOCK_TENANT_ID = "demo-tenant";
+//const useMockProjects = true;
+//const MOCK_TENANT_ID = "demo-tenant";
 // Async thunks
 export const fetchProjects = createAsyncThunk(
   "projects/fetchProjects",

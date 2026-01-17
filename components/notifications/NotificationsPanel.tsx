@@ -108,7 +108,7 @@ export function NotificationsPanel({ userId, className }: Props) {
 
         {!loading && !error && items.length === 0 && (
           <div className="px-4 py-10 text-sm text-muted-foreground text-center">
-            You're all caught up!
+            You&apos;re all caught up!
           </div>
         )}
 
