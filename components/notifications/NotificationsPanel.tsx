@@ -4,31 +4,30 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Check, FileText, Info, TriangleAlert } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, timeAgo } from "@/lib/utils";
 
 type Props = { userId?: string; className?: string };
 
-function timeAgo(iso: string) {
-  const d = new Date(iso);
-  const diff = Date.now() - d.getTime();
-  const mins = Math.max(1, Math.round(diff / 60000));
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.round(hrs / 24);
-  return `${days}d ago`;
-}
 
-function iconFor(type?: string) {
+function iconFor(type?: string | null, severity?: string | null) {
+  if (severity === "critical") {
+    return <TriangleAlert className="w-4 h-4 text-red-500 shrink-0" />;
+  }
   switch (type) {
-    case "project_status":
-      return <TriangleAlert className="w-4 h-4 text-amber-500 shrink-0" />;
-    case "document_change":
+    case "document_comment":
       return <FileText className="w-4 h-4 text-blue-500 shrink-0" />;
+    case "task_assignment":
+      return <Check className="w-4 h-4 text-emerald-500 shrink-0" />;
+    case "deadline_reminder":
+      return <TriangleAlert className="w-4 h-4 text-amber-500 shrink-0" />;
+    case "system_alert":
+      return <TriangleAlert className="w-4 h-4 text-rose-500 shrink-0" />;
     default:
       return <Info className="w-4 h-4 text-muted-foreground shrink-0" />;
   }
 }
+
+
 
 export function NotificationsPanel({ userId, className }: Props) {
   const {
@@ -41,27 +40,31 @@ export function NotificationsPanel({ userId, className }: Props) {
     markOne,
     markAll,
   } = useNotifications(userId);
+  //Guard unread
+  const unreadCount = typeof unread === "number" ? unread : 0;
 
-  // Close on Escape
-  React.useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && toggle();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, toggle]);
-
-  // Click-away close
+  // combine click-away&close escape
   const ref = React.useRef<HTMLDivElement | null>(null);
   React.useEffect(() => {
     if (!isOpen) return;
-    const onDown = (e: MouseEvent) => {
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") toggle();
+    };
+    const onDown = (e: PointerEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) toggle();
     };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+
+    window.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onDown);
+    };
   }, [isOpen, toggle]);
 
   if (!isOpen) return null;
+
 
   return (
     <div
@@ -78,7 +81,7 @@ export function NotificationsPanel({ userId, className }: Props) {
       <div className="flex items-center justify-between px-4 py-3 border-b">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">Notifications</span>
-          <span className="text-xs text-muted-foreground">({unread} unread)</span>
+          <span className="text-xs text-muted-foreground">({unreadCount} unread)</span>
         </div>
         <Button
           variant="outline"
@@ -119,40 +122,55 @@ export function NotificationsPanel({ userId, className }: Props) {
                   !n.is_read ? "bg-accent/40" : ""
                 )}
               >
-                {iconFor(n.type)}
+                {iconFor(n.type, n.severity)}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium truncate">
-                      {n.type === "project_status"
-                        ? "Project status changed"
-                        : n.type === "document_change"
-                        ? "Document updated"
-                        : "Notification"}
+                      {n.title ??
+                        (n.type === "document_comment"
+                          ? "New comment"
+                          : n.type === "task_assignment"
+                          ? "Task assigned"
+                          : n.type === "deadline_reminder"
+                          ? "Deadline reminder"
+                          : n.type === "system_alert"
+                          ? "System alert"
+                          : "Notification")}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {timeAgo(n.created_at)}
                     </span>
                   </div>
 
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    {n.from ? <span>by <strong>{n.from}</strong></span> : null}
-                    {n.resource_id ? (
-                      <span className="ml-1 text-xs">({n.resource_id})</span>
-                    ) : null}
-                  </div>
+                  {n.body ? (
+                    <div className="mt-1 text-sm text-muted-foreground">{n.body}</div>
+                  ) : (
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      {n.from ? (
+                        <span>
+                          by <strong>{n.from}</strong>
+                        </span>
+                      ) : null}
+                      {n.resource_id ? (
+                        <span className="ml-1 text-xs">({n.resource_id})</span>
+                      ) : null}
+                    </div>
+                  )}
 
                   <div className="mt-2 flex items-center gap-2">
                     {!n.is_read && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => markOne(n.id)}
-                      >
+                      <Button size="sm" variant="secondary" onClick={() => markOne(n.id)}>
                         Mark read
+                      </Button>
+                    )}
+                    {n.action_url && (
+                      <Button asChild size="sm" variant="outline">
+                        <a href={n.action_url}>Open</a>
                       </Button>
                     )}
                   </div>
                 </div>
+
               </li>
             ))}
           </ul>

@@ -77,7 +77,7 @@ const getErrorMessage = (error: unknown) => {
 
 // MOCK: Remove mock mode when Supabase projects are live.
 
-const useMockProjects = true;
+const useMockProjects = false;
 const DEMO_TEAM: Team = {
   id: "demo-team",
   name: "Demo Team",

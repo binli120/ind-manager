@@ -6,10 +6,15 @@ import projectsSlice from "./slices/projectsSlice"
 import documentsSlice from "./slices/documentsSlice"
 import uiSlice from "./slices/uiSlice"
 import notificationsSlice from "./slices/notificationsSlice"
+import tenantsSlice from "./slices/tenantsSlice";
+
+
+
 
 export const store = configureStore({
   reducer: {
     auth: authSlice,
+    tenants: tenantsSlice,
     teams: teamsSlice,
     projects: projectsSlice,
     documents: documentsSlice,
