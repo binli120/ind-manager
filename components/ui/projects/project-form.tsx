@@ -31,7 +31,6 @@ import { useState } from "react";
 
 interface ProjectFormProps {
   initialData?: ProjectCreation;
-  teams: Array<{ id: string; name: string }>;
   onSubmit: (data: ProjectCreation) => void;
   onCancel: () => void;
   isEditing?: boolean;
@@ -39,7 +38,6 @@ interface ProjectFormProps {
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({
   initialData,
-  teams,
   onSubmit,
   onCancel,
   isEditing = false,
@@ -69,8 +67,6 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
 
   const handleSubmit = () => {
     onSubmit(projectData);
-    setProjectData(initialData || getDefaultProjectData());
-    setCurrentStep(1);
   };
 
   const updateProjectData = <T extends keyof ProjectCreation>(
@@ -123,24 +119,6 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                     {PRODUCT_TYPES.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="team_id">Team</Label>
-                <Select
-                  value={(projectData.team_id as string) || ""}
-                  onValueChange={(value) => updateProjectData("team_id", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teams.map((team) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        {team.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
