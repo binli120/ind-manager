@@ -114,12 +114,13 @@ const priorityConfig = {
 
 export function ProjectsView() {
   const dispatch = useAppDispatch();
-  const { projects, viewMode, filters, isLoading } = useAppSelector(
+  const { viewMode, filters, projects, isLoading } = useAppSelector(
     (state) => state.projects,
   );
   //const { teams } = useAppSelector((state) => state.teams);
   //const { selectedTeamId } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
+
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
