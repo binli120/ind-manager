@@ -6,3 +6,5 @@ build
 .vercel
 next-env.d.ts
 scripts
+lib/supabase/schema.d.ts
+
