@@ -28,6 +28,14 @@ import {
 } from "@/lib/store/slices/projectsSlice";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { useTenant } from "@/hooks/useTenant";
+
+const PRIORITY_OPTIONS = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "critical", label: "Critical" },
+] as const;
 
 interface ProjectFormProps {
   initialData?: ProjectCreation;
@@ -42,6 +50,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   onCancel,
   isEditing = false,
 }) => {
+  const { currentTenant, selectedTenantId } = useTenant();
   const [currentStep, setCurrentStep] = useState(1);
   const [projectData, setProjectData] = useState<ProjectCreation>(
     initialData || getDefaultProjectData(),
@@ -66,7 +75,24 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   };
 
   const handleSubmit = () => {
-    onSubmit(projectData);
+    const tenantMeta = currentTenant
+      ? { id: currentTenant.id, name: currentTenant.name }
+      : selectedTenantId
+        ? { id: selectedTenantId }
+        : null;
+    const baseMetadata =
+      projectData.metadata &&
+      typeof projectData.metadata === "object" &&
+      !Array.isArray(projectData.metadata)
+        ? (projectData.metadata as Record<string, unknown>)
+        : {};
+    const nextData = tenantMeta
+      ? { ...projectData, metadata: { ...baseMetadata, tenant: tenantMeta } }
+      : projectData;
+
+    onSubmit(nextData);
+    setProjectData(initialData || getDefaultProjectData());
+    setCurrentStep(1);
   };
 
   const updateProjectData = <T extends keyof ProjectCreation>(
@@ -91,6 +117,17 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                     updateProjectData("ind_title", e.target.value)
                   }
                   placeholder="e.g., Phase 1 Study of XYZ-123 in Oncology"
+                />
+              </div>
+              <div>
+                <Label htmlFor="ind_number">Drug / Asset Code *</Label>
+                <Input
+                  id="ind_number"
+                  value={(projectData.ind_number as string) || ""}
+                  onChange={(e) =>
+                    updateProjectData("ind_number", e.target.value)
+                  }
+                  placeholder="e.g., ABC-001"
                 />
               </div>
               <div>
@@ -123,6 +160,46 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label htmlFor="priority">Priority</Label>
+                <Select
+                  value={(projectData.priority as string) || "medium"}
+                  onValueChange={(value) => updateProjectData("priority", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRIORITY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={(projectData.description as string) || ""}
+                  onChange={(e) =>
+                    updateProjectData("description", e.target.value)
+                  }
+                  placeholder="Brief description of the program"
+                />
+              </div>
+              <div>
+                <Label htmlFor="tenant_name">Tenant</Label>
+                <Input
+                  id="tenant_name"
+                  value={
+                    currentTenant?.name ??
+                    (selectedTenantId ? "Tenant selected" : "No tenant selected")
+                  }
+                  disabled
+                />
               </div>
             </div>
           </div>
@@ -230,21 +307,33 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                   <div className="flex justify-between">
                     <span className="font-medium">IND Title:</span>
                     <span>
-                      {(projectData.ind_title as string) || "Not specified"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Drug Name:</span>
-                    <span>
-                      {(projectData.drug_name as string) || "Not specified"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Sponsor:</span>
-                    <span>
-                      {(projectData.sponsor_name as string) || "Not specified"}
-                    </span>
-                  </div>
+                  {(projectData.ind_title as string) || "Not specified"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Drug / Asset Code:</span>
+                <span>
+                  {(projectData.ind_number as string) || "Not specified"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Drug Name:</span>
+                <span>
+                  {(projectData.drug_name as string) || "Not specified"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Product Type:</span>
+                <span>
+                  {(projectData.product_type as string) || "Not specified"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Sponsor:</span>
+                <span>
+                  {(projectData.sponsor_name as string) || "Not specified"}
+                </span>
+              </div>
                   {(projectData.target_ind_submission_date as string) && (
                     <div className="flex justify-between">
                       <span className="font-medium">Target Date:</span>

@@ -2,10 +2,14 @@
 
 import { useAppSelector, useAppDispatch } from "@/lib/store";
 import {
-  setViewMode,
-  setFilters,
-  ProjectCreation,
-  ProjectUpdate,
+	  setViewMode,
+	  setFilters,
+	  fetchProjects,
+	  createProject,
+	  ProjectCreation,
+	  deleteProject,
+	  updateProject,
+	  ProjectUpdate,
 } from "@/lib/store/slices/projectsSlice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -38,33 +42,6 @@ import {
   Target,
 } from "lucide-react";
 import { ProjectForm } from "./ui/projects/project-form";
-import { fetchProjects, createProject, updateProject, deleteProject } from "@/lib/supabase/projects";
-import { fetchCurrentUser } from "@/lib/supabase/users";
-import { authServices } from "@/app/api/auth/auth-services";
-import { User } from "@supabase/supabase-js";
-
-export type Project = {
-  id: string;
-  title: string;
-  code: string;
-  description: string;
-  status: string;
-  priority: string;
-  progress: number;
-  sponsor: string;
-  drug: string;
-  targetDate: string;
-  ownerId: string;
-  teamSize: number;
-  teamMembers: { avatar?: string; initials: string }[];
-  projectStartDate?: string;
-  preIndMeetingDate?: string;
-  targetIndSubmissionDate?: string;
-  fdaContactEmail?: string;
-  sponsorContactEmail?: string;
-  additionalNotes?: string;
-  productType?: string;
-};
 
 //IM-61: Add status info
 const statusOptions = [
@@ -85,7 +62,7 @@ const statusOptions = [
   { value: "terminated", label: "Terminated - (serious deficiencies or inactive ≥5 years)" },
 ];
 
-const statusConfig: Record<string, { label: string; color: string }> = {
+const statusConfig = {
   // Pre-Submission
   draft: { label: "Draft", color: "bg-slate-100 text-slate-800 border-slate-200" },
   "pre-ind-meeting-requested": {
@@ -128,7 +105,7 @@ const priorityOptions = [
   { value: "low", label: "Low" },
 ];
 
-const priorityConfig: Record<string, { label: string; color: string }> = {
+const priorityConfig = {
   low: { label: "Low", color: "bg-gray-100 text-gray-600" },
   medium: { label: "Medium", color: "bg-amber-100 text-amber-700" },
   high: { label: "High", color: "bg-orange-100 text-orange-700" },
@@ -137,13 +114,13 @@ const priorityConfig: Record<string, { label: string; color: string }> = {
 
 export function ProjectsView() {
   const dispatch = useAppDispatch();
-  const { viewMode, filters } = useAppSelector(
+  const { viewMode, filters, projects, isLoading } = useAppSelector(
     (state) => state.projects,
   );
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentTenantId, setCurrentTenantId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  //const { teams } = useAppSelector((state) => state.teams);
+  //const { selectedTeamId } = useAppSelector((state) => state.teams);
+  const { user } = useAppSelector((state) => state.auth);
+
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -154,28 +131,12 @@ export function ProjectsView() {
   useEffect(() => setPage(1), [filters]);
 
   useEffect(() => {
-    async function initData() {
-      setIsLoading(true);
-      const authData = await authServices.getUser();
-      const authUser = authData.data?.user;
-      if (authUser) {
-        setCurrentUser(authUser);
-        const userRecord = await fetchCurrentUser(authUser.id);
-        const privilege = (authUser.user_metadata?.privilege as string) ?? 'user';
-        
-        if (userRecord?.tenantid) {
-          setCurrentTenantId(userRecord.tenantid);
-          const isSystemAdmin = privilege === 'system_admin';
-          const userIdFilter = isSystemAdmin ? undefined : authUser.id;
-
-          const data = await fetchProjects(userRecord.tenantid, userIdFilter);
-          setProjects(data as Project[]);
-        }
-      }
-      setIsLoading(false);
+    if (user?.id) {
+      dispatch(fetchProjects({ userId: user.id }));
     }
-    initData();
-  }, []);
+  }, [dispatch, user?.id]);
+
+  
 
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
@@ -210,32 +171,29 @@ export function ProjectsView() {
     dispatch(setFilters({ priority }));
   };
 
-  const handleCreateProject = async (data: ProjectCreation) => {
-    if (!currentTenantId || !currentUser) return;
-    const newProject = await createProject(data as unknown as Parameters<typeof createProject>[0], currentTenantId, currentUser.id);
-    if (newProject) {
-      setProjects(prev => [newProject as Project, ...prev]);
-      setShowCreateDialog(false);
-    }
+  const handleCreateProject = (data: ProjectCreation) => {
+    dispatch(createProject(data));
+    setShowCreateDialog(false);
   };
 
-  const handleEditProject = async (data: ProjectUpdate) => {
+  const handleEditProject = (data: ProjectUpdate) => {
     if (editProject == null || editProject.id == null) return;
-    const updated = await updateProject(editProject.id, data as unknown as Parameters<typeof updateProject>[1]);
-    if (updated) {
-      setProjects(prev => prev.map(p => p.id === updated.id ? (updated as Project) : p));
-      setShowEditDialog(false);
-    }
-};
+    dispatch(
+      updateProject({
+        projectId: editProject.id,
+        updates: { ...data, id: undefined },
+      }),
+    );
+    setShowEditDialog(false);
+  };
 
-  const handleDeleteProject = async (projectId: string) => {
+  const handleDeleteProject = (projectId: string) => {
     if (
       confirm(
         "Are you sure you wish to delete this project? This action cannot be undone.",
       )
     ) {
-      await deleteProject(projectId);
-      setProjects(prev => prev.filter(p => p.id !== projectId));
+      dispatch(deleteProject(projectId));
     }
   };
 
@@ -245,6 +203,7 @@ export function ProjectsView() {
     setShowEditDialog(true);
     setEditProject({
       id: proj.id,
+      tenantid: proj.tenantId,
       drug_name: proj.drug,
       ind_title: proj.title,
       ind_number: proj.code,
@@ -257,7 +216,7 @@ export function ProjectsView() {
       pre_ind_meeting_date: proj.preIndMeetingDate,
       target_ind_submission_date: proj.targetIndSubmissionDate,
       additional_notes: proj.additionalNotes,
-    } as ProjectCreation);
+    });
   };
 
   return (
@@ -370,9 +329,6 @@ export function ProjectsView() {
           > {/**IM-61 card active card green gradient styling + resume disable */}
             {pagedProjects.map((project) => {
               const isResumeEnabled = project.status === "inactive";
-              const statusInfo = statusConfig[project.status] || { label: project.status, color: "bg-gray-100" };
-              const priorityInfo = priorityConfig[project.priority] || { label: project.priority, color: "bg-gray-100" };
-
               return (
                 <Card
                   key={project.id}
@@ -390,14 +346,14 @@ export function ProjectsView() {
                           </h3>
                           <div className="flex flex-wrap gap-2">
                              <Badge
-                                className={`${statusInfo.color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[240px]`}
+                                className={`${statusConfig[project.status].color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[240px]`}
                               >
-                                {statusInfo.label}
+                                {statusConfig[project.status].label}
                               </Badge>
                               <Badge
-                                className={`${priorityInfo.color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[160px]`}
+                                className={`${priorityConfig[project.priority].color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[160px]`}
                               >
-                                {priorityInfo.label}
+                                {priorityConfig[project.priority].label}
                              </Badge>
                           </div>
                         </div>
@@ -511,7 +467,7 @@ export function ProjectsView() {
                         <Eye className="w-4 h-4 mr-2" />
                         View
                       </Button>
-                      {(!project.ownerId || currentUser?.id === project.ownerId || true) && (
+                      {project.ownerId === user?.id && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -557,7 +513,7 @@ export function ProjectsView() {
                         <span style={{ color: isResumeEnabled ? "#ffffff" : "#9ca3af" }}>Resume</span>
                       </button>
 
-                      {(!project.ownerId || currentUser?.id === project.ownerId || true) && (
+                      {project.ownerId === user?.id && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -614,12 +570,14 @@ export function ProjectsView() {
       </div>
       {showCreateDialog && (
         <ProjectForm
+          
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateDialog(false)}
         />
       )}
       {showEditDialog && editProject && (
         <ProjectForm
+          
           initialData={editProject}
           isEditing
           onSubmit={handleEditProject}
