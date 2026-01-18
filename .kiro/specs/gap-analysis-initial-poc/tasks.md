@@ -5,26 +5,30 @@
 This implementation plan creates a simplified proof-of-concept for document completeness validation using a simple HTML frontend and Next.js API backend. The system reads local documents, validates them against Excel or JSON templates, and provides interactive alerts - no database or file upload complexity.
 
 ## Tasks
+- [x] structure: store tests under gap_analysis_scoping/tests, store .md and docs under gap_analysis_scoping/docs, store code under gap_analysis_scoping/features. 
+  - for every reports, name it as {task-id}-{purpose}.md 
+  - update steering and spec docs to reflect these file structure
+  - refactor the files under gap_analysis_scoping to meet the requirements
 
-- [ ] 1. Set up basic HTML frontend and API structure
+- [x] 1. Set up basic HTML frontend and API structure
   - Create simple HTML interface for document and template selection
   - Set up Next.js API route `/api/validation` for processing
   - Create basic file input handling for local documents and templates
   - _Requirements: 1.1, 2.1_
 
 - [ ] 2. Implement template parsing functionality
-  - [ ] 2.1 Create TemplateParser class for Excel and JSON parsing
+  - [x] 2.1 Create TemplateParser class for Excel and JSON parsing
     - Implement parseExcelTemplate() using existing document libraries
     - Implement parseJsonTemplate() for structured template files
     - Extract validation rules from template structures
     - _Requirements: 1.1, 3.1_
-  
+  - [x] 2.2 read gap_analysis_scoping\template_2.6.2_poc.xlsx as example and then break it into more structured validation rules
   - [ ]* 2.2 Write property test for template parsing
     - **Property 1: Template Parsing Completeness**
     - **Validates: Requirements 1.1, 3.1**
 
 - [ ] 3. Implement document analysis and validation engine
-  - [ ] 3.1 Create DocumentAnalyzer class
+  - [x] 3.1 Create DocumentAnalyzer class
     - Implement analyzeLocalDocument() for processing uploaded documents
     - Add content presence checking against template rules
     - Add format requirement validation

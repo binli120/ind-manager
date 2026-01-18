@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gap Analysis Completeness Check - POC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .file-input-group {
+            margin-bottom: 20px;
+        }
+
+        .file-input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .file-name {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .template-type-group {
+            margin-bottom: 20px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .radio-option label {
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+        }
+
+        .validate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .validate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .validate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gap Analysis Completeness Check</h1>
+            <p>Proof of Concept - Document Validation System</p>
+        </div>
+
+        <div class="content">
+            <!-- Template Selection Section -->
+            <div class="section">
+                <div class="section-title">Template Selection</div>
+                
+                <div class="file-input-group">
+                    <label class="file-input-label" for="templateFile">Upload Template File</label>
+                    <input 
+                        type="file" 
+                        id="templateFile" 
+                        class="file-input"
+                        accept=".xlsx,.xls,.json"
+                    >
+                    <div id="templateFileName" class="file-name"></div>
+                </div>
+
+                <div class="template-type-group">
+                    <label class="file-input-label">Template Type</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="typeExcel" name="templateType" value="excel" checked>
+                            <label for="typeExcel">Excel (.xlsx, .xls)</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="typeJson" name="templateType" value="json">
+                            <label for="typeJson">JSON (.json)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Selection Section -->
+            <div class="section">
+                <div class="section-title">Document Selection</div>
+                
+                <div class="file-input-group">
+                    <label class="file-input-label" for="documentFile">Upload Document to Validate</label>
+                    <input 
+                        type="file" 
+                        id="documentFile" 
+                        class="file-input"
+                        accept=".pdf,.docx,.doc,.txt"
+                    >
+                    <div id="documentFileName" class="file-name"></div>
+                </div>
+            </div>
+
+            <!-- Validate Button -->
+            <button id="validateBtn" class="validate-btn" disabled>
+                Validate Document
+            </button>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="results-section">
+                <div class="section-title">Validation Results</div>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File input handling
+        const templateFileInput = document.getElementById('templateFile');
+        const documentFileInput = document.getElementById('documentFile');
+        const templateFileName = document.getElementById('templateFileName');
+        const documentFileName = document.getElementById('documentFileName');
+        const validateBtn = document.getElementById('validateBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContent = document.getElementById('resultsContent');
+
+        let templateFile = null;
+        let documentFile = null;
+
+        // Handle template file selection
+        templateFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                templateFile = file;
+                templateFileName.textContent = `Selected: ${file.name}`;
+                checkValidateButton();
+            }
+        });
+
+        // Handle document file selection
+        documentFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                documentFile = file;
+                documentFileName.textContent = `Selected: ${file.name}`;
+                checkValidateButton();
+            }
+        });
+
+        // Enable validate button when both files are selected
+        function checkValidateButton() {
+            validateBtn.disabled = !(templateFile && documentFile);
+        }
+
+        // Convert file to base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Handle validation
+        validateBtn.addEventListener('click', async () => {
+            if (!templateFile || !documentFile) return;
+
+            // Show loading state
+            validateBtn.disabled = true;
+            resultsSection.classList.add('show');
+            resultsContent.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Validating document...</div>
+                </div>
+            `;
+
+            try {
+                // Get template type
+                const templateType = document.querySelector('input[name="templateType"]:checked').value;
+
+                // Convert files to base64
+                const templateBase64 = await fileToBase64(templateFile);
+                const documentBase64 = await fileToBase64(documentFile);
+
+                // Send validation request
+                const response = await fetch('/api/validation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        templateFile: templateBase64,
+                        templateName: templateFile.name,
+                        documentFile: documentBase64,
+                        documentName: documentFile.name,
+                        templateType: templateType
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    displayResults(result);
+                } else {
+                    displayError(result.error, result.details);
+                }
+            } catch (error) {
+                displayError('Request failed', error.message);
+            } finally {
+                validateBtn.disabled = false;
+            }
+        });
+
+        // Display validation results
+        function displayResults(result) {
+            resultsContent.innerHTML = `
+                <div class="alert alert-success">
+                    <div>
+                        <strong>✓ Validation Request Successful</strong>
+                        <p style="margin-top: 8px; font-size: 14px;">
+                            Document: ${result.data.documentName}<br>
+                            Template: ${result.data.templateName}<br>
+                            Type: ${result.data.templateType}<br>
+                            Status: ${result.data.status}
+                        </p>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <div>
+                        <strong>ℹ Note</strong>
+                        <p style="margin-top: 8px; font-size: 14px;">
+                            Validation logic will be implemented in subsequent tasks.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Display error
+        function displayError(error, details) {
+            resultsContent.innerHTML = `
+                <div class="alert alert-error">
+                    <div>
+                        <strong>✗ ${error}</strong>
+                        <p style="margin-top: 8px; font-size: 14px;">${details}</p>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
