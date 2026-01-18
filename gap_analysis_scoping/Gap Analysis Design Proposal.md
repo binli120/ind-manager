@@ -2,90 +2,76 @@
 
 ## Overview
 
-The Completeness Check Enhancement extends the existing IND Manager gap analysis system with automated validation capabilities focused on document completeness, compliance reporting, and cross-reference validation. The system provides comprehensive validation against FDA requirements while integrating seamlessly with the existing document management workflow.
+The Completeness Check Enhancement is the first step in implementing gap analysis capabilities for the IND Manager system. This feature provides automated validation focused on document completeness with interactive in-app alerts and reminders. The system validates documents against built-in templates rather than FDA requirements, providing users with actionable feedback to identify and fix gaps.
 
-The design builds upon the existing gap analysis dashboard and module status tracking, adding a validation engine that can automatically assess document completeness, generate compliance reports, and maintain audit trails for regulatory compliance.
+The design introduces a new validation engine that can automatically assess document completeness, generate interactive alerts within the UI, and maintain audit trails. The initial implementation focuses on modules 2.4 and 2.6 only, with no existing gap analysis system currently in place.
 
 ## Glossary
 
-- **System**: The IND Manager completeness check enhancement system
-- **Document**: Any file or section within an IND submission module
-- **Completeness_Rule**: A validation rule that defines what constitutes a complete document or section
-- **Compliance_Report**: A detailed report showing completeness status and specific gaps
-- **Validation_Engine**: The core system component that executes completeness checks
-- **FDA_Requirements**: Official FDA guidelines and requirements for IND submissions
-- **Module**: One of the five CTD modules (Administrative, CTD Summaries, Quality, Nonclinical, Clinical)
-- **Section**: A specific subsection within a module (e.g., Form FDA 1571, Toxicology Summary)
-
-## Requirements 
+- **System**: The IND Manager completeness check system (first step in gap analysis)
+- **Document**: Any file or section within modules 2.4 and 2.6 of an IND submission
+- **Completeness_Rule**: A validation rule that defines what constitutes a complete document or section based on built-in templates
+- **Alert**: An interactive in-app notification showing where gaps exist, allowing users to take action
+- **Validation_Engine**: The core system component that executes completeness checks against templates
+- **Template_Requirements**: Built-in template guidelines and requirements for IND submissions
+- **Module**: Specifically modules 2.4 (Nonclinical Pharmacology and Toxicology) and 2.6 (Pharmacology and Toxicology Summary)
+- **Section**: A specific subsection within the targeted modules
 
 ## Requirements
 
-The IND Manager application currently provides gap analysis functionality for tracking IND submission readiness. This feature enhancement will add comprehensive completeness checking capabilities to automatically validate document completeness, cross-reference requirements, and provide detailed compliance reporting for FDA IND submissions.
+The IND Manager application currently has no gap analysis functionality in place. This feature will introduce the first step in gap analysis capabilities by adding completeness checking for modules 2.4 and 2.6. The system will validate documents against built-in templates and provide interactive in-app alerts rather than formal compliance reports.
 
 The requirements are prioritized in order.
 
 ### Requirement 1: Automated Document Completeness Validation
 
-**User Story:** As a regulatory affairs specialist, I want the system to automatically validate document completeness against FDA requirements, so that I can identify missing or incomplete sections before submission.
+**User Story:** As a regulatory affairs specialist, I want the system to automatically validate document completeness against built-in templates for modules 2.4 and 2.6, so that I can identify missing or incomplete sections through interactive alerts.
 
 #### Acceptance Criteria
 
-1. WHEN a completeness check is initiated, THE System SHALL validate one or all documents against predefined FDA requirements
-2. WHEN a document is missing required content, THE System SHALL flag it as incomplete with specific details
+1. WHEN a completeness check is initiated, THE System SHALL validate documents in modules 2.4 and 2.6 against predefined template requirements
+2. WHEN a document is missing required content, THE System SHALL display an interactive in-app alert with specific details
 3. WHEN a document contains all required elements, THE System SHALL mark it as complete
-4. THE System SHALL validate document format requirements (PDF, page limits, signatures)
+4. THE System SHALL validate document format requirements based on built-in templates
 
-### Requirement 2: Detailed Compliance Reporting
+### Requirement 2: Interactive In-App Alerts and Reminders
 
-**User Story:** As a regulatory affairs manager, I want comprehensive compliance reports, so that I can demonstrate submission readiness to stakeholders and FDA.
-
-#### Acceptance Criteria
-
-1. WHEN a compliance report is requested, THE System SHALL generate a detailed completeness assessment
-2. WHEN generating reports, THE System SHALL include specific gap descriptions and remediation steps
-3. WHEN reports are exported, THE System SHALL support multiple formats (PDF, Excel, Word)
-4. THE System SHALL track completeness history and show progress over time
-5. WHEN audit trails are needed, THE System SHALL provide complete validation history with timestamps
-
-### Requirement 3: Cross-Reference Validation
-
-**User Story:** As a regulatory affairs specialist, I want the system to validate cross-references between documents, so that I can ensure consistency across the entire submission.
+**User Story:** As a regulatory affairs manager, I want interactive in-app alerts and reminders, so that I can quickly identify and address gaps without formal reporting overhead.
 
 #### Acceptance Criteria
 
-1. WHEN documents reference other sections, THE System SHALL verify that referenced content exists
-2. WHEN cross-referenced data is inconsistent, THE System SHALL flag discrepancies with specific locations
-3. WHEN a referenced document is updated, THE System SHALL check all dependent documents for impact
-4. THE System SHALL validate that all required cross-references are present and accurate
-5. WHEN pagination changes occur, THE System SHALL update all table of contents references automatically
+1. WHEN a gap is identified, THE System SHALL display an interactive alert within the document editor interface
+2. WHEN alerts are shown, THE System SHALL include specific gap descriptions and suggested actions
+3. WHEN users interact with alerts, THE System SHALL provide direct navigation to the problematic sections
+4. THE System SHALL track alert acknowledgment and resolution status
+5. WHEN alerts are resolved, THE System SHALL update the status in real-time
+
+### Requirement 3: Template-Based Validation Rules
+
+**User Story:** As a system administrator, I want to configure validation rules based on built-in templates, so that I can ensure documents meet template requirements for modules 2.4 and 2.6.
+
+#### Acceptance Criteria
+
+1. WHEN template requirements are updated, THE System SHALL allow administrators to modify validation rules
+2. WHEN different template versions are used, THE System SHALL support multiple rule sets
+3. WHEN custom template requirements exist, THE System SHALL allow creation of organization-specific rules
+4. THE System SHALL validate rule configurations before activation
+5. WHEN rules conflict, THE System SHALL prevent activation and show specific conflicts
 
 
 ### Requirement 4: Integration with Document Management
 
-**User Story:** As a document author, I want the completeness checker to integrate with the document editor, so that I can see validation results while working on documents.
+**User Story:** As a document author, I want the completeness checker to integrate with the document editor, so that I can see validation alerts while working on modules 2.4 and 2.6 documents.
 
 #### Acceptance Criteria
 
-1. WHEN editing documents, THE System SHALL show real-time completeness status in the editor
-2. WHEN validation errors exist, THE System SHALL highlight specific sections needing attention
+1. WHEN editing documents in modules 2.4 and 2.6, THE System SHALL show real-time completeness status in the editor
+2. WHEN validation issues exist, THE System SHALL highlight specific sections needing attention with interactive alerts
 3. WHEN documents are saved, THE System SHALL automatically trigger completeness validation
 4. THE System SHALL provide inline suggestions for resolving completeness issues
 5. WHEN templates are used, THE System SHALL pre-populate required sections and validate completion
 
-### Requirement 5: Configurable Validation Rules
-
-**User Story:** As a system administrator, I want to configure validation rules, so that I can adapt the system to different submission types and regulatory requirements.
-
-#### Acceptance Criteria
-
-1. WHEN new FDA guidelines are released, THE System SHALL allow administrators to update validation rules
-2. WHEN different submission types are used, THE System SHALL support multiple rule sets
-3. WHEN custom requirements exist, THE System SHALL allow creation of organization-specific rules
-4. THE System SHALL validate rule configurations before activation
-5. WHEN rules conflict, THE System SHALL prevent activation and show specific conflicts
-
-### Requirement 6: Audit Trail and Version Control
+### Requirement 5: Audit Trail and Version Control
 
 **User Story:** As a quality assurance manager, I want complete audit trails of completeness checks, so that I can demonstrate compliance with validation procedures.
 
@@ -93,7 +79,7 @@ The requirements are prioritized in order.
 
 1. WHEN completeness checks are performed, THE System SHALL log all validation activities with timestamps
 2. WHEN validation results change, THE System SHALL maintain history of previous states
-3. WHEN users acknowledge issues, THE System SHALL record acknowledgment details and user identity
+3. WHEN users acknowledge alerts, THE System SHALL record acknowledgment details and user identity
 4. THE System SHALL track who performed each validation and when
 5. WHEN audit reports are needed, THE System SHALL generate comprehensive validation history reports
 
@@ -104,32 +90,31 @@ The requirements are prioritized in order.
 ```mermaid
 graph TB
     subgraph "Frontend Layer"
-        A[Gap Analysis Dashboard]
+        A[Gap Analysis Dashboard - New]
         B[Document Editor Integration]
-        C[Compliance Reports]
+        C[Interactive Alerts UI]
         D[Admin Rule Management]
     end
     
     subgraph "API Layer"
         E[Validation API]
         F[Rules Management API]
-        G[Reporting API]
+        G[Alert Management API]
         H[Audit API]
     end
     
     subgraph "Core Services"
         I[Validation Engine]
         J[Rules Engine]
-        K[Cross-Reference Validator]
-        L[Report Generator]
-        M[Audit Logger]
+        K[Alert Generator]
+        L[Audit Logger]
     end
     
     subgraph "Data Layer"
-        N[Document Store]
-        O[Validation Rules DB]
-        P[Audit Log DB]
-        Q[Compliance History DB]
+        M[Document Store - Modules 2.4 & 2.6]
+        N[Template Rules DB]
+        O[Audit Log DB]
+        P[Alert History DB]
     end
     
     A --> E
@@ -139,47 +124,45 @@ graph TB
     
     E --> I
     F --> J
-    G --> E
-    G --> L
-    H --> M
+    G --> K
+    H --> L
     
+    I --> M
     I --> N
-    I --> O
-    J --> O
-    K --> N
-    L --> Q
-    M --> P
+    J --> N
+    K --> P
+    L --> O
 ```
 
 ### Component Integration
 
-The enhancement integrates with existing components:
-- **Gap Analysis Dashboard**: Extended with automated validation results
-- **Module Status Cards**: Enhanced with detailed completeness metrics
-- **Document Editor**: Integrated with real-time validation feedback
-- **Issue Tracking**: Expanded with automated issue detection
+This is the first gap analysis implementation for the IND Manager system. The enhancement introduces new components:
+- **Gap Analysis Dashboard**: New dashboard for tracking completeness status of modules 2.4 and 2.6
+- **Interactive Alerts**: Real-time in-app notifications and reminders for identified gaps
+- **Document Editor**: Enhanced with validation feedback and alert integration
+- **Template Validation**: New system for validating against built-in templates
 
 ## Components and Interfaces
 
 ### 1. Validation Engine
 
-**Purpose**: Core component that executes document completeness validation
+**Purpose**: Core component that executes document completeness validation against built-in templates
 
 **Key Methods**:
 ```typescript
 interface ValidationEngine {
-  validateDocument(documentId: string, ruleSetId: string): ValidationResult
-  validateModule(moduleId: string): ModuleValidationResult
-  validateSubmission(submissionId: string): SubmissionValidationResult
+  validateDocument(documentId: string, templateId: string): ValidationResult
+  validateModule(moduleId: '2.4' | '2.6'): ModuleValidationResult
   getValidationStatus(documentId: string): ValidationStatus
+  generateAlerts(validationResult: ValidationResult): Alert[]
 }
 ```
 
 **Responsibilities**:
-- Execute validation rules against documents
-- Assess document completeness against FDA requirements
+- Execute validation rules against documents in modules 2.4 and 2.6
+- Assess document completeness against built-in template requirements
 - Generate validation results with specific gap details
-- Support both single document and batch validation
+- Create interactive alerts for identified issues
 
 ### 2. Rules Engine
 
