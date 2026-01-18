@@ -36,6 +36,7 @@ export function NotificationsPanel({ userId, className }: Props) {
     loading,
     error,
     isOpen,
+    close,
     toggle,
     markOne,
     markAll,
@@ -48,20 +49,25 @@ export function NotificationsPanel({ userId, className }: Props) {
   React.useEffect(() => {
     if (!isOpen) return;
 
+    const controller = new AbortController();
+
+    const dismiss = () => close();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") toggle();
-    };
-    const onDown = (e: PointerEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) toggle();
+      if (e.key === "Escape") dismiss();
     };
 
-    window.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onDown);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.removeEventListener("pointerdown", onDown);
+    const onDown = (e: PointerEvent) => {
+      const el = ref.current;
+      if (el && !el.contains(e.target as Node)) dismiss();
     };
-  }, [isOpen, toggle]);
+
+    window.addEventListener("keydown", onKey, { signal: controller.signal });
+    document.addEventListener("pointerdown", onDown, { signal: controller.signal });
+    return () => {
+      controller.abort()
+    };
+  }, [isOpen, close]);
 
   if (!isOpen) return null;
 
@@ -179,7 +185,7 @@ export function NotificationsPanel({ userId, className }: Props) {
 
       {/* Footer */}
       <div className="flex items-center justify-end gap-2 px-4 py-3 border-t">
-        <Button variant="ghost" size="sm" onClick={toggle}>
+        <Button variant="ghost" size="sm" onClick={close}>
           Close
         </Button>
       </div>

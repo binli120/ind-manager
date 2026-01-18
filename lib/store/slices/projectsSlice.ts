@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/schema";
+import { getErrorMessage, isAdminEmail } from "@/lib/utils";
 
 export interface ProjectMember {
   id: string;
@@ -102,11 +103,6 @@ const initialState: ProjectsState = {
   selectedProjectId: null,
 };
 
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return "Unknown error";
-};
 
 // MOCK: Remove mock mode when Supabase projects are live.
 //const useMockProjects = true;
@@ -137,8 +133,7 @@ export const fetchProjects = createAsyncThunk(
         .single();
 
       if (userError) throw userError;
-      const email = (userRow?.email ?? "").toLowerCase();
-      const isAdmin = email.endsWith("filynai.com");
+      const isAdmin = isAdminEmail(userRow?.email);
       if (!isAdmin && !userRow?.tenantid) return [];
 
       // MOCK: update if you keep mock mode
