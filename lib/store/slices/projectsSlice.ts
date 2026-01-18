@@ -360,11 +360,7 @@ export const deleteProject = createAsyncThunk(
 export const addProjectMember = createAsyncThunk(
   "projects/addProjectMember",
   async (
-    {
-      projectId,
-      userId,
-      role,
-    }: {
+    {}: {
       projectId: string;
       userId: string;
       role: "lead" | "member" | "viewer";
@@ -372,6 +368,9 @@ export const addProjectMember = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
+      throw new Error("Members management temporarily stopped");
+
+      /*
       const supabase = createClient();
 
       // TODO: Fix query, team member = project member?
@@ -396,6 +395,7 @@ export const addProjectMember = createAsyncThunk(
       if (error) throw error;
 
       return data;
+      */
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to add project member");
     }
@@ -406,6 +406,8 @@ export const removeProjectMember = createAsyncThunk(
   "projects/removeProjectMember",
   async (memberId: string, { rejectWithValue }) => {
     try {
+      throw new Error("Members management temporarily stopped");
+      /*
       const supabase = createClient();
 
       // TODO: Fix query, team member = project member?
@@ -417,6 +419,7 @@ export const removeProjectMember = createAsyncThunk(
       if (error) throw error;
 
       return memberId;
+      */
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to remove project member",

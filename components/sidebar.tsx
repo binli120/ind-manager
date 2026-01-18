@@ -20,13 +20,15 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+import type { UserPrivilege } from '@/components/ui/users/users-page';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  currentUserPrivilege: UserPrivilege | string;
 }
 
-export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -85,14 +87,20 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       icon: Building2Icon,
       label: 'tenants',
       path: '/admin/tenants',
+      allowedRoles: ['system_admin'],
     },
     {
       title: 'Users',
       icon: UserIcon,
       label: 'users',
       path: '/admin/users',
+      allowedRoles: ['system_admin', 'user_manager'],
     },
   ];
+
+  const filteredAdminItems = adminItems.filter((item) =>
+    item.allowedRoles.includes(currentUserPrivilege as string)
+  );
 
   const analysisItems = [
     {
@@ -226,34 +234,35 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         </div>
 
         {/* Admin Management */}
-        <div className='p-4'>
-          {isOpen && (
-            <h3 className='text-xs font-semibold text-muted uppercase tracking-wider mb-3'>
-              Admin Space
-            </h3>
-          )}
-          <nav className='space-y-1'>
-            {adminItems.map((item) => (
-              <Button
-                key={item.label}
-                variant={item.path === pathname ? 'secondary' : 'ghost'}
-                onClick={() => router.push(item.path)}
-                className={cn(
-                  'w-full justify-start gap-3 h-10',
-                  !isOpen && 'justify-center px-2',
-                  item.path === pathname &&
-                    'bg-sidebar-primary text-sidebar-primary-foreground'
-                )}
-              >
-                <item.icon className='w-4 h-4 flex-shrink-0' />
-                {isOpen && (
-                  <span className='flex-1 text-left'>{item.label}</span>
-                )}
-              </Button>
-            ))}
-          </nav>
-        </div>
-
+        {filteredAdminItems.length > 0 && (
+          <div className='p-4'>
+            {isOpen && (
+              <h3 className='text-xs font-semibold text-muted uppercase tracking-wider mb-3'>
+                Admin Space
+              </h3>
+            )}
+            <nav className='space-y-1'>
+              {filteredAdminItems.map((item) => (
+                <Button
+                  key={item.label}
+                  variant={item.path === pathname ? 'secondary' : 'ghost'}
+                  onClick={() => router.push(item.path)}
+                  className={cn(
+                    'w-full justify-start gap-3 h-10',
+                    !isOpen && 'justify-center px-2',
+                    item.path === pathname &&
+                      'bg-sidebar-primary text-sidebar-primary-foreground'
+                  )}
+                >
+                  <item.icon className='w-4 h-4 flex-shrink-0' />
+                  {isOpen && (
+                    <span className='flex-1 text-left'>{item.label}</span>
+                  )}
+                </Button>
+              ))}
+            </nav>
+          </div>
+        )}
         {/* Submission Management */}
         <div className='p-4'>
           {isOpen && (

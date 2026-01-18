@@ -20,8 +20,8 @@ import { useProject } from '@/hooks/useProject';
 import { useAppDispatch } from '@/lib/store';
 import { fetchUserDocuments } from '@/lib/store/slices/documentsSlice';
 import {
-  fetchProjectDetails,
   fetchProjects,
+  fetchProjectDetails,
 } from '@/lib/store/slices/projectsSlice';
 
 import type { ViewType } from '@/lib/store/slices/uiSlice';
@@ -127,8 +127,6 @@ export function Header({
     switch (currentView) {
       case 'projects':
         return 'Projects';
-      case 'teams':
-        return 'Teams';
       case 'calendar':
         return 'Calendar';
       case 'submission':
