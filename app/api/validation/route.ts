@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TemplateParser } from './validation/template-parser';
-import { DocumentAnalyzer } from './validation/document-analyzer';
-import { RuleEngine } from './validation/rule-engine';
-import { AlertGenerator } from './validation/alert-generator';
+import { TemplateParser } from '@/gap_analysis_scoping/features/validation/template-parser';
+import { DocumentAnalyzer } from '@/gap_analysis_scoping/features/validation/document-analyzer';
+import { RuleEngine } from '@/gap_analysis_scoping/features/validation/rule-engine';
+import { AlertGenerator } from '@/gap_analysis_scoping/features/validation/alert-generator';
 
 /**
  * POST /api/validation
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
-    );
+      );
   }
 }
 

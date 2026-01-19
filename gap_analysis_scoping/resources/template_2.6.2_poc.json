@@ -1,0 +1,1361 @@
+{
+  "name": "2.6.2",
+  "templateType": "excel",
+  "rules": [
+    {
+      "name": "2.6.2.1 - a: Brief Summary - Content Presence",
+      "description": "Provide a concise executive summary of key pharmacology findings (1-2 paragraphs), highlighting the primary pharmacodynamic activity, selectivity profile, and overall conclusions supporting clinical d...",
+      "type": "content_presence",
+      "field": "2.6.2.1 - a",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.1 - a (Brief Summary). Provide a concise executive summary of key pharmacology findings (1-2 paragraphs), highlighting the ..."
+    },
+    {
+      "name": "2.6.2.1 - a: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- pd_executive_summary: [object]\r\n  - primary_pd_conclusion [MOA validation]\r\n  - selectivity_conclusion [off-target profile]\r\n  - s...",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - a_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.1 - a. Check template for: REQUIRED INPUTS:\r\n- pd_executive_summary: [object]\r\n  - primary_pd_conclusion [MOA validation]\r\n  - ..."
+    },
+    {
+      "name": "2.6.2.1 - a: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: \"Conclusions\"\r\n- 4.2.1.2 Secondary PD: \"Conclusions\"\r\n- 4.2.1.3 Safety pharmacology: \"Conclusions\"\r\n\r\nWITHI...",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - a_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: \"Conclusions\"\r\n- 4.2.1.2 Secondary PD: \"Conclusions\"\r\n- 4..."
+    },
+    {
+      "name": "2.6.2.1 - a: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• PD summary: key-efficacy-findings (Required), mechanism-validation → 4.2.1.1 \"Conclusions\"\r\n• Safety summary: target-organs (Requi...",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - a_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• PD summary: key-efficacy-findings (Required), mechanism-validation → 4.2.1.1 \"Co..."
+    },
+    {
+      "name": "2.6.2.1 - a: SM Modality Requirements",
+      "description": "For SM products: Emphasize receptor/enzyme binding affinity, selectivity over related targets, and functional activity in relevant assay systems....",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - a_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.1 - a follows guidance: Emphasize receptor/enzyme binding affinity, selectivity over related targets, and functional activit..."
+    },
+    {
+      "name": "2.6.2.1 - a: BIO Modality Requirements",
+      "description": "For BIO products: Emphasize target binding affinity and specificity, functional activity (agonist/antagonist/neutralizing), and species cross-reactivity profile. Addres...",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - a_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.1 - a follows guidance: Emphasize target binding affinity and specificity, functional activity (agonist/antagonist/neutraliz..."
+    },
+    {
+      "name": "2.6.2.1 - a: ADC Modality Requirements",
+      "description": "For ADC products: Summarize antibody-target binding, internalization efficiency, payload release kinetics, and cytotoxic activity in target-expressing vs. non-expressin...",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - a_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.1 - a follows guidance: Summarize antibody-target binding, internalization efficiency, payload release kinetics, and cytotox..."
+    },
+    {
+      "name": "2.6.2.1 - a: ONT Modality Requirements",
+      "description": "For ONT products: Summarize target knockdown efficiency, duration of effect, and selectivity (absence of significant off-target gene silencing). Address innate immune s...",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - a_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.1 - a follows guidance: Summarize target knockdown efficiency, duration of effect, and selectivity (absence of significant o..."
+    },
+    {
+      "name": "2.6.2.1 - a: Other Modality Requirements",
+      "description": "For Other products: Summarize mechanism-specific endpoints (e.g., transgene expression, immune response, cell engraftment) and key efficacy/activity findings....",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - a_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.1 - a follows guidance: Summarize mechanism-specific endpoints (e.g., transgene expression, immune response, cell engraftmen..."
+    },
+    {
+      "name": "2.6.2.1 - b: Brief Summary - Content Presence",
+      "description": "Summarize secondary and safety pharmacology findings, including any signals that informed clinical monitoring strategies or dose selection.",
+      "type": "content_presence",
+      "field": "2.6.2.1 - b",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.1 - b (Brief Summary). Summarize secondary and safety pharmacology findings, including any signals that informed clinical m..."
+    },
+    {
+      "name": "2.6.2.1 - b: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- safety_pharm_summary: [cv_assessment, cns_assessment, resp_assessment - each with study_id, species, findings, noael]\r\n- secondary...",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - b_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.1 - b. Check template for: REQUIRED INPUTS:\r\n- safety_pharm_summary: [cv_assessment, cns_assessment, resp_assessment - each wit..."
+    },
+    {
+      "name": "2.6.2.1 - b: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology: CV, CNS, respiratory\r\n- 4.2.3.2 Repeat-dose tox: integrated safety pharm\r\n- 4.2.1.2 Secondary PD: ...",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - b_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology: CV, CNS, respiratory\r\n- 4.2.3.2 Repeat-dose tox:..."
+    },
+    {
+      "name": "2.6.2.1 - b: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• Safety pharm summary: CV/CNS/respiratory-findings (Required), NOAELs → 4.2.1.3 \"Conclusions\"\r\n• hERG/QT data: IC50 (Required), in-...",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - b_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• Safety pharm summary: CV/CNS/respiratory-findings (Required), NOAELs → 4.2.1.3 \"..."
+    },
+    {
+      "name": "2.6.2.1 - b: SM Modality Requirements",
+      "description": "For SM products: Highlight any off-target activities identified in secondary pharmacology screens and cardiovascular, CNS, or respiratory safety pharmacology results....",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - b_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.1 - b follows guidance: Highlight any off-target activities identified in secondary pharmacology screens and cardiovascular,..."
+    },
+    {
+      "name": "2.6.2.1 - b: BIO Modality Requirements",
+      "description": "For BIO products: Summarize any unexpected pharmacological activities and note if safety pharmacology studies were conducted or waived with justification....",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - b_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.1 - b follows guidance: Summarize any unexpected pharmacological activities and note if safety pharmacology studies were con..."
+    },
+    {
+      "name": "2.6.2.1 - b: ADC Modality Requirements",
+      "description": "For ADC products: Summarize any bystander effects, off-target cytotoxicity, and safety pharmacology findings for the intact ADC....",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - b_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.1 - b follows guidance: Summarize any bystander effects, off-target cytotoxicity, and safety pharmacology findings for the i..."
+    },
+    {
+      "name": "2.6.2.1 - b: ONT Modality Requirements",
+      "description": "For ONT products: Summarize any hybridization-independent effects, off-target gene knockdown, and safety pharmacology findings if conducted....",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - b_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.1 - b follows guidance: Summarize any hybridization-independent effects, off-target gene knockdown, and safety pharmacology ..."
+    },
+    {
+      "name": "2.6.2.1 - b: Other Modality Requirements",
+      "description": "For Other products: Summarize any unintended biological activities and safety pharmacology findings appropriate to the modality....",
+      "type": "format_requirement",
+      "field": "2.6.2.1 - b_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.1 - b follows guidance: Summarize any unintended biological activities and safety pharmacology findings appropriate to the m..."
+    },
+    {
+      "name": "2.6.2.2 - a: Primary Pharmacodynamics - Content Presence",
+      "description": "State the objectives of primary pharmacodynamic studies and the rationale for the models and endpoints selected to demonstrate proof of mechanism and/or proof of concept.",
+      "type": "content_presence",
+      "field": "2.6.2.2 - a",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.2 - a (Primary Pharmacodynamics). State the objectives of primary pharmacodynamic studies and the rationale for the models and endpoin..."
+    },
+    {
+      "name": "2.6.2.2 - a: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- primary_pd_study_objectives: [in_vitro_objectives, in_vivo_objectives]\r\n- models_selected: [list: model, rationale]\r\n- endpoints_s...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - a_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.2 - a. Check template for: REQUIRED INPUTS:\r\n- primary_pd_study_objectives: [in_vitro_objectives, in_vivo_objectives]\r\n- models..."
+    },
+    {
+      "name": "2.6.2.2 - a: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: \"Objectives\", model rationale\r\n- 4.2.1.2 TCR (biologics): species relevance\r\n\r\nWITHIN EACH REPORT:\r\n- \"Obje...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - a_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: \"Objectives\", model rationale\r\n- 4.2.1.2 TCR (biologics):..."
+    },
+    {
+      "name": "2.6.2.2 - a: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• Study objectives: PD-study-objectives (Required), model-rationale → 4.2.1.1 \"Introduction\"/\"Objectives\"\r\n• Endpoint selection: end...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - a_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• Study objectives: PD-study-objectives (Required), model-rationale → 4.2.1.1 \"Int..."
+    },
+    {
+      "name": "2.6.2.2 - a: SM Modality Requirements",
+      "description": "For SM products: Describe rationale for in vitro binding/functional assays and in vivo efficacy models selected based on target biology and intended indication....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - a_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.2 - a follows guidance: Describe rationale for in vitro binding/functional assays and in vivo efficacy models selected based..."
+    },
+    {
+      "name": "2.6.2.2 - a: BIO Modality Requirements",
+      "description": "For BIO products: Describe rationale for binding assays, cell-based functional assays, and in vivo models; justify species selection based on target homology and cross-...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - a_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.2 - a follows guidance: Describe rationale for binding assays, cell-based functional assays, and in vivo models; justify spe..."
+    },
+    {
+      "name": "2.6.2.2 - a: ADC Modality Requirements",
+      "description": "For ADC products: Describe rationale for assays evaluating antibody binding, internalization, payload release, and cytotoxicity; explain model selection for in vivo eff...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - a_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.2 - a follows guidance: Describe rationale for assays evaluating antibody binding, internalization, payload release, and cyt..."
+    },
+    {
+      "name": "2.6.2.2 - a: ONT Modality Requirements",
+      "description": "For ONT products: Describe rationale for target knockdown assays (qPCR, protein), duration of effect studies, and in vivo PD models; address sequence specificity....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - a_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.2 - a follows guidance: Describe rationale for target knockdown assays (qPCR, protein), duration of effect studies, and in v..."
+    },
+    {
+      "name": "2.6.2.2 - a: Other Modality Requirements",
+      "description": "For Other products: Describe rationale for models demonstrating intended mechanism (e.g., transgene expression, immune activation, cell function); address species/model r...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - a_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.2 - a follows guidance: Describe rationale for models demonstrating intended mechanism (e.g., transgene expression, immune a..."
+    },
+    {
+      "name": "2.6.2.2 - b: Primary Pharmacodynamics - Content Presence",
+      "description": "Summarize in vitro primary pharmacodynamic studies including assay systems, key parameters measured (e.g., IC50, EC50, Kd), and results. Organize by study type or target.",
+      "type": "content_presence",
+      "field": "2.6.2.2 - b",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.2 - b (Primary Pharmacodynamics). Summarize in vitro primary pharmacodynamic studies including assay systems, key parameters measured ..."
+    },
+    {
+      "name": "2.6.2.2 - b: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- in_vitro_pd_studies: [list: study_id, assay_type, key_endpoints, key_results (parameter, value, unit)]\r\n- potency_data: [parameter...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - b_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.2 - b. Check template for: REQUIRED INPUTS:\r\n- in_vitro_pd_studies: [list: study_id, assay_type, key_endpoints, key_results (pa..."
+    },
+    {
+      "name": "2.6.2.2 - b: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: in vitro studies \"Results\"\r\n\r\nWITHIN EACH REPORT:\r\n- \"Objectives\": study purpose\r\n- \"Materials and Methods\"...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - b_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: in vitro studies \"Results\"\r\n\r\nWITHIN EACH REPORT:\r\n- \"Obj..."
+    },
+    {
+      "name": "2.6.2.2 - b: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• In vitro PD: assay-type (Required), target (Required), IC50/EC50/Kd (Required), selectivity → 4.2.1.1 \"Results\" tables\r\n• Binding ...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - b_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• In vitro PD: assay-type (Required), target (Required), IC50/EC50/Kd (Required), ..."
+    },
+    {
+      "name": "2.6.2.2 - b: SM Modality Requirements",
+      "description": "For SM products: Report binding affinity (Ki, Kd), functional potency (IC50, EC50), and selectivity ratios vs. related receptors/enzymes from in vitro assays....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - b_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.2 - b follows guidance: Report binding affinity (Ki, Kd), functional potency (IC50, EC50), and selectivity ratios vs. relate..."
+    },
+    {
+      "name": "2.6.2.2 - b: BIO Modality Requirements",
+      "description": "For BIO products: Report target binding affinity (Kd, KD), association/dissociation kinetics, epitope characterization, and functional activity in cell-based assays....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - b_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.2 - b follows guidance: Report target binding affinity (Kd, KD), association/dissociation kinetics, epitope characterization..."
+    },
+    {
+      "name": "2.6.2.2 - b: ADC Modality Requirements",
+      "description": "For ADC products: Report antibody binding characteristics, internalization rates, in vitro cytotoxicity (IC50) in target-positive vs. negative cell lines, and linker st...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - b_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.2 - b follows guidance: Report antibody binding characteristics, internalization rates, in vitro cytotoxicity (IC50) in targ..."
+    },
+    {
+      "name": "2.6.2.2 - b: ONT Modality Requirements",
+      "description": "For ONT products: Report target mRNA/protein knockdown (IC50, Emax), duration of knockdown, dose-response relationships, and sequence specificity in cell-based assays....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - b_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.2 - b follows guidance: Report target mRNA/protein knockdown (IC50, Emax), duration of knockdown, dose-response relationship..."
+    },
+    {
+      "name": "2.6.2.2 - b: Other Modality Requirements",
+      "description": "For Other products: Report relevant in vitro activity endpoints (e.g., transgene expression levels, T-cell activation, antigen-specific responses) from cell-based systems...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - b_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.2 - b follows guidance: Report relevant in vitro activity endpoints (e.g., transgene expression levels, T-cell activation, a..."
+    },
+    {
+      "name": "2.6.2.2 - b: Tables/Figures",
+      "description": "Consider adding tables/figures: Hint: It might be advisable to add a Table “In Vitro Primary Pharmacology Summary” here. The table should capture target binding/functional potency (e...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - b_tables_figures",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Hint: It might be advisable to add a Table “In Vitro Primary Pharmacology Summary” here. The table should capture target binding/functional potency (e.g., KD/EC50/IC50), assay system and key condition..."
+    },
+    {
+      "name": "2.6.2.2 - c: Primary Pharmacodynamics - Content Presence",
+      "description": "Summarize in vivo primary pharmacodynamic/efficacy studies including species, models, routes, doses, endpoints, and key results. Present dose-response relationships where established.",
+      "type": "content_presence",
+      "field": "2.6.2.2 - c",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.2 - c (Primary Pharmacodynamics). Summarize in vivo primary pharmacodynamic/efficacy studies including species, models, routes, doses,..."
+    },
+    {
+      "name": "2.6.2.2 - c: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- in_vivo_pd_studies: [list: study_id, model_system, species_strain, route, doses, endpoints, key_results]\r\n- dose_response_data: [E...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - c_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.2 - c. Check template for: REQUIRED INPUTS:\r\n- in_vivo_pd_studies: [list: study_id, model_system, species_strain, route, doses,..."
+    },
+    {
+      "name": "2.6.2.2 - c: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: in vivo studies \"Results\"\r\n\r\nWITHIN EACH REPORT:\r\n- \"Materials and Methods\": model, species, route, doses\r\n...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - c_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: in vivo studies \"Results\"\r\n\r\nWITHIN EACH REPORT:\r\n- \"Mate..."
+    },
+    {
+      "name": "2.6.2.2 - c: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• In vivo efficacy: species/model (Required), doses (Required), route, endpoints (Required), results (Required) → 4.2.1.1 In vivo PD...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - c_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• In vivo efficacy: species/model (Required), doses (Required), route, endpoints (..."
+    },
+    {
+      "name": "2.6.2.2 - c: SM Modality Requirements",
+      "description": "For SM products: Describe efficacy model results including dose-response, ED50 values, and relationship between plasma exposure and PD effect....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - c_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.2 - c follows guidance: Describe efficacy model results including dose-response, ED50 values, and relationship between plasm..."
+    },
+    {
+      "name": "2.6.2.2 - c: BIO Modality Requirements",
+      "description": "For BIO products: Describe in vivo efficacy in pharmacologically relevant species; include PD biomarkers, efficacy endpoints, and exposure-response relationships....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - c_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.2 - c follows guidance: Describe in vivo efficacy in pharmacologically relevant species; include PD biomarkers, efficacy end..."
+    },
+    {
+      "name": "2.6.2.2 - c: ADC Modality Requirements",
+      "description": "For ADC products: Describe in vivo antitumor efficacy in xenograft or other relevant models; report tumor growth inhibition, exposure-efficacy relationships, and any by...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - c_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.2 - c follows guidance: Describe in vivo antitumor efficacy in xenograft or other relevant models; report tumor growth inhib..."
+    },
+    {
+      "name": "2.6.2.2 - c: ONT Modality Requirements",
+      "description": "For ONT products: Describe in vivo target knockdown (tissue-specific), duration of effect, dose-response, and any functional/phenotypic endpoints in disease models....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - c_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.2 - c follows guidance: Describe in vivo target knockdown (tissue-specific), duration of effect, dose-response, and any func..."
+    },
+    {
+      "name": "2.6.2.2 - c: Other Modality Requirements",
+      "description": "For Other products: Describe in vivo proof-of-concept results including transgene expression (levels, duration, tissue distribution), immune responses, or cell persistenc...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - c_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.2 - c follows guidance: Describe in vivo proof-of-concept results including transgene expression (levels, duration, tissue d..."
+    },
+    {
+      "name": "2.6.2.2 - c: Tables/Figures",
+      "description": "Consider adding tables/figures: Hint: It might be advisable to add a Figure “In Vivo Primary PD/Efficacy Dose–Response” here. The figure should show the lead in vivo model(s) with do...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - c_tables_figures",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Hint: It might be advisable to add a Figure “In Vivo Primary PD/Efficacy Dose–Response” here. The figure should show the lead in vivo model(s) with dose levels, effect size over time (or at endpoint),..."
+    },
+    {
+      "name": "2.6.2.2 - d: Primary Pharmacodynamics - Content Presence",
+      "description": "Discuss the relevance of nonclinical pharmacodynamic findings to the proposed clinical indication and mechanism. Relate effective nonclinical exposures to projected human exposures.",
+      "type": "content_presence",
+      "field": "2.6.2.2 - d",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.2 - d (Primary Pharmacodynamics). Discuss the relevance of nonclinical pharmacodynamic findings to the proposed clinical indication an..."
+    },
+    {
+      "name": "2.6.2.2 - d: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- clinical_translation_assessment: [efficacious_nonclinical_exposures (species, dose, cmax, auc), projected_human_exposures (dose, c...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - d_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.2 - d. Check template for: REQUIRED INPUTS:\r\n- clinical_translation_assessment: [efficacious_nonclinical_exposures (species, do..."
+    },
+    {
+      "name": "2.6.2.2 - d: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: \"Discussion\" for clinical translation\r\n- 4.2.2.* PK: exposure data\r\n\r\nWITHIN EACH REPORT:\r\n- \"Results\": eff...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - d_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: \"Discussion\" for clinical translation\r\n- 4.2.2.* PK: expo..."
+    },
+    {
+      "name": "2.6.2.2 - d: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• Clinical relevance: model-translatability (Required), human-relevance-statement → 4.2.1.1 \"Discussion\"\r\n• PK/PD relationship: expo...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - d_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• Clinical relevance: model-translatability (Required), human-relevance-statement ..."
+    },
+    {
+      "name": "2.6.2.2 - d: SM Modality Requirements",
+      "description": "For SM products: Relate nonclinical efficacious exposures to projected human PK and discuss translation of PD endpoints to clinical biomarkers....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - d_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.2 - d follows guidance: Relate nonclinical efficacious exposures to projected human PK and discuss translation of PD endpoin..."
+    },
+    {
+      "name": "2.6.2.2 - d: BIO Modality Requirements",
+      "description": "For BIO products: Discuss human target homology, species relevance, and translation of nonclinical PD findings to expected clinical activity; address immunogenicity imp...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - d_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.2 - d follows guidance: Discuss human target homology, species relevance, and translation of nonclinical PD findings to expe..."
+    },
+    {
+      "name": "2.6.2.2 - d: ADC Modality Requirements",
+      "description": "For ADC products: Discuss translation of nonclinical efficacy to clinical expectations; address differences in target expression, tumor biology, and immune competence b...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - d_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.2 - d follows guidance: Discuss translation of nonclinical efficacy to clinical expectations; address differences in target ..."
+    },
+    {
+      "name": "2.6.2.2 - d: ONT Modality Requirements",
+      "description": "For ONT products: Discuss translation of knockdown efficiency and duration to humans; address tissue distribution differences and potential for clinical PD biomarkers....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - d_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.2 - d follows guidance: Discuss translation of knockdown efficiency and duration to humans; address tissue distribution diff..."
+    },
+    {
+      "name": "2.6.2.2 - d: Other Modality Requirements",
+      "description": "For Other products: Discuss translation to clinical proof-of-concept; address species-specific factors and clinical biomarkers for monitoring activity....",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - d_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.2 - d follows guidance: Discuss translation to clinical proof-of-concept; address species-specific factors and clinical biom..."
+    },
+    {
+      "name": "2.6.2.2 - d: Tables/Figures",
+      "description": "Consider adding tables/figures: Hint: It might be advisable to add a Figure 2.6-2 “PK/PD or Biomarker Relationship” here—plot pharmacodynamic effect or translational biomarker vs con...",
+      "type": "format_requirement",
+      "field": "2.6.2.2 - d_tables_figures",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Hint: It might be advisable to add a Figure 2.6-2 “PK/PD or Biomarker Relationship” here—plot pharmacodynamic effect or translational biomarker vs concentration/exposure (or target engagement) to esti..."
+    },
+    {
+      "name": "2.6.2.3 - a: Secondary Pharmacodynamics - Content Presence",
+      "description": "Describe secondary pharmacodynamic studies conducted to evaluate off-target pharmacological activity, including the panel of targets screened and rationale for selection.",
+      "type": "content_presence",
+      "field": "2.6.2.3 - a",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.3 - a (Secondary Pharmacodynamics). Describe secondary pharmacodynamic studies conducted to evaluate off-target pharmacological activity..."
+    },
+    {
+      "name": "2.6.2.3 - a: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- secondary_pd_studies: [list: study_id, assay_type, targets_screened, screening_concentration, significance_threshold, significant_...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - a_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.3 - a. Check template for: REQUIRED INPUTS:\r\n- secondary_pd_studies: [list: study_id, assay_type, targets_screened, screening_c..."
+    },
+    {
+      "name": "2.6.2.3 - a: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.2 Secondary PD: off-target screening\r\n- 4.2.1.2 TCR (biologics): tissue cross-reactivity\r\n\r\nWITHIN EACH REPORT:\r\n- \"Mater...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - a_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.2 Secondary PD: off-target screening\r\n- 4.2.1.2 TCR (biologics): tissue..."
+    },
+    {
+      "name": "2.6.2.3 - a: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• Secondary PD studies: panel-screened (Required), off-targets-tested, concentrations (Required) → 4.2.1.2 Secondary PD \"Results\"\r\n•...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - a_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• Secondary PD studies: panel-screened (Required), off-targets-tested, concentrati..."
+    },
+    {
+      "name": "2.6.2.3 - a: SM Modality Requirements",
+      "description": "For SM products: Summarize broad receptor/enzyme panel screening results; report any significant off-target binding (typically defined as >50% inhibition at 10 μM or r...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - a_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.3 - a follows guidance: Summarize broad receptor/enzyme panel screening results; report any significant off-target binding (..."
+    },
+    {
+      "name": "2.6.2.3 - a: BIO Modality Requirements",
+      "description": "For BIO products: Summarize tissue cross-reactivity studies and any binding to unintended targets; describe methodology and results....",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - a_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.3 - a follows guidance: Summarize tissue cross-reactivity studies and any binding to unintended targets; describe methodolog..."
+    },
+    {
+      "name": "2.6.2.3 - a: ADC Modality Requirements",
+      "description": "For ADC products: Describe off-target binding assessments for both the antibody (tissue cross-reactivity) and payload (receptor/enzyme panels) components....",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - a_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.3 - a follows guidance: Describe off-target binding assessments for both the antibody (tissue cross-reactivity) and payload ..."
+    },
+    {
+      "name": "2.6.2.3 - a: ONT Modality Requirements",
+      "description": "For ONT products: Summarize off-target gene knockdown assessment using bioinformatics and/or experimental approaches; report any significant unintended silencing. Inclu...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - a_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.3 - a follows guidance: Summarize off-target gene knockdown assessment using bioinformatics and/or experimental approaches; ..."
+    },
+    {
+      "name": "2.6.2.3 - a: Other Modality Requirements",
+      "description": "For Other products: Describe any off-target activity assessments relevant to the modality (e.g., insertional mutagenesis potential for integrating vectors, off-target edi...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - a_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.3 - a follows guidance: Describe any off-target activity assessments relevant to the modality (e.g., insertional mutagenesis..."
+    },
+    {
+      "name": "2.6.2.3 - a: Tables/Figures",
+      "description": "Consider adding tables/figures: Hint: It might be advisable to add a Table “Secondary Pharmacology / Off‑Target Screen Results” here. The table should list the panel/system tested, c...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - a_tables_figures",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Hint: It might be advisable to add a Table “Secondary Pharmacology / Off‑Target Screen Results” here. The table should list the panel/system tested, concentrations, predefined ‘hit’ threshold, any cli..."
+    },
+    {
+      "name": "2.6.2.3 - b: Secondary Pharmacodynamics - Content Presence",
+      "description": "For any significant off-target activities identified, discuss the potential clinical relevance and any risk mitigation strategies. Condition: Include if off-target signals were identified.",
+      "type": "content_presence",
+      "field": "2.6.2.3 - b",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add section 2.6.2.3 - b (Secondary Pharmacodynamics). For any significant off-target activities identified, discuss the potential clinical relevance and a..."
+    },
+    {
+      "name": "2.6.2.3 - b: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- off_target_clinical_assessment (IF hits identified): [significant_off_targets, clinical_relevance_assessment, risk_mitigation]\r\n- ...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - b_data_inputs",
+      "required": false,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.3 - b. Check template for: REQUIRED INPUTS:\r\n- off_target_clinical_assessment (IF hits identified): [significant_off_targets, c..."
+    },
+    {
+      "name": "2.6.2.3 - b: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- All M4 reports: \"Conclusions\" for findings\r\n- 4.2.3.2 Repeat-dose tox (pivotal): NOAEL, exposure\r\n- TK tables for margin calcul...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - b_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- All M4 reports: \"Conclusions\" for findings\r\n- 4.2.3.2 Repeat-dose tox (pivota..."
+    },
+    {
+      "name": "2.6.2.3 - b: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• Off-target clinical relevance: off-target-identity (Required if significant), exposure-margin, clinical-implication → 4.2.1.2 \"Dis...",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - b_claims",
+      "required": false,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• Off-target clinical relevance: off-target-identity (Required if significant), ex..."
+    },
+    {
+      "name": "2.6.2.3 - b: SM Modality Requirements",
+      "description": "For SM products: Discuss clinical relevance of any off-target receptor/enzyme activity and potential for adverse effects; describe any follow-up studies conducted....",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - b_sm",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For SM modality, ensure section 2.6.2.3 - b follows guidance: Discuss clinical relevance of any off-target receptor/enzyme activity and potential for adverse effe..."
+    },
+    {
+      "name": "2.6.2.3 - b: BIO Modality Requirements",
+      "description": "For BIO products: Discuss clinical relevance of any unexpected tissue binding or cross-reactivity; describe impact on safety monitoring....",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - b_bio",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.3 - b follows guidance: Discuss clinical relevance of any unexpected tissue binding or cross-reactivity; describe impact on ..."
+    },
+    {
+      "name": "2.6.2.3 - b: ADC Modality Requirements",
+      "description": "For ADC products: Discuss clinical relevance of any off-target binding (antibody) or pharmacological activity (payload); address bystander effect potential....",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - b_adc",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.3 - b follows guidance: Discuss clinical relevance of any off-target binding (antibody) or pharmacological activity (payload..."
+    },
+    {
+      "name": "2.6.2.3 - b: ONT Modality Requirements",
+      "description": "For ONT products: Discuss clinical relevance of any off-target knockdown and strategies to minimize (e.g., sequence optimization, chemical modifications)....",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - b_ont",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.3 - b follows guidance: Discuss clinical relevance of any off-target knockdown and strategies to minimize (e.g., sequence op..."
+    },
+    {
+      "name": "2.6.2.3 - b: Other Modality Requirements",
+      "description": "For Other products: Discuss clinical relevance of any off-target activity and risk mitigation strategies implemented in product design or clinical monitoring....",
+      "type": "format_requirement",
+      "field": "2.6.2.3 - b_other",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For Other modality, ensure section 2.6.2.3 - b follows guidance: Discuss clinical relevance of any off-target activity and risk mitigation strategies implemented in ..."
+    },
+    {
+      "name": "2.6.2.4 - a: Safety Pharmacology - Content Presence",
+      "description": "Summarize the safety pharmacology program including studies conducted (or rationale for waiver), species, doses, routes, and endpoints per ICH S7A/S7B. Link safety pharmacology findings to FIH clinica...",
+      "type": "content_presence",
+      "field": "2.6.2.4 - a",
+      "required": true,
+      "severity": "info",
+      "remediationHint": "Add section 2.6.2.4 - a (Safety Pharmacology). Summarize the safety pharmacology program including studies conducted (or rationale for waiver), spe..."
+    },
+    {
+      "name": "2.6.2.4 - a: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- safety_pharm_program: [approach (standalone|integrated|combination), guideline_basis (ICH S7A|S7B|S6(R1))]\r\n- studies_conducted: [...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - a_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.4 - a. Check template for: REQUIRED INPUTS:\r\n- safety_pharm_program: [approach (standalone|integrated|combination), guideline_b..."
+    },
+    {
+      "name": "2.6.2.4 - a: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology: study designs, results\r\n- 4.2.3.2 Repeat-dose tox: integrated safety endpoints\r\n\r\nWITHIN EACH REPO...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - a_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology: study designs, results\r\n- 4.2.3.2 Repeat-dose to..."
+    },
+    {
+      "name": "2.6.2.4 - a: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• Safety pharm program: studies-conducted (Required), species (Required), doses, endpoints → 4.2.1.3 Title pages + Synopsis\r\n• Waive...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - a_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• Safety pharm program: studies-conducted (Required), species (Required), doses, e..."
+    },
+    {
+      "name": "2.6.2.4 - a: SM Modality Requirements",
+      "description": "For SM products: Summarize core battery (CV, CNS, respiratory) studies per ICH S7A; include hERG/ion channel studies per S7B. Report NOAEL and exposure margins....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - a_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.4 - a follows guidance: Summarize core battery (CV, CNS, respiratory) studies per ICH S7A; include hERG/ion channel studies ..."
+    },
+    {
+      "name": "2.6.2.4 - a: BIO Modality Requirements",
+      "description": "For BIO products: Describe safety pharmacology approach; if studies were not conducted, provide scientific justification per ICH S6(R1) (e.g., parameters assessed in re...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - a_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.4 - a follows guidance: Describe safety pharmacology approach; if studies were not conducted, provide scientific justificati..."
+    },
+    {
+      "name": "2.6.2.4 - a: ADC Modality Requirements",
+      "description": "For ADC products: Describe safety pharmacology studies for the intact ADC and/or components; address potential cardiovascular effects of payload if relevant....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - a_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.4 - a follows guidance: Describe safety pharmacology studies for the intact ADC and/or components; address potential cardiov..."
+    },
+    {
+      "name": "2.6.2.4 - a: ONT Modality Requirements",
+      "description": "For ONT products: Describe safety pharmacology approach; address potential for complement activation, coagulation effects, or other class-related concerns. Address clas...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - a_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.4 - a follows guidance: Describe safety pharmacology approach; address potential for complement activation, coagulation effe..."
+    },
+    {
+      "name": "2.6.2.4 - a: Other Modality Requirements",
+      "description": "For Other products: Describe safety pharmacology assessments appropriate to the modality; address any class-specific concerns (e.g., cytokine release for cell therapies)....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - a_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.4 - a follows guidance: Describe safety pharmacology assessments appropriate to the modality; address any class-specific con..."
+    },
+    {
+      "name": "2.6.2.4 - a: Tables/Figures",
+      "description": "Consider adding tables/figures: Hint: It might be advisable to add a Table “Safety Pharmacology Results & Margins” here (single consolidated table across CV/CNS/respiratory). The tab...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - a_tables_figures",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Hint: It might be advisable to add a Table “Safety Pharmacology Results & Margins” here (single consolidated table across CV/CNS/respiratory). The table should include key endpoints (e.g., QT/hERG, HR..."
+    },
+    {
+      "name": "2.6.2.4 - b: Safety Pharmacology - Content Presence",
+      "description": "Present key results from cardiovascular safety pharmacology studies including effects on blood pressure, heart rate, ECG parameters (including QT/QTc), and cardiac contractility.",
+      "type": "content_presence",
+      "field": "2.6.2.4 - b",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.4 - b (Safety Pharmacology). Present key results from cardiovascular safety pharmacology studies including effects on blood press..."
+    },
+    {
+      "name": "2.6.2.4 - b: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- cv_safety_pharm: [study_id, species, doses, endpoints_assessed (BP, HR, ECG)]\r\n- findings: [bp_effect, hr_effect, ecg_effects (QT,...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - b_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.4 - b. Check template for: REQUIRED INPUTS:\r\n- cv_safety_pharm: [study_id, species, doses, endpoints_assessed (BP, HR, ECG)]\r\n-..."
+    },
+    {
+      "name": "2.6.2.4 - b: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology (CV): dedicated studies\r\n- 4.2.3.2 Repeat-dose tox: telemetry/ECG if collected\r\n- hERG assay report...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - b_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology (CV): dedicated studies\r\n- 4.2.3.2 Repeat-dose to..."
+    },
+    {
+      "name": "2.6.2.4 - b: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• CV results: hERG-IC50 (Required), in-vivo-QT (Required), BP, HR, doses (Required), species (Required) → 4.2.1.3 CV \"Results\"\r\n• Ex...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - b_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• CV results: hERG-IC50 (Required), in-vivo-QT (Required), BP, HR, doses (Required..."
+    },
+    {
+      "name": "2.6.2.4 - b: SM Modality Requirements",
+      "description": "For SM products: Report hERG IC50, in vivo QT/QTc effects, and hemodynamic parameters; calculate safety margins relative to projected clinical Cmax....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - b_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.4 - b follows guidance: Report hERG IC50, in vivo QT/QTc effects, and hemodynamic parameters; calculate safety margins relat..."
+    },
+    {
+      "name": "2.6.2.4 - b: BIO Modality Requirements",
+      "description": "For BIO products: If standalone CV studies were not conducted, summarize CV parameters from repeat-dose toxicity studies; provide justification for adequacy of assessme...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - b_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.4 - b follows guidance: If standalone CV studies were not conducted, summarize CV parameters from repeat-dose toxicity studi..."
+    },
+    {
+      "name": "2.6.2.4 - b: ADC Modality Requirements",
+      "description": "For ADC products: Report CV safety findings for the intact ADC; address any payload-related concerns (e.g., tubulin inhibitors and cardiac effects)....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - b_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.4 - b follows guidance: Report CV safety findings for the intact ADC; address any payload-related concerns (e.g., tubulin in..."
+    },
+    {
+      "name": "2.6.2.4 - b: ONT Modality Requirements",
+      "description": "For ONT products: Report any CV effects observed; address complement activation potential and its hemodynamic consequences if applicable....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - b_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.4 - b follows guidance: Report any CV effects observed; address complement activation potential and its hemodynamic conseque..."
+    },
+    {
+      "name": "2.6.2.4 - b: Other Modality Requirements",
+      "description": "For Other products: Report CV safety assessments from toxicity studies; address any modality-specific CV concerns....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - b_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.4 - b follows guidance: Report CV safety assessments from toxicity studies; address any modality-specific CV concerns...."
+    },
+    {
+      "name": "2.6.2.4 - c: Safety Pharmacology - Content Presence",
+      "description": "Present key results from CNS safety pharmacology studies including effects on behavior, motor function, body temperature, and other neurological parameters.",
+      "type": "content_presence",
+      "field": "2.6.2.4 - c",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.4 - c (Safety Pharmacology). Present key results from CNS safety pharmacology studies including effects on behavior, motor functi..."
+    },
+    {
+      "name": "2.6.2.4 - c: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- cns_safety_pharm: [study_id, species, doses, assessment_type (FOB|Irwin|integrated)]\r\n- findings: [behavioral_effects, motor_funct...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - c_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.4 - c. Check template for: REQUIRED INPUTS:\r\n- cns_safety_pharm: [study_id, species, doses, assessment_type (FOB|Irwin|integrat..."
+    },
+    {
+      "name": "2.6.2.4 - c: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology (CNS): dedicated studies\r\n- 4.2.3.2 Repeat-dose tox: neurobehavioral observations\r\n\r\nWITHIN EACH RE...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - c_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology (CNS): dedicated studies\r\n- 4.2.3.2 Repeat-dose t..."
+    },
+    {
+      "name": "2.6.2.4 - c: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• CNS results: FOB-parameters (Required), motor-activity, doses (Required), species (Required), NOAEL (Required) → 4.2.1.3 CNS \"Resu...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - c_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• CNS results: FOB-parameters (Required), motor-activity, doses (Required), specie..."
+    },
+    {
+      "name": "2.6.2.4 - c: SM Modality Requirements",
+      "description": "For SM products: Report functional observation battery (FOB) or Irwin test results; note any CNS penetration data and relevance to observed effects....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - c_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.4 - c follows guidance: Report functional observation battery (FOB) or Irwin test results; note any CNS penetration data and..."
+    },
+    {
+      "name": "2.6.2.4 - c: BIO Modality Requirements",
+      "description": "For BIO products: If standalone CNS studies were not conducted, summarize neurobehavioral assessments from repeat-dose toxicity studies....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - c_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.4 - c follows guidance: If standalone CNS studies were not conducted, summarize neurobehavioral assessments from repeat-dose..."
+    },
+    {
+      "name": "2.6.2.4 - c: ADC Modality Requirements",
+      "description": "For ADC products: Report CNS safety findings; address any concerns for CNS-penetrant payloads or brain metastases indications....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - c_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.4 - c follows guidance: Report CNS safety findings; address any concerns for CNS-penetrant payloads or brain metastases indi..."
+    },
+    {
+      "name": "2.6.2.4 - c: ONT Modality Requirements",
+      "description": "For ONT products: Report CNS safety findings; address CNS distribution and any neurotoxicity potential for the oligonucleotide class....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - c_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.4 - c follows guidance: Report CNS safety findings; address CNS distribution and any neurotoxicity potential for the oligonu..."
+    },
+    {
+      "name": "2.6.2.4 - c: Other Modality Requirements",
+      "description": "For Other products: Report CNS safety assessments; address any vector/cell tropism for CNS tissue if applicable....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - c_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.4 - c follows guidance: Report CNS safety assessments; address any vector/cell tropism for CNS tissue if applicable...."
+    },
+    {
+      "name": "2.6.2.4 - d: Safety Pharmacology - Content Presence",
+      "description": "Present key results from respiratory safety pharmacology studies including effects on respiratory rate, tidal volume, and other pulmonary parameters.",
+      "type": "content_presence",
+      "field": "2.6.2.4 - d",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.4 - d (Safety Pharmacology). Present key results from respiratory safety pharmacology studies including effects on respiratory ra..."
+    },
+    {
+      "name": "2.6.2.4 - d: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- respiratory_safety_pharm: [study_id, species, doses, assessment_type (plethysmography|integrated)]\r\n- findings: [respiratory_rate,...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - d_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.4 - d. Check template for: REQUIRED INPUTS:\r\n- respiratory_safety_pharm: [study_id, species, doses, assessment_type (plethysmog..."
+    },
+    {
+      "name": "2.6.2.4 - d: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology (respiratory): dedicated studies\r\n- 4.2.3.2 Repeat-dose tox: respiratory observations\r\n\r\nWITHIN EAC...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - d_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology (respiratory): dedicated studies\r\n- 4.2.3.2 Repea..."
+    },
+    {
+      "name": "2.6.2.4 - d: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• Respiratory results: RR (Required), TV, MV, blood-gases, species (Required), doses (Required), NOAEL (Required) → 4.2.1.3 Respirat...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - d_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• Respiratory results: RR (Required), TV, MV, blood-gases, species (Required), dos..."
+    },
+    {
+      "name": "2.6.2.4 - d: SM Modality Requirements",
+      "description": "For SM products: Report respiratory function parameters from safety pharmacology studies; note any effects at clinically relevant exposures....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - d_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.4 - d follows guidance: Report respiratory function parameters from safety pharmacology studies; note any effects at clinica..."
+    },
+    {
+      "name": "2.6.2.4 - d: BIO Modality Requirements",
+      "description": "For BIO products: If standalone respiratory studies were not conducted, summarize respiratory assessments from repeat-dose toxicity studies....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - d_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.4 - d follows guidance: If standalone respiratory studies were not conducted, summarize respiratory assessments from repeat-..."
+    },
+    {
+      "name": "2.6.2.4 - d: ADC Modality Requirements",
+      "description": "For ADC products: Report respiratory safety findings; address any pulmonary toxicity potential of the payload (e.g., pneumonitis risk)....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - d_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.4 - d follows guidance: Report respiratory safety findings; address any pulmonary toxicity potential of the payload (e.g., p..."
+    },
+    {
+      "name": "2.6.2.4 - d: ONT Modality Requirements",
+      "description": "For ONT products: Report respiratory safety findings; address any pulmonary accumulation or effects on respiratory epithelium....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - d_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.4 - d follows guidance: Report respiratory safety findings; address any pulmonary accumulation or effects on respiratory epi..."
+    },
+    {
+      "name": "2.6.2.4 - d: Other Modality Requirements",
+      "description": "For Other products: Report respiratory safety assessments; address any modality-specific pulmonary concerns (e.g., inhaled gene therapy vectors)....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - d_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.4 - d follows guidance: Report respiratory safety assessments; address any modality-specific pulmonary concerns (e.g., inhal..."
+    },
+    {
+      "name": "2.6.2.4 - e: Safety Pharmacology - Content Presence",
+      "description": "Present results from supplemental/follow-up safety pharmacology studies if conducted (e.g., renal, GI, autonomic). Condition: Include if supplemental studies were conducted based on signals or mechani...",
+      "type": "content_presence",
+      "field": "2.6.2.4 - e",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add section 2.6.2.4 - e (Safety Pharmacology). Present results from supplemental/follow-up safety pharmacology studies if conducted (e.g., renal, G..."
+    },
+    {
+      "name": "2.6.2.4 - e: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- supplemental_safety_pharm (IF conducted): [list: study_id, system (renal|GI|autonomic), species, doses, trigger, findings, clinica...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - e_data_inputs",
+      "required": false,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.4 - e. Check template for: REQUIRED INPUTS:\r\n- supplemental_safety_pharm (IF conducted): [list: study_id, system (renal|GI|auto..."
+    },
+    {
+      "name": "2.6.2.4 - e: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology: supplemental studies\r\n- 4.2.3.2 Repeat-dose tox: additional organ findings\r\n\r\nWITHIN EACH REPORT:\r...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - e_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.3 Safety pharmacology: supplemental studies\r\n- 4.2.3.2 Repeat-dose tox:..."
+    },
+    {
+      "name": "2.6.2.4 - e: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• Supplemental studies: study-type (Required), species (Required), key-findings (Required) → 4.2.1.3 Other Safety Pharm \"Results\"\r\n•...",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - e_claims",
+      "required": false,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• Supplemental studies: study-type (Required), species (Required), key-findings (R..."
+    },
+    {
+      "name": "2.6.2.4 - e: SM Modality Requirements",
+      "description": "For SM products: Report any supplemental organ system studies triggered by target biology, chemical class, or findings in other studies....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - e_sm",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For SM modality, ensure section 2.6.2.4 - e follows guidance: Report any supplemental organ system studies triggered by target biology, chemical class, or finding..."
+    },
+    {
+      "name": "2.6.2.4 - e: BIO Modality Requirements",
+      "description": "For BIO products: Report any supplemental studies conducted based on target biology or toxicity findings....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - e_bio",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.4 - e follows guidance: Report any supplemental studies conducted based on target biology or toxicity findings...."
+    },
+    {
+      "name": "2.6.2.4 - e: ADC Modality Requirements",
+      "description": "For ADC products: Report any supplemental studies for the intact ADC or components based on mechanism or toxicity signals....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - e_adc",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.4 - e follows guidance: Report any supplemental studies for the intact ADC or components based on mechanism or toxicity sign..."
+    },
+    {
+      "name": "2.6.2.4 - e: ONT Modality Requirements",
+      "description": "For ONT products: Report any supplemental studies addressing class-related effects (e.g., pro-inflammatory effects, coagulation)....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - e_ont",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.4 - e follows guidance: Report any supplemental studies addressing class-related effects (e.g., pro-inflammatory effects, co..."
+    },
+    {
+      "name": "2.6.2.4 - e: Other Modality Requirements",
+      "description": "For Other products: Report any supplemental safety pharmacology studies specific to the modality....",
+      "type": "format_requirement",
+      "field": "2.6.2.4 - e_other",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For Other modality, ensure section 2.6.2.4 - e follows guidance: Report any supplemental safety pharmacology studies specific to the modality...."
+    },
+    {
+      "name": "2.6.2.5 - a: Pharmacodynamic Drug Interactions - Content Presence",
+      "description": "Summarize any nonclinical pharmacodynamic drug interaction studies conducted. Describe study designs, combination partners evaluated, and results. Condition: Include if PD interaction studies were con...",
+      "type": "content_presence",
+      "field": "2.6.2.5 - a",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add section 2.6.2.5 - a (Pharmacodynamic Drug Interactions). Summarize any nonclinical pharmacodynamic drug interaction studies conducted. Describe study designs..."
+    },
+    {
+      "name": "2.6.2.5 - a: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- pd_interaction_studies (IF conducted): [list: study_id, combination_partner, model_system, endpoints, interaction_type (synergy|ad...",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - a_data_inputs",
+      "required": false,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.5 - a. Check template for: REQUIRED INPUTS:\r\n- pd_interaction_studies (IF conducted): [list: study_id, combination_partner, mod..."
+    },
+    {
+      "name": "2.6.2.5 - a: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: combination studies\r\n\r\nWITHIN EACH REPORT:\r\n- \"Objectives\": combination purpose\r\n- \"Methods\": partner, mode...",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - a_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.1 Primary PD: combination studies\r\n\r\nWITHIN EACH REPORT:\r\n- \"Objectives..."
+    },
+    {
+      "name": "2.6.2.5 - a: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• PD interaction study: partner-drug (Required), species (Required), doses (Required), design, findings (Required) → 4.2.1.1 PD Inte...",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - a_claims",
+      "required": false,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• PD interaction study: partner-drug (Required), species (Required), doses (Requir..."
+    },
+    {
+      "name": "2.6.2.5 - a: SM Modality Requirements",
+      "description": "For SM products: Describe nonclinical combination studies if the product is intended for combination therapy; report any synergistic, additive, or antagonistic effects...",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - a_sm",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For SM modality, ensure section 2.6.2.5 - a follows guidance: Describe nonclinical combination studies if the product is intended for combination therapy; report ..."
+    },
+    {
+      "name": "2.6.2.5 - a: BIO Modality Requirements",
+      "description": "For BIO products: Describe any combination PD studies; address potential for enhanced efficacy or toxicity when combined with other agents....",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - a_bio",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.5 - a follows guidance: Describe any combination PD studies; address potential for enhanced efficacy or toxicity when combin..."
+    },
+    {
+      "name": "2.6.2.5 - a: ADC Modality Requirements",
+      "description": "For ADC products: Describe combination studies evaluating ADC with chemotherapy, immunotherapy, or other oncology agents as applicable....",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - a_adc",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.5 - a follows guidance: Describe combination studies evaluating ADC with chemotherapy, immunotherapy, or other oncology agen..."
+    },
+    {
+      "name": "2.6.2.5 - a: ONT Modality Requirements",
+      "description": "For ONT products: Describe any studies evaluating pharmacodynamic interactions with concomitant medications; address potential for enhanced knockdown or off-target effe...",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - a_ont",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.5 - a follows guidance: Describe any studies evaluating pharmacodynamic interactions with concomitant medications; address p..."
+    },
+    {
+      "name": "2.6.2.5 - a: Other Modality Requirements",
+      "description": "For Other products: Describe any combination or interaction studies relevant to the modality and intended use....",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - a_other",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For Other modality, ensure section 2.6.2.5 - a follows guidance: Describe any combination or interaction studies relevant to the modality and intended use...."
+    },
+    {
+      "name": "2.6.2.5 - b: Pharmacodynamic Drug Interactions - Content Presence",
+      "description": "If no formal PD interaction studies were conducted, provide rationale and discuss any available data informing potential for PD interactions. Condition: Include if PD interaction studies were not cond...",
+      "type": "content_presence",
+      "field": "2.6.2.5 - b",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add section 2.6.2.5 - b (Pharmacodynamic Drug Interactions). If no formal PD interaction studies were conducted, provide rationale and discuss any available data..."
+    },
+    {
+      "name": "2.6.2.5 - b: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- pd_interaction_assessment: [studies_conducted (boolean), IF_not: rationale, theoretical_interaction_potential]\r\n\r\nCONDITIONAL INPU...",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - b_data_inputs",
+      "required": false,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.5 - b. Check template for: REQUIRED INPUTS:\r\n- pd_interaction_assessment: [studies_conducted (boolean), IF_not: rationale, theo..."
+    },
+    {
+      "name": "2.6.2.5 - b: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- 4.2.1.* Pharmacology: absence of interaction studies\r\n- \"Discussion\" sections: interaction considerations\r\n\r\nWITHIN REPORTS:\r\n-...",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - b_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- 4.2.1.* Pharmacology: absence of interaction studies\r\n- \"Discussion\" sections..."
+    },
+    {
+      "name": "2.6.2.5 - b: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• No formal study rationale: scientific-justification (Required), available-data → Sponsor assessment; Literature\r\n• Available data:...",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - b_claims",
+      "required": false,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• No formal study rationale: scientific-justification (Required), available-data →..."
+    },
+    {
+      "name": "2.6.2.5 - b: SM Modality Requirements",
+      "description": "For SM products: Provide rationale if no combination studies were conducted; discuss theoretical potential for PD interactions based on mechanism....",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - b_sm",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For SM modality, ensure section 2.6.2.5 - b follows guidance: Provide rationale if no combination studies were conducted; discuss theoretical potential for PD int..."
+    },
+    {
+      "name": "2.6.2.5 - b: BIO Modality Requirements",
+      "description": "For BIO products: Discuss potential for PD interactions based on target biology and mechanism; note any planned clinical combination studies....",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - b_bio",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.5 - b follows guidance: Discuss potential for PD interactions based on target biology and mechanism; note any planned clinic..."
+    },
+    {
+      "name": "2.6.2.5 - b: ADC Modality Requirements",
+      "description": "For ADC products: Discuss potential for PD interactions, particularly with myelosuppressive agents or CYP3A4 inhibitors (for some payloads)....",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - b_adc",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.5 - b follows guidance: Discuss potential for PD interactions, particularly with myelosuppressive agents or CYP3A4 inhibitor..."
+    },
+    {
+      "name": "2.6.2.5 - b: ONT Modality Requirements",
+      "description": "For ONT products: Discuss potential for PD interactions based on mechanism and target; note any sequence-based considerations....",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - b_ont",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.5 - b follows guidance: Discuss potential for PD interactions based on mechanism and target; note any sequence-based conside..."
+    },
+    {
+      "name": "2.6.2.5 - b: Other Modality Requirements",
+      "description": "For Other products: Discuss potential for PD interactions relevant to the modality and intended clinical use....",
+      "type": "format_requirement",
+      "field": "2.6.2.5 - b_other",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "For Other modality, ensure section 2.6.2.5 - b follows guidance: Discuss potential for PD interactions relevant to the modality and intended clinical use...."
+    },
+    {
+      "name": "2.6.2.6 - a: Discussion and Conclusions - Content Presence",
+      "description": "Provide an integrated discussion of the pharmacology data, including a balanced interpretation of findings, their clinical relevance, and any limitations of the nonclinical pharmacology program. Summa...",
+      "type": "content_presence",
+      "field": "2.6.2.6 - a",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Add section 2.6.2.6 - a (Discussion and Conclusions). Provide an integrated discussion of the pharmacology data, including a balanced interpretation of fi..."
+    },
+    {
+      "name": "2.6.2.6 - a: Required Data Inputs",
+      "description": "Section must include specified data inputs: REQUIRED INPUTS:\r\n- pharmacology_discussion: [mechanism_validation_summary, efficacy_signals, selectivity_profile, safety_pharmacology_conclusions, cl...",
+      "type": "format_requirement",
+      "field": "2.6.2.6 - a_data_inputs",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "Include all required data inputs in section 2.6.2.6 - a. Check template for: REQUIRED INPUTS:\r\n- pharmacology_discussion: [mechanism_validation_summary, efficacy_signals, select..."
+    },
+    {
+      "name": "2.6.2.6 - a: Source Traceability",
+      "description": "Content must reference Module 4 sources: PRIMARY (Module 4):\r\n- All 4.2.* synopses: \"Objectives\", \"Conclusions\"\r\n- All 4.2.* title pages: Study No., GLP, species\r\n- 4.2.1.* reports: \"Discussi...",
+      "type": "format_requirement",
+      "field": "2.6.2.6 - a_sources",
+      "required": false,
+      "severity": "info",
+      "remediationHint": "Add references to Module 4 source documents: PRIMARY (Module 4):\r\n- All 4.2.* synopses: \"Objectives\", \"Conclusions\"\r\n- All 4.2.* title pages: Stu..."
+    },
+    {
+      "name": "2.6.2.6 - a: Critical Claim Elements",
+      "description": "Section must include traceable critical claims: CLAIMS TO TRACE:\r\n• PD conclusions: mechanism-validation (Required), efficacy-summary (Required), selectivity-profile → 4.2.1.1 \"Conclusions\"\r\n• Safet...",
+      "type": "format_requirement",
+      "field": "2.6.2.6 - a_claims",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure all critical claim elements are present and traceable: CLAIMS TO TRACE:\r\n• PD conclusions: mechanism-validation (Required), efficacy-summary (Required), se..."
+    },
+    {
+      "name": "2.6.2.6 - a: SM Modality Requirements",
+      "description": "For SM products: Discuss the overall pharmacological profile including target engagement, efficacy signals, selectivity, and safety pharmacology; relate findings to th...",
+      "type": "format_requirement",
+      "field": "2.6.2.6 - a_sm",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For SM modality, ensure section 2.6.2.6 - a follows guidance: Discuss the overall pharmacological profile including target engagement, efficacy signals, selectivi..."
+    },
+    {
+      "name": "2.6.2.6 - a: BIO Modality Requirements",
+      "description": "For BIO products: Discuss the overall pharmacological profile including target binding, functional activity, species relevance, and safety pharmacology; address any lim...",
+      "type": "format_requirement",
+      "field": "2.6.2.6 - a_bio",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For BIO modality, ensure section 2.6.2.6 - a follows guidance: Discuss the overall pharmacological profile including target binding, functional activity, species r..."
+    },
+    {
+      "name": "2.6.2.6 - a: ADC Modality Requirements",
+      "description": "For ADC products: Discuss the integrated pharmacology of the ADC construct, including contributions of antibody and payload to efficacy and safety; summarize the overal...",
+      "type": "format_requirement",
+      "field": "2.6.2.6 - a_adc",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ADC modality, ensure section 2.6.2.6 - a follows guidance: Discuss the integrated pharmacology of the ADC construct, including contributions of antibody and pa..."
+    },
+    {
+      "name": "2.6.2.6 - a: ONT Modality Requirements",
+      "description": "For ONT products: Discuss the overall pharmacological profile including target knockdown efficiency, duration, tissue distribution, and any off-target or immunostimulat...",
+      "type": "format_requirement",
+      "field": "2.6.2.6 - a_ont",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For ONT modality, ensure section 2.6.2.6 - a follows guidance: Discuss the overall pharmacological profile including target knockdown efficiency, duration, tissue ..."
+    },
+    {
+      "name": "2.6.2.6 - a: Other Modality Requirements",
+      "description": "For Other products: Discuss the overall pharmacological profile appropriate to the modality, including mechanism of action, proof-of-concept findings, and any limitations...",
+      "type": "format_requirement",
+      "field": "2.6.2.6 - a_other",
+      "required": true,
+      "severity": "warning",
+      "remediationHint": "For Other modality, ensure section 2.6.2.6 - a follows guidance: Discuss the overall pharmacological profile appropriate to the modality, including mechanism of acti..."
+    },
+    {
+      "name": "Template Structure Completeness",
+      "description": "Document must contain all 16 required sections with complete content, data inputs, and source references",
+      "type": "format_requirement",
+      "field": "sections",
+      "required": true,
+      "severity": "critical",
+      "remediationHint": "Ensure document includes all 16 sections from the template with all required elements"
+    }
+  ],
+  "metadata": {
+    "convertedFrom": "template_2.6.2_poc.xlsx",
+    "convertedAt": "2026-01-19T00:35:00.832Z",
+    "ruleCount": 150
+  }
+}

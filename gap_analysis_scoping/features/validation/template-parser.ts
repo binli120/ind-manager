@@ -37,7 +37,17 @@ export class TemplateParser {
     try {
       const template = JSON.parse(fileContent);
       
-      // Extract validation rules from JSON structure
+      // Check if this is a pre-processed template with rules already extracted
+      if (template.rules && Array.isArray(template.rules) && template.rules.length > 0) {
+        // This is a pre-processed template - use the rules directly
+        return {
+          name: template.name || 'JSON Template',
+          templateType: 'json',
+          rules: template.rules
+        };
+      }
+      
+      // Otherwise, extract validation rules from JSON structure
       const rules = this.extractValidationRules(template);
       
       return {

@@ -63,8 +63,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
         pathname?.startsWith("/auth/") || pathname === "/login";
       const isApiPage = pathname?.startsWith("/api/");
       const isResetPage = pathname?.startsWith("/auth/reset-password");
+      const isPublicPage = pathname?.startsWith("/gap-analysis-poc") || pathname?.startsWith("/gap-analysis-html");
 
-      if ((!user || !isAuthenticated) && !isAuthPage && !isApiPage) {
+      if ((!user || !isAuthenticated) && !isAuthPage && !isApiPage && !isPublicPage) {
         // Not authenticated and trying to access protected page
         setTimeout(() => {
           router.replace("/auth/login");
@@ -94,6 +95,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const isAuthPage = pathname?.startsWith("/auth/") || pathname === "/login";
   const isResetPage = pathname?.startsWith("/auth/reset-password") && user;
   const isApiPage = pathname?.startsWith("/api/");
+  const isPublicPage = pathname?.startsWith("/gap-analysis-poc") || pathname?.startsWith("/gap-analysis-html");
+
+  // For public pages, always render children
+  if (isPublicPage) {
+    return <>{children}</>;
+  }
 
   // For auth pages, render children if not authenticated
   if (isAuthPage && !isResetPage) {

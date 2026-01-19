@@ -38,7 +38,14 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const protectedRoutes = ["/protected", "/dashboard", "/profile"]
+  const publicRoutes = ["/gap-analysis-poc", "/gap-analysis-html", "/api/validation", "/api/gap-analysis"]
   const isProtectedRoute = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
+  const isPublicRoute = publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
+
+  // Allow public routes without authentication
+  if (isPublicRoute) {
+    return supabaseResponse
+  }
 
   if (isProtectedRoute && !user) {
     // no user, potentially respond by redirecting the user to the login page

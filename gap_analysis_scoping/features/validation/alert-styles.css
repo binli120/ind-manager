@@ -1,0 +1,318 @@
+/**
+ * Alert Styles for Gap Analysis Completeness Check
+ * 
+ * Provides styling for interactive alerts with severity-based colors
+ * and status indicators.
+ */
+
+/* Alert Container */
+.alert {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.alert:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Severity-based styling */
+.alert-critical {
+  border-left: 4px solid #dc3545;
+  background-color: #fff5f5;
+}
+
+.alert-warning {
+  border-left: 4px solid #ffc107;
+  background-color: #fffbf0;
+}
+
+.alert-info {
+  border-left: 4px solid #17a2b8;
+  background-color: #f0f9ff;
+}
+
+/* Resolved state */
+.alert-resolved {
+  opacity: 0.7;
+  background-color: #f8f9fa;
+}
+
+.alert-resolved .alert-title {
+  text-decoration: line-through;
+}
+
+/* Alert Header */
+.alert-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.alert-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.alert-title {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.alert-status {
+  margin-left: auto;
+}
+
+/* Alert Body */
+.alert-body {
+  margin-bottom: 16px;
+}
+
+.alert-message {
+  margin: 0 0 12px 0;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Remediation Steps */
+.alert-remediation {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+}
+
+.alert-remediation h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.alert-remediation ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.alert-remediation li {
+  margin-bottom: 6px;
+  color: #555;
+  line-height: 1.4;
+}
+
+.alert-remediation li:last-child {
+  margin-bottom: 0;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.badge-open {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.badge-acknowledged {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.badge-resolved {
+  background-color: #28a745;
+  color: #fff;
+}
+
+/* Alert Actions */
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-acknowledge {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.btn-acknowledge:hover {
+  background-color: #e0a800;
+}
+
+.btn-resolve {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.btn-resolve:hover {
+  background-color: #218838;
+}
+
+.btn-dismiss {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.btn-dismiss:hover {
+  background-color: #5a6268;
+}
+
+/* Disabled state for resolved alerts */
+.alert-resolved .btn-acknowledge,
+.alert-resolved .btn-resolve {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .alert {
+    padding: 12px;
+  }
+
+  .alert-header {
+    flex-wrap: wrap;
+  }
+
+  .alert-title {
+    font-size: 14px;
+  }
+
+  .alert-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+/* Animation for new alerts */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Container for all alerts */
+.alerts-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.alerts-container-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.alerts-container-empty::before {
+  content: "✓";
+  display: block;
+  font-size: 48px;
+  color: #28a745;
+  margin-bottom: 16px;
+}
+
+/* Alert Statistics */
+.alert-statistics {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.alert-stat {
+  flex: 1;
+  text-align: center;
+}
+
+.alert-stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
+
+.alert-stat-label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Filter buttons */
+.alert-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.filter-btn.active {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
