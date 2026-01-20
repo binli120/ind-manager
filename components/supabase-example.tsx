@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export function SupabaseExample() {
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<unknown[]>([])
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
 

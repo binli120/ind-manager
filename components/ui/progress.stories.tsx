@@ -1,6 +1,6 @@
 "use client"
 
-import type { Meta, StoryObj } from "@storybook/react"
+import type { Meta, StoryObj } from "@storybook/react-webpack5"
 import { Progress } from "./progress"
 import { useEffect, useState } from "react"
 
@@ -50,7 +50,7 @@ export const Complete: Story = {
 }
 
 export const Animated: Story = {
-  render: () => {
+  render: function Render() {
     const [progress, setProgress] = useState(13)
 
     useEffect(() => {
@@ -63,7 +63,7 @@ export const Animated: Story = {
 }
 
 export const LoadingSimulation: Story = {
-  render: () => {
+  render: function Render() {
     const [progress, setProgress] = useState(0)
 
     useEffect(() => {

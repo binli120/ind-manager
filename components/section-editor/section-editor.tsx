@@ -23,7 +23,6 @@ interface SectionEditorProps {
 
 function SubsectionEditor({
   subsection,
-  sectionNumber,
   onSave,
   onApprove,
   onDelete,
@@ -31,23 +30,19 @@ function SubsectionEditor({
   total,
 }: {
   subsection: SubsectionContent
-  sectionNumber: string
   onSave: (id: string) => void
   onApprove: (id: string) => void
   onDelete: (id: string) => void
   index: number
   total: number
 }) {
-  const [isEditingHeader, setIsEditingHeader] = useState(false)
-  const [header, setHeader] = useState(subsection.header)
-  const [headerError, setHeaderError] = useState(false)
   const [content, setContent] = useState(subsection.content)
   const [showMaterialsDialog, setShowMaterialsDialog] = useState(false)
   const [materialsCount, setMaterialsCount] = useState(0)
   const [showTemplate, setShowTemplate] = useState(false)
   const [showTableInsert, setShowTableInsert] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const editorRef = useRef<any>(null)
+  const editorRef = useRef<unknown>(null)
 
   const [isAnimating, setIsAnimating] = useState(subsection.isUserAdded)
 
@@ -60,38 +55,6 @@ function SubsectionEditor({
       return () => clearTimeout(timer)
     }
   }, [subsection.isUserAdded, isAnimating])
-
-  const handleHeaderBlur = () => {
-    if (header.trim() === "") {
-      setHeaderError(true)
-      setHeader(subsection.header)
-    } else {
-      setHeaderError(false)
-      setIsEditingHeader(false)
-    }
-  }
-
-  const handleHeaderKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      if (header.trim() === "") {
-        setHeaderError(true)
-        return
-      }
-      setHeaderError(false)
-      setIsEditingHeader(false)
-    } else if (e.key === "Escape") {
-      setHeader(subsection.header)
-      setHeaderError(false)
-      setIsEditingHeader(false)
-    }
-  }
-
-  const handleHeaderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHeader(e.target.value)
-    if (e.target.value.trim() !== "") {
-      setHeaderError(false)
-    }
-  }
 
   const handleTableInsert = (rows: number, cols: number) => {
     console.log(`[v0] Inserting table: ${rows}x${cols} for section ${subsection.subsectionNumber}`)
@@ -278,7 +241,6 @@ export function SectionEditor({
 
   const parentSubsection = findParentSubsection(selectedSubsection)
   const isViewingCategorySubsection = selectedSubsection?.isCategory === true
-  const isViewingAllSubsections = section.isCategory && !selectedSubsection
 
   let mainHeader = `${section.number} ${section.title}`
   let subHeader: string | null = null
@@ -369,7 +331,6 @@ export function SectionEditor({
             <div key={subsection.id}>
               <SubsectionEditor
                 subsection={subsection}
-                sectionNumber={section.number}
                 onSave={() => {}}
                 onApprove={() => {}}
                 onDelete={onDeleteSubsection}

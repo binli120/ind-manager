@@ -7,11 +7,15 @@ interface AddSectionDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   sectionNumber: string
-  existingSubsections: any[]
+  existingSubsections: ExistingSubsection[]
   onAddSection: (subsectionNumber: string, header: string) => void
 }
 
-const getNextSubsectionLetter = (existingSubsections: any[], sectionNumber: string): string => {
+type ExistingSubsection = {
+  subsectionNumber?: string
+}
+
+const getNextSubsectionLetter = (existingSubsections: ExistingSubsection[]): string => {
   if (!existingSubsections || existingSubsections.length === 0) return "a"
 
   // Find all subsection numbers that match the pattern
@@ -53,11 +57,11 @@ export function AddSectionDialog({
   existingSubsections,
   onAddSection,
 }: AddSectionDialogProps) {
-  const nextLetter = getNextSubsectionLetter(existingSubsections, sectionNumber)
+  const nextLetter = getNextSubsectionLetter(existingSubsections)
   const nextSubsectionNumber = `${sectionNumber}-${nextLetter}`
 
   const handleAdd = () => {
-    onAddSection(nextSubsectionNumber, "")
+    onAddSection(nextSubsectionNumber, getDefaultHeader(nextLetter))
     onOpenChange(false)
   }
 
