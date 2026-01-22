@@ -1,0 +1,10 @@
+.next
+node_modules
+storybook-static
+dist
+build
+.vercel
+next-env.d.ts
+scripts
+lib/supabase/schema.d.ts
+

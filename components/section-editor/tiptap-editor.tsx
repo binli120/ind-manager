@@ -110,8 +110,6 @@ export function TiptapEditor({
             if (editorRef.current && editor.view.dom) {
               const { state } = editor
               const { from } = state.selection
-              const resolvedPos = state.doc.resolve(from)
-
               const domAtPos = editor.view.domAtPos(from)
               const node = domAtPos.node as HTMLElement
 

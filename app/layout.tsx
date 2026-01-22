@@ -1,7 +1,8 @@
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { ReduxProvider } from '@/components/providers/redux-provider';
 import { ThemeProvider } from '@/components/theme-provider';
-import { Analytics } from '@vercel/analytics/next';
+import { WorkspaceLayout } from '@/components/workspace-layout';
+import { Analytics } from '@vercel/analytics/react';
 import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
 import type { Metadata } from 'next';
@@ -21,8 +22,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang='en' suppressHydrationWarning>
+      <body
+        suppressHydrationWarning
+        className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}
+      >
         <Suspense fallback={null}>
           <ReduxProvider>
             <ThemeProvider
@@ -31,7 +35,9 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <AuthGuard>{children}</AuthGuard>
+              <AuthGuard>
+                <WorkspaceLayout>{children}</WorkspaceLayout>
+              </AuthGuard>
             </ThemeProvider>
           </ReduxProvider>
         </Suspense>

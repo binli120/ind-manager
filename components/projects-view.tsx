@@ -2,15 +2,14 @@
 
 import { useAppSelector, useAppDispatch } from "@/lib/store";
 import {
-  setViewMode,
-  setFilters,
-  fetchProjects,
-  createProject,
-  Project,
-  ProjectCreation,
-  deleteProject,
-  updateProject,
-  ProjectUpdate,
+	  setViewMode,
+	  setFilters,
+	  fetchProjects,
+	  createProject,
+	  ProjectCreation,
+	  deleteProject,
+	  updateProject,
+	  ProjectUpdate,
 } from "@/lib/store/slices/projectsSlice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -115,12 +114,13 @@ const priorityConfig = {
 
 export function ProjectsView() {
   const dispatch = useAppDispatch();
-  const { projects, viewMode, filters, isLoading } = useAppSelector(
+  const { viewMode, filters, projects, isLoading } = useAppSelector(
     (state) => state.projects,
   );
-  const { teams } = useAppSelector((state) => state.teams);
-  const { selectedTeamId } = useAppSelector((state) => state.teams);
+  //const { teams } = useAppSelector((state) => state.teams);
+  //const { selectedTeamId } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
+
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -131,10 +131,10 @@ export function ProjectsView() {
   useEffect(() => setPage(1), [filters]);
 
   useEffect(() => {
-    if (selectedTeamId) {
-      dispatch(fetchProjects(selectedTeamId));
+    if (user?.id) {
+      dispatch(fetchProjects({ userId: user.id }));
     }
-  }, [dispatch, selectedTeamId]);
+  }, [dispatch, user?.id]);
 
   
 
@@ -203,7 +203,7 @@ export function ProjectsView() {
     setShowEditDialog(true);
     setEditProject({
       id: proj.id,
-      team_id: proj.teamId,
+      tenantid: proj.tenantId,
       drug_name: proj.drug,
       ind_title: proj.title,
       ind_number: proj.code,
@@ -570,14 +570,14 @@ export function ProjectsView() {
       </div>
       {showCreateDialog && (
         <ProjectForm
-          teams={teams}
+          
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateDialog(false)}
         />
       )}
       {showEditDialog && editProject && (
         <ProjectForm
-          teams={teams}
+          
           initialData={editProject}
           isEditing
           onSubmit={handleEditProject}

@@ -41,7 +41,7 @@ export function ResetPasswordForm() {
           window.location.href = "/";
         }, 1000);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);

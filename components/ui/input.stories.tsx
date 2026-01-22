@@ -1,6 +1,6 @@
 "use client"
 
-import type { Meta, StoryObj } from "@storybook/react"
+import type { Meta, StoryObj } from "@storybook/react-webpack5"
 import { Input } from "./input"
 import { Label } from "./label"
 import { Search, Eye, EyeOff } from "lucide-react"
@@ -46,7 +46,7 @@ export const WithLabel: Story = {
 }
 
 export const Password: Story = {
-  render: () => {
+  render: function Render() {
     const [showPassword, setShowPassword] = useState(false)
 
     return (
