@@ -132,6 +132,62 @@ interface AlertGenerator {
 - Format alerts for HTML display
 - Create interactive DOM elements for alerts
 
+### 5. In-Editor Validation Manager
+
+**Purpose**: Integrates validation feedback directly into the editor with real-time indicators
+
+**Implementation Approach**:
+- **Phase 1 (Task 6)**: HTML-based demo using contenteditable
+- **Phase 2 (Task 9)**: Tiptap integration with ProseMirror decorations
+
+**Key Methods**:
+```typescript
+interface InEditorValidationManager {
+  attachToEditor(editor: HTMLElement | Editor, validationResults: AnalysisResult): void
+  createInlineIndicators(gaps: ValidationGap[]): HTMLElement[] | EditorDecoration[]
+  showPlaceholderHints(missingContent: ValidationGap[]): void
+  highlightProblematicContent(formatErrors: ValidationGap[]): void
+  renderOutlineView(template: ValidationRuleSet, document: any): OutlineViewData
+  updateValidationStatus(gapId: string, status: 'fixed' | 'acknowledged' | 'dismissed'): void
+  detachFromEditor(): void
+}
+```
+
+**Responsibilities**:
+- Attach validation indicators to editor (HTML spans or Tiptap decorations)
+- Create inline validation indicators with severity-based styling
+- Display placeholder hints for missing content
+- Highlight problematic text for format errors
+- Render structured outline view for blank documents
+- Track and update validation status in real-time
+- Handle user interactions with validation indicators
+
+### 6. Validation Decorator
+
+**Purpose**: Creates editor decorations/indicators for validation feedback
+
+**Implementation Approach**:
+- **Phase 1**: HTML spans with CSS styling
+- **Phase 2**: Tiptap ProseMirror decorations
+
+**Key Methods**:
+```typescript
+interface ValidationDecorator {
+  createMissingContentIndicator(gap: ValidationGap, position: number): HTMLElement | Decoration
+  createFormatErrorIndicator(gap: ValidationGap, range: { from: number; to: number }): HTMLElement | Decoration
+  createPlaceholderIndicator(gap: ValidationGap, position: number): HTMLElement | Decoration
+  getSeverityStyle(severity: 'critical' | 'warning' | 'info'): DecorationStyle
+  createTooltipWidget(gap: ValidationGap): HTMLElement
+}
+```
+
+**Responsibilities**:
+- Create editor indicators for different validation types
+- Apply severity-based styling (critical: red, warning: yellow, info: blue)
+- Generate tooltip widgets with gap details and remediation steps
+- Position indicators at appropriate document locations
+- Handle indicator lifecycle and updates
+
 ## Data Models
 
 ### ValidationRuleSet
@@ -188,6 +244,103 @@ interface InteractiveAlert {
 }
 ```
 
+### In-Editor Validation Models
+
+```typescript
+interface EditorDecoration {
+  id: string
+  gapId: string
+  type: 'missing_content' | 'format_error' | 'placeholder_hint'
+  severity: 'critical' | 'warning' | 'info'
+  position: number | { from: number; to: number }
+  tooltip: TooltipContent
+  status: 'active' | 'acknowledged' | 'dismissed' | 'fixed'
+}
+
+interface TooltipContent {
+  title: string
+  description: string
+  remediationSteps: string[]
+  actions: TooltipAction[]
+}
+
+interface TooltipAction {
+  label: string
+  action: 'acknowledge' | 'dismiss' | 'fix' | 'view_details'
+  callback: () => void
+}
+
+interface OutlineViewData {
+  sections: OutlineSection[]
+  completenessPercentage: number
+  totalRequired: number
+  totalCompleted: number
+}
+
+interface OutlineSection {
+  id: string
+  title: string
+  required: boolean
+  status: 'complete' | 'incomplete' | 'partial'
+  severity: 'critical' | 'warning' | 'info'
+  subsections: OutlineSection[]
+  validationGaps: ValidationGap[]
+  position?: number // Position in document if exists
+}
+
+interface DecorationStyle {
+  backgroundColor?: string
+  borderColor?: string
+  borderStyle?: string
+  borderWidth?: string
+  textDecoration?: string
+  opacity?: number
+  icon?: string
+  iconColor?: string
+}
+```
+
+### Validation Indicator Styling
+
+```typescript
+const SEVERITY_STYLES = {
+  critical: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)', // red-500 with opacity
+    borderColor: '#ef4444',
+    borderStyle: 'solid',
+    borderWidth: '0 0 2px 0',
+    icon: '🔴',
+    iconColor: '#ef4444'
+  },
+  warning: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)', // amber-500 with opacity
+    borderColor: '#f59e0b',
+    borderStyle: 'dashed',
+    borderWidth: '0 0 2px 0',
+    icon: '⚠️',
+    iconColor: '#f59e0b'
+  },
+  info: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)', // blue-500 with opacity
+    borderColor: '#3b82f6',
+    borderStyle: 'dotted',
+    borderWidth: '0 0 1px 0',
+    icon: 'ℹ️',
+    iconColor: '#3b82f6'
+  }
+}
+
+const PLACEHOLDER_STYLE = {
+  backgroundColor: 'rgba(156, 163, 175, 0.05)', // gray-400 with low opacity
+  borderColor: '#9ca3af',
+  borderStyle: 'dashed',
+  borderWidth: '1px',
+  opacity: 0.6,
+  icon: '➕',
+  iconColor: '#9ca3af'
+}
+```
+
 Now I need to use the prework tool to analyze the acceptance criteria before writing the correctness properties.
 
 <function_calls>
@@ -229,6 +382,297 @@ Now I need to use the prework tool to analyze the acceptance criteria before wri
 ### Property 8: Template Selection Functionality
 *For any* collection of available templates, users should be able to select templates and have validation use the correct selected template
 **Validates: Requirements 3.4**
+
+### Property 9: In-Editor Validation Indicator Display
+*For any* validation gap identified during editing, the system should display appropriate inline indicators with severity-based visual differentiation
+**Validates: Requirements 4.1, 4.3, 4.7**
+
+### Property 10: Placeholder Hint Generation
+*For any* missing content in a document, the system should generate subtle placeholder hints indicating expected content
+**Validates: Requirements 4.2**
+
+### Property 11: Real-Time Validation Updates
+*For any* content change that fixes a validation issue, the system should automatically update validation status and remove indicators
+**Validates: Requirements 4.6**
+
+### Property 12: Outline View Completeness
+*For any* blank or minimal document, the system should generate a complete outline view showing all required sections from the template
+**Validates: Requirements 4.5**
+
+## In-Editor Validation Experience Design
+
+### Overview
+
+The in-editor validation experience integrates validation feedback directly into the Tiptap editor, providing real-time, contextual guidance as users author documents. This design focuses on three key UX principles:
+
+1. **Non-Intrusive**: Validation indicators should guide without overwhelming
+2. **Contextual**: Feedback appears where it's needed, when it's needed
+3. **Actionable**: Every indicator provides clear next steps
+
+### Validation Modes
+
+#### Mode 1: Active Editing (Content Present)
+
+When a document has content, validation indicators appear inline:
+
+**Missing Content Indicators**:
+- Displayed as subtle placeholder blocks at appropriate positions
+- Show section number and title with a "+" icon
+- Collapsible to avoid clutter
+- Click to expand and see requirements
+
+**Format Error Indicators**:
+- Highlight problematic text with colored underlines
+- Severity-based colors (red=critical, yellow=warning, blue=info)
+- Hover to see tooltip with issue details
+- Click to see full remediation steps
+
+**Wrong Information Indicators**:
+- Similar to format errors but with different icon (⚠️ vs ℹ️)
+- Highlight specific text that needs correction
+- Tooltip shows expected vs actual information
+
+#### Mode 2: Blank Document (Outline View)
+
+When a document is blank or has minimal content, show a structured outline:
+
+**Outline View Features**:
+- Hierarchical display of all required sections
+- Visual indicators for required vs optional
+- Severity badges for critical sections
+- Progress bar showing overall completeness
+- Click any section to insert a template placeholder
+
+**Progressive Disclosure**:
+- Top-level sections expanded by default
+- Subsections collapsed to reduce visual noise
+- Expand/collapse controls for each level
+- "Show only required" filter option
+
+### Visual Design Patterns
+
+#### Severity-Based Styling
+
+**Critical (Red)**:
+- Solid red underline (2px)
+- Red background tint (10% opacity)
+- 🔴 icon in tooltip
+- Used for: Required missing content, blocking issues
+
+**Warning (Yellow/Amber)**:
+- Dashed amber underline (2px)
+- Amber background tint (10% opacity)
+- ⚠️ icon in tooltip
+- Used for: Important but non-blocking issues
+
+**Info (Blue)**:
+- Dotted blue underline (1px)
+- Blue background tint (10% opacity)
+- ℹ️ icon in tooltip
+- Used for: Suggestions, optional improvements
+
+#### Placeholder Hints
+
+**Visual Style**:
+- Light gray dashed border
+- Very subtle background (5% opacity)
+- ➕ icon with section title
+- Italic text showing "Click to add [Section Name]"
+
+**Interaction**:
+- Click to insert section template
+- Hover to see requirements
+- Dismiss button to hide temporarily
+- "Show all placeholders" toggle in toolbar
+
+### Tooltip/Popover Design
+
+**Tooltip Structure**:
+```
+┌─────────────────────────────────────┐
+│ [Icon] Section 2.6.2.1-a Missing    │
+│ ─────────────────────────────────── │
+│ Brief Summary section is required   │
+│                                     │
+│ What to include:                    │
+│ • Executive summary of findings     │
+│ • Key safety conclusions            │
+│ • Regulatory implications           │
+│                                     │
+│ [Insert Template] [Dismiss] [Details]│
+└─────────────────────────────────────┘
+```
+
+**Tooltip Behavior**:
+- Appears on hover (500ms delay)
+- Stays open when mouse moves to tooltip
+- Click indicator to pin tooltip
+- ESC key to close
+- Auto-position to avoid viewport edges
+
+### Avoiding UX Overwhelm
+
+#### Smart Indicator Grouping
+
+**Problem**: 87 validation rules could create 87 indicators
+**Solution**: Group related indicators
+
+- Group by section (e.g., all 2.6.2.1 issues together)
+- Show count badge: "3 issues in this section"
+- Click to expand and see individual issues
+- Fix one, auto-update count
+
+#### Progressive Validation
+
+**Problem**: Showing all issues at once is overwhelming
+**Solution**: Reveal issues progressively
+
+- Initially show only critical issues
+- "Show warnings" button to reveal warning-level issues
+- "Show all suggestions" for info-level issues
+- User preference to remember setting
+
+#### Contextual Filtering
+
+**Problem**: Not all validation rules apply to current section
+**Solution**: Context-aware display
+
+- Only show indicators relevant to visible content
+- Sidebar summary shows all issues
+- "Jump to next issue" navigation
+- Filter by severity, section, or status
+
+#### Dismissal and Acknowledgment
+
+**Problem**: Users may want to ignore certain validations
+**Solution**: Flexible acknowledgment system
+
+- Dismiss individual indicators temporarily
+- Acknowledge with reason (stored for audit)
+- "Dismissed items" panel to review later
+- Re-validate button to check dismissed items
+
+### Integration with Existing Editor
+
+#### HTML-Based Demo (Phase 1)
+
+**Initial Implementation**: Simple contenteditable-based editor
+
+```html
+<div id="validation-editor" contenteditable="true" class="editor-content">
+  <!-- User content here -->
+</div>
+```
+
+**Validation Indicators**: HTML spans with data attributes
+
+```html
+<span class="validation-indicator" 
+      data-gap-id="2.6.2.1-a" 
+      data-severity="critical"
+      data-type="missing_content">
+  ➕ Section 2.6.2.1-a: Brief Summary
+</span>
+```
+
+**Format Error Highlighting**: Inline spans wrapping problematic text
+
+```html
+<span class="validation-error" 
+      data-gap-id="2.6.2.4-b_data_inputs"
+      data-severity="warning"
+      style="border-bottom: 2px dashed #f59e0b; background: rgba(245, 158, 11, 0.1);">
+  This section needs study ID and species
+</span>
+```
+
+#### Tiptap Integration (Phase 2 - Follow-up)
+
+**Custom Extension**: `ValidationIndicatorExtension`
+
+```typescript
+const ValidationIndicatorExtension = Extension.create({
+  name: 'validationIndicator',
+  
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        state: {
+          init() { return DecorationSet.empty },
+          apply(tr, set) {
+            // Update decorations based on validation results
+            return updateValidationDecorations(tr, set)
+          }
+        },
+        props: {
+          decorations(state) {
+            return this.getState(state)
+          }
+        }
+      })
+    ]
+  }
+})
+```
+
+#### Decoration Types (Tiptap Phase 2)
+
+**Widget Decorations**: For placeholder hints
+- Inserted at specific positions
+- Rendered as React components
+- Interactive (clickable, hoverable)
+
+**Inline Decorations**: For format errors
+- Wrap existing text
+- Apply styling without modifying content
+- Support tooltips on hover
+
+**Node Decorations**: For section-level issues
+- Decorate entire paragraphs or sections
+- Show section-level validation status
+- Collapsible/expandable
+
+### Toolbar Integration
+
+**New Toolbar Button**: "Validation" toggle
+
+- Icon: Checkmark with badge showing issue count
+- Toggle to show/hide all indicators
+- Dropdown menu:
+  - Show Critical Only
+  - Show Warnings
+  - Show All
+  - Hide All
+  - View Outline
+  - Validation Settings
+
+### Real-Time Validation
+
+**Debounced Validation**:
+- Wait 1 second after user stops typing
+- Run validation in background
+- Update indicators without interrupting typing
+- Show loading indicator during validation
+
+**Incremental Updates**:
+- Only re-validate changed sections
+- Cache validation results for unchanged content
+- Diff-based indicator updates
+- Smooth transitions (fade in/out)
+
+### Accessibility Considerations
+
+**Screen Reader Support**:
+- ARIA labels for all indicators
+- Announce validation status changes
+- Keyboard navigation through issues
+- Focus management for tooltips
+
+**Keyboard Shortcuts**:
+- `Ctrl+Shift+V`: Toggle validation display
+- `F8`: Jump to next issue
+- `Shift+F8`: Jump to previous issue
+- `Ctrl+.`: Show quick fix menu
 
 ## Error Handling
 

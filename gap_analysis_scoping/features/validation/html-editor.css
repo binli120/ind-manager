@@ -1,0 +1,429 @@
+/**
+ * HTML Editor Styles
+ * 
+ * Styles for the contenteditable-based HTML editor
+ */
+
+/* Editor Container */
+.html-editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.html-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.toolbar-btn {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.toolbar-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.toolbar-btn:active {
+  background: #e5e7eb;
+}
+
+.toolbar-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+.toolbar-btn.btn-bold {
+  font-weight: 700;
+}
+
+.toolbar-btn.btn-italic {
+  font-style: italic;
+}
+
+.toolbar-btn.btn-underline {
+  text-decoration: underline;
+}
+
+.toolbar-separator {
+  color: #d1d5db;
+  margin: 0 4px;
+  user-select: none;
+}
+
+/* Editor Content */
+.html-editor-content {
+  flex: 1;
+  padding: 16px 20px;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #1f2937;
+  outline: none;
+}
+
+.html-editor-content:focus {
+  outline: none;
+}
+
+/* Placeholder */
+.html-editor-content.empty:before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  font-style: italic;
+  pointer-events: none;
+  position: absolute;
+}
+
+/* Typography */
+.html-editor-content h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 0.67em 0;
+  line-height: 1.2;
+}
+
+.html-editor-content h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0.75em 0;
+  line-height: 1.3;
+}
+
+.html-editor-content h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.83em 0;
+  line-height: 1.4;
+}
+
+.html-editor-content p {
+  margin: 1em 0;
+}
+
+.html-editor-content ul,
+.html-editor-content ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.html-editor-content li {
+  margin: 0.5em 0;
+}
+
+.html-editor-content strong,
+.html-editor-content b {
+  font-weight: 700;
+}
+
+.html-editor-content em,
+.html-editor-content i {
+  font-style: italic;
+}
+
+.html-editor-content u {
+  text-decoration: underline;
+}
+
+/* Selection */
+.html-editor-content ::selection {
+  background: #bfdbfe;
+  color: #1e40af;
+}
+
+/* Scrollbar */
+.html-editor-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.html-editor-content::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.html-editor-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.html-editor-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Validation Toolbar Controls */
+.btn-validation-toggle,
+.btn-severity-filter,
+.btn-jump-next,
+.btn-jump-prev {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.btn-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.btn-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.validation-badge {
+  display: none;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e74c3c;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-validation-toggle.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* Dropdown */
+.toolbar-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.btn-severity-filter:hover .dropdown-arrow {
+  transform: translateY(2px);
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  z-index: 1000;
+  padding: 4px 0;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0;
+}
+
+.dropdown-action {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dropdown-action:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.severity-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.severity-label {
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.severity-label.severity-critical {
+  color: #e74c3c;
+}
+
+.severity-label.severity-warning {
+  color: #f39c12;
+}
+
+.severity-label.severity-info {
+  color: #3498db;
+}
+
+/* Navigation buttons */
+.btn-jump-next:disabled,
+.btn-jump-prev:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-jump-next:not(:disabled):hover,
+.btn-jump-prev:not(:disabled):hover {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* Highlight flash animation for navigation */
+@keyframes highlight-flash {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.2);
+  }
+}
+
+.highlight-flash {
+  animation: highlight-flash 1s ease-in-out;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .html-editor-container {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .html-editor-toolbar {
+    background: #111827;
+    border-color: #374151;
+  }
+
+  .toolbar-btn {
+    background: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+  }
+
+  .toolbar-btn:hover {
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+
+  .toolbar-btn:active {
+    background: #6b7280;
+  }
+
+  .toolbar-btn.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #2563eb;
+  }
+
+  .toolbar-separator {
+    color: #4b5563;
+  }
+
+  .html-editor-content {
+    color: #f9fafb;
+  }
+
+  .html-editor-content.empty:before {
+    color: #6b7280;
+  }
+
+  .html-editor-content ::selection {
+    background: #1e40af;
+    color: #bfdbfe;
+  }
+
+  .html-editor-content::-webkit-scrollbar-track {
+    background: #111827;
+  }
+
+  .html-editor-content::-webkit-scrollbar-thumb {
+    background: #4b5563;
+  }
+
+  .html-editor-content::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+
+  .dropdown-menu {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .dropdown-item:hover {
+    background: #4b5563;
+  }
+
+  .dropdown-divider {
+    background: #4b5563;
+  }
+
+  .dropdown-action {
+    color: #f9fafb;
+  }
+
+  .dropdown-action:hover {
+    background: #4b5563;
+    color: white;
+  }
+}

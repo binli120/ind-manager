@@ -97,15 +97,103 @@ This implementation plan creates a simplified proof-of-concept for document comp
   - [x] when click load test files, i saw ✗ Failed to load test files . fix it
 
 
+- [-] 6. Build HTML-based in-editor validation demo (no Tiptap dependency)
+  - [x] 6.1 Create HTML editor with contenteditable
+    - Build simple HTML editor using contenteditable div
+    - Add basic formatting toolbar (bold, italic, headings)
+    - Implement content change detection
+    - _Requirements: 4.1_
+  
+  - [x] 6.2 Create InEditorValidationManager class (HTML-based)
+    - Implement attachToEditor() for contenteditable integration
+    - Create inline validation indicators using HTML spans
+    - Implement showPlaceholderHints() for missing content
+    - Implement highlightProblematicContent() for format errors
+    - Add real-time validation status updates
+    - _Requirements: 4.1, 4.2, 4.3, 4.6_
+  
+  - [x] 6.3 Implement validation indicator rendering
+    - Create severity-based styling (critical/warning/info)
+    - Implement placeholder hints with ➕ icon
+    - Add colored underlines for format errors
+    - Create hover tooltips with gap details and remediation steps
+    - _Requirements: 4.2, 4.3, 4.4, 4.7_
+  
+  - [x] 6.4 Implement outline view for blank documents
+    - Create OutlineView HTML component
+    - Render hierarchical section structure from template
+    - Add progress tracking and completeness percentage
+    - Add expand/collapse functionality
+    - Add "insert template" action for sections
+    - _Requirements: 4.5_
+  
+  - [x] 6.5 Add validation toolbar controls
+    - Add validation toggle button to editor toolbar
+    - Implement severity filter dropdown (critical/warning/info)
+    - Add "Jump to next issue" navigation
+    - Add issue count badge
+    - _Requirements: 4.1, 4.7_
+  
+  - [x] 6.6 Implement smart indicator grouping
+    - Group related indicators by section
+    - Add count badges for grouped issues
+    - Implement progressive disclosure (show critical first)
+    - Add expand/collapse for grouped indicators
+    - _Requirements: 4.7_
+  
+  - [x] 6.7 Add acknowledgment and dismissal system
+    - Implement indicator dismissal with tracking
+    - Add acknowledgment with reason capture
+    - Create "Dismissed items" review panel
+    - Track validation status changes
+    - _Requirements: 4.8_
+  
+  - [x] 6.8 Integrate with existing validation API
+    - Connect HTML editor to /api/validation endpoint
+    - Trigger validation on content changes (debounced)
+    - Update indicators based on validation results
+    - Handle validation errors gracefully
+    - _Requirements: 4.1, 4.6_
+  
+  - [x] 6.9 Write property tests for in-editor validation
+    - **Property 9: In-Editor Validation Indicator Display**
+    - **Validates: Requirements 4.1, 4.3, 4.7**
+    - **Property 10: Placeholder Hint Generation**
+    - **Validates: Requirements 4.2**
+    - **Property 11: Real-Time Validation Updates**
+    - **Validates: Requirements 4.6**
+    - **Property 12: Outline View Completeness**
+    - **Validates: Requirements 4.5**
 
-- [ ] 6. Final checkpoint - Ensure complete system works
+- [ ] 7. Final checkpoint - Ensure complete system works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Remove authentication backdoor for gap-analysis-poc routes
+- [ ] 8. Remove authentication backdoor for gap-analysis-poc routes
   - Remove `/gap-analysis-poc` and `/gap-analysis-html` from public routes in `lib/supabase/middleware.ts`
   - Remove `/gap-analysis-poc` and `/gap-analysis-html` from public pages in `components/auth/auth-guard.tsx`
   - Add proper authentication to the gap analysis POC pages
   - Or move the POC to a proper authenticated section of the application
+
+- [ ] 9. Integrate in-editor validation with Tiptap (follow-up)
+  - [ ] 9.1 Create Tiptap validation extension
+    - Create ValidationIndicatorExtension for Tiptap
+    - Implement decoration management (widget, inline, node decorations)
+    - Add ProseMirror plugin for validation state management
+    - _Requirements: 4.1, 4.3_
+  
+  - [ ] 9.2 Migrate HTML validation to Tiptap decorations
+    - Convert HTML spans to Tiptap decorations
+    - Implement widget decorations for placeholder hints
+    - Implement inline decorations for format errors
+    - Implement node decorations for section-level issues
+    - _Requirements: 4.2, 4.3, 4.7_
+  
+  - [ ] 9.3 Integrate with existing Tiptap editor
+    - Add validation extension to components/section-editor/tiptap-editor.tsx
+    - Connect to validation API
+    - Add validation toolbar button
+    - Test with existing editor features (comments, smart assistant)
+    - _Requirements: 4.1, 4.6_
 
 ## Notes
 
