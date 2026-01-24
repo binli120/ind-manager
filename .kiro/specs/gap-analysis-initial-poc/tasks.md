@@ -209,6 +209,9 @@ This implementation plan creates a simplified proof-of-concept for document comp
     - Add proper TypeScript types and props
     - Test component renders correctly
     - _Requirements: Production readiness_
+  
+  - [x] 8.6 run existing tests to ensure the refactor doesn't introduce break change
+
 
 - [ ] 9. Remove authentication backdoor for gap-analysis routes
   - [ ] 9.1 Remove public routes from middleware

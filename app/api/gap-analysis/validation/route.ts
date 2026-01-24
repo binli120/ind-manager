@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TemplateParser } from '@/lib/gap-analysis/validation/template-parser';
-import { DocumentAnalyzer } from '@/lib/gap-analysis/validation/document-analyzer';
-import { RuleEngine } from '@/lib/gap-analysis/validation/rule-engine';
-import { AlertGenerator } from '@/lib/gap-analysis/validation/alert-generator';
+import { TemplateParser } from '@/lib/gap-analysis/template-parser';
+import { DocumentAnalyzer } from '@/lib/gap-analysis/document-analyzer';
+import { RuleEngine } from '@/lib/gap-analysis/rule-engine';
+import { AlertGenerator } from '@/lib/gap-analysis/alert-generator';
 
 /**
  * POST /api/gap-analysis/validation

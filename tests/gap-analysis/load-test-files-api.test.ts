@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 describe('Load Test Files API', () => {
   it('should load template test file successfully', async () => {

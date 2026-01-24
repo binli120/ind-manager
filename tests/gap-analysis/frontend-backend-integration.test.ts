@@ -4,10 +4,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { TemplateParser } from '../features/validation/template-parser';
-import { DocumentAnalyzer } from '../features/validation/document-analyzer';
-import { RuleEngine } from '../features/validation/rule-engine';
-import { AlertGenerator } from '../features/validation/alert-generator';
+import { TemplateParser } from '@/lib/gap-analysis/template-parser';
+import { DocumentAnalyzer } from '@/lib/gap-analysis/document-analyzer';
+import { RuleEngine } from '@/lib/gap-analysis/rule-engine';
+import { AlertGenerator } from '@/lib/gap-analysis/alert-generator';
 import * as fs from 'fs';
 import * as path from 'path';
 
