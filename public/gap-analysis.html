@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gap Analysis - Consolidated View</title>
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="/gap_analysis_scoping/features/validation/html-editor.css">
+    <link rel="stylesheet" href="/gap_analysis_scoping/features/validation/validation-indicators.css">
+    <link rel="stylesheet" href="/gap_analysis_scoping/features/validation/alert-styles.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        /* View mode toggle */
+        .view-mode-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .view-mode-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .view-mode-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .view-mode-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .view-mode-btn:hover {
+            background: #f8f9ff;
+            transform: translateY(-1px);
+        }
+
+        .view-mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .view-mode-description {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            padding: 10px 20px;
+            background: #fff9e6;
+            border-bottom: 1px solid #ffe066;
+        }
+
+        /* View containers */
+        .view-container {
+            display: none;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        /* Setup section (shared) */
+        .setup-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+
+        .setup-section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .file-input-group {
+            margin-bottom: 15px;
+        }
+
+        .file-input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .file-name {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            margin-right: 10px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .validation-status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .validation-status.show {
+            display: block;
+        }
+
+        .validation-status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .validation-status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .validation-status.loading {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        /* Report View Styles */
+        .results-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .validation-summary {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .score-high { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .score-medium { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .score-low { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .alerts-container {
+            margin-top: 20px;
+        }
+
+        .alert-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .alert-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(5px);
+        }
+
+        .alert-item.alert-critical {
+            border-left-color: #e74c3c;
+        }
+
+        .alert-item.alert-warning {
+            border-left-color: #f39c12;
+        }
+
+        .alert-item.alert-info {
+            border-left-color: #3498db;
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .alert-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .alert-severity {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-critical {
+            background: #fee;
+            color: #e74c3c;
+        }
+
+        .severity-warning {
+            background: #fef5e7;
+            color: #f39c12;
+        }
+
+        .severity-info {
+            background: #ebf5fb;
+            color: #3498db;
+        }
+
+        .alert-message {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .remediation-steps {
+            background: #f8f9ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .remediation-steps h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .remediation-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .remediation-steps li {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .btn-acknowledge {
+            background: #3498db;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-acknowledge:hover {
+            background: #2980b9;
+        }
+
+        .btn-resolve {
+            background: #27ae60;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-resolve:hover {
+            background: #229954;
+        }
+
+        .btn-dismiss {
+            background: #95a5a6;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-dismiss:hover {
+            background: #7f8c8d;
+        }
+
+        .alert-resolved {
+            opacity: 0.6;
+            background: #f0f0f0;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-open {
+            background: #fee;
+            color: #e74c3c;
+        }
+
+        .badge-acknowledged {
+            background: #fef5e7;
+            color: #f39c12;
+        }
+
+        .badge-resolved {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        /* Editor View Styles */
+        #editorToolbar {
+            background: #f8f9ff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #editorContainer {
+            min-height: 500px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gap Analysis - Consolidated View</h1>
+            <p>Comprehensive document validation with multiple viewing modes</p>
+        </div>
+
+        <!-- View Mode Toggle -->
+        <div class="view-mode-section">
+            <span class="view-mode-label">Select View Mode:</span>
+            <div class="view-mode-toggle">
+                <button class="view-mode-btn active" data-view="report">
+                    <span>📊</span>
+                    <span>Report View</span>
+                </button>
+                <button class="view-mode-btn" data-view="editor">
+                    <span>✏️</span>
+                    <span>Editor View</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="view-mode-description" id="viewModeDescription">
+            <strong>Report View:</strong> Best for early-stage documents with many missing sections. Shows a comprehensive list of all validation issues with detailed remediation steps.
+        </div>
+
+        <div class="content">
+            <!-- Shared Setup Section -->
+            <div class="setup-section">
+                <h2>Setup Validation</h2>
+                
+                <div class="file-input-group">
+                    <label class="file-input-label" for="templateFile">Upload Template File</label>
+                    <input 
+                        type="file" 
+                        id="templateFile" 
+                        class="file-input"
+                        accept=".xlsx,.xls,.json"
+                    >
+                    <div id="templateFileName" class="file-name"></div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label class="file-input-label">Template Type</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="templateType" value="excel" style="width: 18px; height: 18px;">
+                            <span style="font-size: 14px; color: #555;">Excel (.xlsx, .xls)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="templateType" value="json" checked style="width: 18px; height: 18px;">
+                            <span style="font-size: 14px; color: #555;">JSON (.json)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="file-input-group">
+                    <label class="file-input-label" for="documentFile">Upload Document to Validate</label>
+                    <input 
+                        type="file" 
+                        id="documentFile" 
+                        class="file-input"
+                        accept=".pdf,.docx,.doc,.txt,.json"
+                    >
+                    <div id="documentFileName" class="file-name"></div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button id="loadTestFilesBtn" class="btn btn-secondary">
+                        Load Test Files
+                    </button>
+                    <button id="startValidationBtn" class="btn btn-primary" disabled>
+                        Start Validation
+                    </button>
+                </div>
+            </div>
+
+            <!-- Validation Status -->
+            <div id="validationStatus" class="validation-status"></div>
+
+            <!-- Report View Container -->
+            <div id="reportView" class="view-container active">
+                <div id="resultsSection" class="results-section">
+                    <div id="resultsContent"></div>
+                </div>
+            </div>
+
+            <!-- Editor View Container -->
+            <div id="editorView" class="view-container">
+                <div id="editorToolbar"></div>
+                <div id="editorContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // SHARED STATE AND INITIALIZATION
+        // ============================================================================
+        
+        let templateFile = null;
+        let documentFile = null;
+        let currentValidationResults = null;
+        let currentViewMode = 'report';
+        let isValidationActive = false;
+
+        // DOM elements
+        const templateFileInput = document.getElementById('templateFile');
+        const documentFileInput = document.getElementById('documentFile');
+        const templateFileName = document.getElementById('templateFileName');
+        const documentFileName = document.getElementById('documentFileName');
+        const loadTestFilesBtn = document.getElementById('loadTestFilesBtn');
+        const startValidationBtn = document.getElementById('startValidationBtn');
+        const validationStatus = document.getElementById('validationStatus');
+        const viewModeButtons = document.querySelectorAll('.view-mode-btn');
+        const viewModeDescription = document.getElementById('viewModeDescription');
+        const reportView = document.getElementById('reportView');
+        const editorView = document.getElementById('editorView');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContent = document.getElementById('resultsContent');
+        const editorContainer = document.getElementById('editorContainer');
+        const editorToolbar = document.getElementById('editorToolbar');
+
+        // Initialize
+        init();
+
+        function init() {
+            // Set up file input handlers
+            templateFileInput.addEventListener('change', handleTemplateChange);
+            documentFileInput.addEventListener('change', handleDocumentChange);
+            loadTestFilesBtn.addEventListener('click', loadTestFiles);
+            startValidationBtn.addEventListener('click', startValidation);
+            
+            // Set up view mode toggle
+            viewModeButtons.forEach(btn => {
+                btn.addEventListener('click', () => switchViewMode(btn.getAttribute('data-view')));
+            });
+            
+            // Initialize editor
+            initializeEditor();
+        }
+
+        // ============================================================================
+        // VIEW MODE SWITCHING
+        // ============================================================================
+        
+        function switchViewMode(mode) {
+            currentViewMode = mode;
+            
+            // Update button states
+            viewModeButtons.forEach(btn => {
+                if (btn.getAttribute('data-view') === mode) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Update description
+            if (mode === 'report') {
+                viewModeDescription.innerHTML = '<strong>Report View:</strong> Best for early-stage documents with many missing sections. Shows a comprehensive list of all validation issues with detailed remediation steps.';
+                reportView.classList.add('active');
+                editorView.classList.remove('active');
+            } else {
+                viewModeDescription.innerHTML = '<strong>Editor View:</strong> Best for later-stage editing with inline validation. Shows real-time validation indicators directly in the document as you edit.';
+                reportView.classList.remove('active');
+                editorView.classList.add('active');
+            }
+
+            // Results are already rendered in both views during validation
+            // No need to re-render, just show the appropriate view
+            console.log(`Switched to ${mode} view`);
+        }
+
+        // ============================================================================
+        // FILE HANDLING
+        // ============================================================================
+        
+        function handleTemplateChange(e) {
+            const file = e.target.files[0];
+            if (file) {
+                templateFile = file;
+                templateFileName.textContent = `Selected: ${file.name}`;
+                checkStartValidationButton();
+            }
+        }
+
+        function handleDocumentChange(e) {
+            const file = e.target.files[0];
+            if (file) {
+                documentFile = file;
+                documentFileName.textContent = `Selected: ${file.name}`;
+                checkStartValidationButton();
+            }
+        }
+
+        function checkStartValidationButton() {
+            const hasTemplate = templateFile !== null;
+            const hasDocument = documentFile !== null;
+            startValidationBtn.disabled = !(hasTemplate && hasDocument);
+            
+            if (hasTemplate && hasDocument) {
+                startValidationBtn.textContent = 'Start Validation';
+            } else if (hasTemplate) {
+                startValidationBtn.textContent = 'Select Document to Continue';
+            } else if (hasDocument) {
+                startValidationBtn.textContent = 'Select Template to Continue';
+            } else {
+                startValidationBtn.textContent = 'Start Validation';
+            }
+        }
+
+        async function loadTestFiles() {
+            try {
+                loadTestFilesBtn.disabled = true;
+                loadTestFilesBtn.textContent = 'Loading...';
+
+                const [templateResponse, documentResponse] = await Promise.all([
+                    fetch('/api/gap-analysis/test-files?type=template'),
+                    fetch('/api/gap-analysis/test-files?type=document')
+                ]);
+                
+                if (!templateResponse.ok || !documentResponse.ok) {
+                    throw new Error('Failed to load test files');
+                }
+
+                const templateData = await templateResponse.json();
+                const documentData = await documentResponse.json();
+
+                const templateBlob = new Blob([JSON.stringify(templateData)], { type: 'application/json' });
+                const documentBlob = new Blob([JSON.stringify(documentData)], { type: 'application/json' });
+
+                templateFile = new File([templateBlob], 'template_2.6.2_poc.json', { type: 'application/json' });
+                documentFile = new File([documentBlob], '2.6.2-summary.json', { type: 'application/json' });
+
+                templateFileName.textContent = `Selected: ${templateFile.name} (Test File)`;
+                documentFileName.textContent = `Selected: ${documentFile.name} (Test File)`;
+                document.querySelector('input[name="templateType"][value="json"]').checked = true;
+                
+                checkStartValidationButton();
+
+                loadTestFilesBtn.textContent = '✓ Test Files Loaded';
+                loadTestFilesBtn.style.background = 'linear-gradient(135deg, #27ae60 0%, #229954 100%)';
+
+            } catch (error) {
+                console.error('Error loading test files:', error);
+                showValidationStatus('error', `Failed to load test files: ${error.message}`);
+                loadTestFilesBtn.textContent = 'Load Test Files';
+                loadTestFilesBtn.disabled = false;
+            }
+        }
+
+        // ============================================================================
+        // VALIDATION
+        // ============================================================================
+        
+        async function startValidation() {
+            if (!templateFile || !documentFile) return;
+
+            try {
+                startValidationBtn.disabled = true;
+                showValidationStatus('loading', 'Validating document...');
+
+                // Always load document content since we render both views
+                await loadDocumentContent();
+
+                // Perform validation
+                await performValidation();
+
+                isValidationActive = true;
+                showValidationStatus('success', 'Validation complete!');
+                startValidationBtn.textContent = 'Validation Complete';
+
+            } catch (error) {
+                console.error('Error starting validation:', error);
+                showValidationStatus('error', `Failed to start validation: ${error.message}`);
+                startValidationBtn.disabled = false;
+            }
+        }
+
+        async function performValidation() {
+            if (!templateFile || !documentFile) return;
+
+            try {
+                const templateType = document.querySelector('input[name="templateType"]:checked').value;
+                const templateBase64 = await fileToBase64(templateFile);
+                const documentBase64 = await fileToBase64(documentFile);
+
+                const response = await fetch('/api/validation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        templateFile: templateBase64,
+                        templateName: templateFile.name,
+                        documentFile: documentBase64,
+                        documentName: documentFile.name,
+                        templateType: templateType
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.details || error.error || 'Validation failed');
+                }
+
+                const result = await response.json();
+                currentValidationResults = result.data;
+
+                // Generate results for BOTH views so they're ready when user switches
+                displayReportView(currentValidationResults);
+                displayEditorView(currentValidationResults);
+
+                console.log('Validation results generated for both views');
+
+            } catch (error) {
+                console.error('Validation error:', error);
+                showValidationStatus('error', `Validation failed: ${error.message}`);
+                throw error;
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function showValidationStatus(type, message) {
+            validationStatus.className = `validation-status ${type} show`;
+            validationStatus.textContent = message;
+        }
+
+        // ============================================================================
+        // REPORT VIEW
+        // ============================================================================
+        
+        function displayReportView(results) {
+            const validation = results.validation;
+            const alerts = results.alerts || [];
+
+            // Determine score class
+            let scoreClass = 'score-low';
+            if (validation.completenessPercentage >= 80) {
+                scoreClass = 'score-high';
+            } else if (validation.completenessPercentage >= 50) {
+                scoreClass = 'score-medium';
+            }
+
+            // Build results HTML
+            let html = `
+                <div class="validation-summary">
+                    <div class="score-display">
+                        <div class="score-circle ${scoreClass}">
+                            ${validation.completenessPercentage}%
+                        </div>
+                        <div style="font-size: 18px; font-weight: 600; color: #333;">
+                            Document Completeness Score
+                        </div>
+                        <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                            Weighted Score: ${validation.weightedScore}%
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${validation.totalRules}</div>
+                            <div class="stat-label">Total Rules</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: #27ae60;">${validation.passedRules}</div>
+                            <div class="stat-label">Passed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: #e74c3c;">${validation.failedRules}</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: #e74c3c;">${validation.breakdown.critical.failed}</div>
+                            <div class="stat-label">Critical Issues</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: #f39c12;">${validation.breakdown.warning.failed}</div>
+                            <div class="stat-label">Warnings</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: #3498db;">${validation.breakdown.info.failed}</div>
+                            <div class="stat-label">Info</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (alerts.length > 0) {
+                html += `
+                    <div class="alerts-container">
+                        <h3 style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 15px;">
+                            Validation Alerts (${alerts.length})
+                        </h3>
+                        ${alerts.map(alert => createAlertHTML(alert)).join('')}
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div style="padding: 20px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724;">
+                        <strong>✓ No Issues Found</strong>
+                        <p style="margin-top: 8px; font-size: 14px;">
+                            Your document meets all validation requirements!
+                        </p>
+                    </div>
+                `;
+            }
+
+            resultsContent.innerHTML = html;
+            resultsSection.classList.add('show');
+
+            // Attach event listeners to alert buttons
+            attachAlertEventListeners();
+        }
+
+        function createAlertHTML(alert) {
+            const severityClass = `alert-${alert.severity}`;
+            const severityBadgeClass = `severity-${alert.severity}`;
+            
+            return `
+                <div class="alert-item ${severityClass}" data-alert-id="${alert.id}">
+                    <div class="alert-header">
+                        <h3 class="alert-title">${escapeHtml(alert.title)}</h3>
+                        <span class="alert-severity ${severityBadgeClass}">${alert.severity}</span>
+                    </div>
+                    <div class="alert-message">
+                        ${escapeHtml(alert.message)}
+                        ${alert.required ? '<strong>(Required)</strong>' : ''}
+                    </div>
+                    ${alert.remediationSteps && alert.remediationSteps.length > 0 ? `
+                        <div class="remediation-steps">
+                            <h4>Remediation Steps:</h4>
+                            <ol>
+                                ${alert.remediationSteps.map(step => `<li>${escapeHtml(step)}</li>`).join('')}
+                            </ol>
+                        </div>
+                    ` : ''}
+                    <div class="alert-actions">
+                        <button class="btn-acknowledge" data-action="acknowledge" data-alert-id="${alert.id}">
+                            Acknowledge
+                        </button>
+                        <button class="btn-resolve" data-action="resolve" data-alert-id="${alert.id}">
+                            Mark as Resolved
+                        </button>
+                        <button class="btn-dismiss" data-action="dismiss" data-alert-id="${alert.id}">
+                            Dismiss
+                        </button>
+                    </div>
+                    <div class="alert-status-badge" style="margin-top: 10px;">
+                        <span class="badge badge-open">Open</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function attachAlertEventListeners() {
+            document.querySelectorAll('[data-action="acknowledge"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const alertId = e.target.getAttribute('data-alert-id');
+                    handleAcknowledge(alertId);
+                });
+            });
+
+            document.querySelectorAll('[data-action="resolve"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const alertId = e.target.getAttribute('data-alert-id');
+                    handleResolve(alertId);
+                });
+            });
+
+            document.querySelectorAll('[data-action="dismiss"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const alertId = e.target.getAttribute('data-alert-id');
+                    handleDismiss(alertId);
+                });
+            });
+        }
+
+        function handleAcknowledge(alertId) {
+            const alertElement = document.querySelector(`[data-alert-id="${alertId}"]`);
+            if (alertElement) {
+                const statusBadge = alertElement.querySelector('.alert-status-badge');
+                if (statusBadge) {
+                    statusBadge.innerHTML = '<span class="badge badge-acknowledged">Acknowledged</span>';
+                }
+                
+                const acknowledgeBtn = alertElement.querySelector('[data-action="acknowledge"]');
+                if (acknowledgeBtn) {
+                    acknowledgeBtn.disabled = true;
+                    acknowledgeBtn.style.opacity = '0.5';
+                }
+            }
+        }
+
+        function handleResolve(alertId) {
+            const alertElement = document.querySelector(`[data-alert-id="${alertId}"]`);
+            if (alertElement) {
+                const statusBadge = alertElement.querySelector('.alert-status-badge');
+                if (statusBadge) {
+                    statusBadge.innerHTML = '<span class="badge badge-resolved">Resolved</span>';
+                }
+                
+                alertElement.classList.add('alert-resolved');
+                
+                alertElement.querySelectorAll('.btn-acknowledge, .btn-resolve, .btn-dismiss').forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                });
+            }
+        }
+
+        function handleDismiss(alertId) {
+            const alertElement = document.querySelector(`[data-alert-id="${alertId}"]`);
+            if (alertElement) {
+                alertElement.style.opacity = '0';
+                alertElement.style.transition = 'opacity 0.3s ease-out';
+                
+                setTimeout(() => {
+                    alertElement.remove();
+                }, 300);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================================================
+        // EDITOR VIEW
+        // ============================================================================
+        
+        function initializeEditor() {
+            editorContainer.contentEditable = 'true';
+            editorContainer.className = 'html-editor-content';
+            editorContainer.style.cssText = `
+                padding: 20px;
+                min-height: 500px;
+                border: 1px solid #e0e0e0;
+                border-radius: 0 0 8px 8px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+                color: #333;
+            `;
+            editorContainer.setAttribute('data-placeholder', 'Start typing your document here...');
+            
+            createToolbar();
+            
+            console.log('Editor initialized successfully');
+        }
+
+        function createToolbar() {
+            editorToolbar.className = 'html-editor-toolbar';
+            editorToolbar.style.cssText = `
+                background: #f8f9ff;
+                border: 1px solid #e0e0e0;
+                border-bottom: none;
+                border-radius: 8px 8px 0 0;
+                padding: 10px;
+                display: flex;
+                gap: 5px;
+                flex-wrap: wrap;
+                align-items: center;
+            `;
+
+            const buttons = [
+                { command: 'bold', label: 'B', title: 'Bold' },
+                { command: 'italic', label: 'I', title: 'Italic' },
+                { command: 'underline', label: 'U', title: 'Underline' },
+                { separator: true },
+                { command: 'formatBlock:h2', label: 'H2', title: 'Heading 2' },
+                { command: 'formatBlock:h3', label: 'H3', title: 'Heading 3' },
+                { command: 'formatBlock:p', label: 'P', title: 'Paragraph' },
+                { separator: true },
+                { command: 'insertUnorderedList', label: '• List', title: 'Bullet List' },
+            ];
+
+            buttons.forEach(btn => {
+                if (btn.separator) {
+                    const sep = document.createElement('span');
+                    sep.textContent = '|';
+                    sep.style.cssText = 'color: #ccc; margin: 0 5px;';
+                    editorToolbar.appendChild(sep);
+                } else {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.textContent = btn.label;
+                    button.title = btn.title;
+                    button.style.cssText = `
+                        padding: 6px 12px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        background: white;
+                        cursor: pointer;
+                        font-weight: 600;
+                        font-size: 13px;
+                        transition: all 0.2s;
+                    `;
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        executeCommand(btn.command);
+                        editorContainer.focus();
+                    });
+                    button.addEventListener('mouseenter', () => {
+                        button.style.background = '#f0f0f0';
+                    });
+                    button.addEventListener('mouseleave', () => {
+                        button.style.background = 'white';
+                    });
+                    editorToolbar.appendChild(button);
+                }
+            });
+
+            const sep = document.createElement('span');
+            sep.textContent = '|';
+            sep.style.cssText = 'color: #ccc; margin: 0 10px;';
+            editorToolbar.appendChild(sep);
+
+            const badge = document.createElement('span');
+            badge.id = 'validationBadge';
+            badge.style.cssText = `
+                padding: 4px 12px;
+                background: #667eea;
+                color: white;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+                display: none;
+            `;
+            badge.textContent = '0 issues';
+            editorToolbar.appendChild(badge);
+        }
+
+        function executeCommand(command) {
+            if (command.startsWith('formatBlock:')) {
+                const tag = command.split(':')[1];
+                document.execCommand('formatBlock', false, tag);
+            } else {
+                document.execCommand(command, false);
+            }
+        }
+
+        async function loadDocumentContent() {
+            try {
+                if (!documentFile) {
+                    console.log('No document file selected');
+                    return;
+                }
+
+                const fileContent = await readFileAsText(documentFile);
+                
+                if (documentFile.name.endsWith('.json')) {
+                    const documentData = JSON.parse(fileContent);
+                    
+                    if (documentData.summary_text) {
+                        const htmlContent = convertTextToHTML(documentData.summary_text);
+                        editorContainer.innerHTML = htmlContent;
+                        
+                        console.log('Document content loaded successfully');
+                    } else {
+                        console.warn('Document JSON does not contain summary_text field');
+                        editorContainer.innerHTML = '<p>Document loaded but no summary_text field found.</p>';
+                    }
+                } else {
+                    const htmlContent = convertTextToHTML(fileContent);
+                    editorContainer.innerHTML = htmlContent;
+                    console.log('Document content loaded as plain text');
+                }
+            } catch (error) {
+                console.error('Error loading document content:', error);
+                showValidationStatus('error', `Failed to load document: ${error.message}`);
+            }
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        function convertTextToHTML(text) {
+            const lines = text.split('\n');
+            let html = '';
+            
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                
+                if (!trimmed) {
+                    html += '<p><br></p>';
+                } else if (trimmed.match(/^2\.6\.2(\.\d+)*\s+[A-Z]/)) {
+                    html += `<h2>${trimmed}</h2>`;
+                } else if (trimmed.match(/^2\.6\.2(\.\d+)*-[a-z]\s+/)) {
+                    html += `<h3>${trimmed}</h3>`;
+                } else {
+                    html += `<p>${trimmed}</p>`;
+                }
+            });
+            
+            return html;
+        }
+
+        function displayEditorView(results) {
+            const issueCount = results.gaps.length;
+            const completeness = results.validation.completenessPercentage;
+            
+            showValidationStatus('success', 
+                `Validation complete: ${completeness}% complete, ${issueCount} issues found`
+            );
+
+            updateValidationBadge(issueCount);
+
+            // Add inline indicators with full functionality
+            updateValidationIndicators(results);
+
+            console.log('Editor view updated with validation results');
+        }
+
+        function updateValidationIndicators(results) {
+            // Remove existing validation indicators
+            const existingIndicators = editorContainer.querySelectorAll('.validation-inline-indicator, .validation-sidebar-panel, .validation-missing-sections-banner');
+            existingIndicators.forEach(indicator => indicator.remove());
+
+            if (!results.gaps || results.gaps.length === 0) {
+                return;
+            }
+
+            // Check if editor has content
+            const hasContent = editorContainer.textContent?.trim().length > 0;
+
+            if (!hasContent) {
+                // If no content, show a message to load document
+                const message = document.createElement('div');
+                message.style.cssText = `
+                    padding: 20px;
+                    text-align: center;
+                    color: #666;
+                    font-style: italic;
+                `;
+                message.textContent = 'No document content loaded. Upload a document or start typing...';
+                editorContainer.appendChild(message);
+                return;
+            }
+
+            // Add inline indicators to the existing content
+            addInlineIndicators(results.gaps);
+
+            // Create side panel for detailed information
+            createValidationSidePanel(results.gaps);
+        }
+
+        function addInlineIndicators(gaps) {
+            // Group gaps by section
+            const gapsBySection = groupGapsBySection(gaps);
+
+            // Find all headings in the document
+            const headings = editorContainer.querySelectorAll('h2, h3');
+
+            headings.forEach(heading => {
+                const headingText = heading.textContent || '';
+                
+                // Try to match heading with gaps
+                gapsBySection.forEach((sectionGaps, sectionId) => {
+                    if (headingText.includes(sectionId)) {
+                        // Add inline indicator badge next to this heading
+                        const badge = createInlineBadge(sectionGaps);
+                        heading.appendChild(badge);
+                    }
+                });
+            });
+
+            // For gaps without matching sections, add a summary at the top
+            const unmatchedGaps = gaps.filter(gap => {
+                const sectionId = extractSectionId(gap.ruleId);
+                const headings = Array.from(editorContainer.querySelectorAll('h2, h3'));
+                return !headings.some(h => (h.textContent || '').includes(sectionId));
+            });
+
+            if (unmatchedGaps.length > 0) {
+                const summaryBanner = createMissingSectionsBanner(unmatchedGaps);
+                editorContainer.insertBefore(summaryBanner, editorContainer.firstChild);
+            }
+        }
+
+        function createInlineBadge(gaps) {
+            const badge = document.createElement('span');
+            badge.className = 'validation-inline-indicator';
+            badge.setAttribute('contenteditable', 'false');
+            badge.style.cssText = `
+                display: inline-block;
+                margin-left: 10px;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 11px;
+                font-weight: 600;
+                cursor: pointer;
+                vertical-align: middle;
+            `;
+
+            // Count by severity
+            const criticalCount = gaps.filter(g => g.severity === 'critical').length;
+            const warningCount = gaps.filter(g => g.severity === 'warning').length;
+            const infoCount = gaps.filter(g => g.severity === 'info').length;
+
+            // Set badge color based on highest severity
+            if (criticalCount > 0) {
+                badge.style.background = '#fee2e2';
+                badge.style.color = '#991b1b';
+                badge.style.border = '1px solid #fca5a5';
+                badge.textContent = `🔴 ${gaps.length}`;
+            } else if (warningCount > 0) {
+                badge.style.background = '#fef3c7';
+                badge.style.color = '#92400e';
+                badge.style.border = '1px solid #fcd34d';
+                badge.textContent = `⚠️ ${gaps.length}`;
+            } else {
+                badge.style.background = '#dbeafe';
+                badge.style.color = '#1e40af';
+                badge.style.border = '1px solid #93c5fd';
+                badge.textContent = `ℹ️ ${gaps.length}`;
+            }
+
+            // Click to show details in side panel
+            badge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showGapDetailsInPanel(gaps);
+            });
+
+            return badge;
+        }
+
+        function createMissingSectionsBanner(gaps) {
+            const banner = document.createElement('div');
+            banner.className = 'validation-missing-sections-banner';
+            banner.setAttribute('contenteditable', 'false');
+            banner.style.cssText = `
+                margin: 0 0 20px 0;
+                padding: 15px;
+                background: #fef3c7;
+                border: 2px solid #fcd34d;
+                border-radius: 8px;
+                font-size: 14px;
+            `;
+
+            const title = document.createElement('div');
+            title.style.cssText = 'font-weight: 600; margin-bottom: 8px; color: #92400e;';
+            title.textContent = `⚠️ ${gaps.length} Missing Section${gaps.length !== 1 ? 's' : ''}`;
+            banner.appendChild(title);
+
+            const description = document.createElement('div');
+            description.style.cssText = 'font-size: 13px; color: #78350f; margin-bottom: 10px;';
+            description.textContent = 'The following required sections are missing from your document:';
+            banner.appendChild(description);
+
+            const list = document.createElement('ul');
+            list.style.cssText = 'margin: 0 0 10px 20px; font-size: 13px; color: #78350f;';
+            
+            // Show first 5 missing sections
+            gaps.slice(0, 5).forEach(gap => {
+                const li = document.createElement('li');
+                li.textContent = gap.ruleName || gap.ruleId;
+                list.appendChild(li);
+            });
+
+            if (gaps.length > 5) {
+                const li = document.createElement('li');
+                li.textContent = `... and ${gaps.length - 5} more`;
+                li.style.fontStyle = 'italic';
+                list.appendChild(li);
+            }
+
+            banner.appendChild(list);
+
+            const viewBtn = document.createElement('button');
+            viewBtn.textContent = 'View All Missing Sections';
+            viewBtn.style.cssText = `
+                padding: 6px 12px;
+                border: 1px solid #92400e;
+                border-radius: 4px;
+                background: white;
+                color: #92400e;
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                margin-right: 10px;
+            `;
+            viewBtn.addEventListener('click', () => {
+                showGapDetailsInPanel(gaps);
+            });
+            banner.appendChild(viewBtn);
+
+            const switchBtn = document.createElement('button');
+            switchBtn.textContent = 'View Report';
+            switchBtn.style.cssText = `
+                padding: 6px 12px;
+                border: 1px solid #92400e;
+                border-radius: 4px;
+                background: white;
+                color: #92400e;
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+            `;
+            switchBtn.addEventListener('click', () => {
+                switchViewMode('report');
+            });
+            banner.appendChild(switchBtn);
+
+            return banner;
+        }
+
+        function createValidationSidePanel(gaps) {
+            // Remove existing panel
+            const existingPanel = document.querySelector('.validation-sidebar-panel');
+            if (existingPanel) {
+                existingPanel.remove();
+            }
+
+            // Create side panel (initially hidden)
+            const panel = document.createElement('div');
+            panel.className = 'validation-sidebar-panel';
+            panel.style.cssText = `
+                position: fixed;
+                right: -400px;
+                top: 0;
+                width: 400px;
+                height: 100vh;
+                background: white;
+                box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+                transition: right 0.3s ease;
+                z-index: 1000;
+                overflow-y: auto;
+                padding: 20px;
+            `;
+
+            const header = document.createElement('div');
+            header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e5e7eb;';
+            
+            const title = document.createElement('h3');
+            title.textContent = 'Validation Issues';
+            title.style.cssText = 'margin: 0; font-size: 18px; color: #111827;';
+            header.appendChild(title);
+
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '✕';
+            closeBtn.style.cssText = `
+                border: none;
+                background: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #6b7280;
+                padding: 0;
+                width: 30px;
+                height: 30px;
+            `;
+            closeBtn.addEventListener('click', () => {
+                panel.style.right = '-400px';
+            });
+            header.appendChild(closeBtn);
+
+            panel.appendChild(header);
+
+            const content = document.createElement('div');
+            content.id = 'sidePanelContent';
+            panel.appendChild(content);
+
+            document.body.appendChild(panel);
+
+            // Store reference for later use
+            window.validationSidePanel = panel;
+        }
+
+        function showGapDetailsInPanel(gaps) {
+            const panel = window.validationSidePanel;
+            if (!panel) return;
+
+            const content = panel.querySelector('#sidePanelContent');
+            if (!content) return;
+
+            // Clear existing content
+            content.innerHTML = '';
+
+            // Add gap details
+            gaps.forEach(gap => {
+                const gapCard = document.createElement('div');
+                gapCard.style.cssText = `
+                    margin-bottom: 15px;
+                    padding: 12px;
+                    border-left: 4px solid ${getSeverityColor(gap.severity)};
+                    background: ${getSeverityBackground(gap.severity)};
+                    border-radius: 4px;
+                `;
+
+                const gapTitle = document.createElement('div');
+                gapTitle.style.cssText = 'font-weight: 600; margin-bottom: 5px; font-size: 14px; color: #111827;';
+                gapTitle.textContent = `${getSeverityIcon(gap.severity)} ${gap.ruleName || gap.ruleId}`;
+                gapCard.appendChild(gapTitle);
+
+                const gapDesc = document.createElement('div');
+                gapDesc.style.cssText = 'font-size: 13px; color: #374151; margin-bottom: 8px;';
+                gapDesc.textContent = gap.description;
+                gapCard.appendChild(gapDesc);
+
+                if (gap.remediationSteps && gap.remediationSteps.length > 0) {
+                    const stepsTitle = document.createElement('div');
+                    stepsTitle.style.cssText = 'font-weight: 600; font-size: 12px; color: #111827; margin-top: 8px; margin-bottom: 4px;';
+                    stepsTitle.textContent = 'How to fix:';
+                    gapCard.appendChild(stepsTitle);
+
+                    const stepsList = document.createElement('ul');
+                    stepsList.style.cssText = 'margin: 0 0 0 20px; font-size: 12px; color: #4b5563;';
+                    gap.remediationSteps.forEach(step => {
+                        const li = document.createElement('li');
+                        li.textContent = step;
+                        stepsList.appendChild(li);
+                    });
+                    gapCard.appendChild(stepsList);
+                }
+
+                content.appendChild(gapCard);
+            });
+
+            // Show panel
+            panel.style.right = '0';
+        }
+
+        function groupGapsBySection(gaps) {
+            const grouped = new Map();
+            
+            gaps.forEach(gap => {
+                const sectionId = extractSectionId(gap.ruleId);
+                if (!grouped.has(sectionId)) {
+                    grouped.set(sectionId, []);
+                }
+                grouped.get(sectionId).push(gap);
+            });
+
+            return grouped;
+        }
+
+        function extractSectionId(ruleId) {
+            // Extract section ID like "2.6.2.1" from "2.6.2.1 - a"
+            const match = ruleId.match(/^(\d+(?:\.\d+)*)/);
+            return match ? match[1] : ruleId;
+        }
+
+        function getSeverityColor(severity) {
+            const colors = {
+                critical: '#e74c3c',
+                warning: '#f39c12',
+                info: '#3498db'
+            };
+            return colors[severity] || '#3498db';
+        }
+
+        function getSeverityBackground(severity) {
+            const backgrounds = {
+                critical: 'rgba(231, 76, 60, 0.1)',
+                warning: 'rgba(243, 156, 18, 0.1)',
+                info: 'rgba(52, 152, 219, 0.1)'
+            };
+            return backgrounds[severity] || 'rgba(52, 152, 219, 0.1)';
+        }
+
+        function getSeverityIcon(severity) {
+            const icons = {
+                critical: '🔴',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            return icons[severity] || 'ℹ️';
+        }
+
+        function updateValidationBadge(count) {
+            const badge = document.getElementById('validationBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = `${count} issue${count !== 1 ? 's' : ''}`;
+                    badge.style.display = 'inline-block';
+                    badge.style.background = '#e74c3c';
+                } else {
+                    badge.textContent = '✓ No issues';
+                    badge.style.background = '#27ae60';
+                    badge.style.display = 'inline-block';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

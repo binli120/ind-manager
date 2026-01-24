@@ -165,6 +165,12 @@ This implementation plan creates a simplified proof-of-concept for document comp
     - **Property 12: Outline View Completeness**
     - **Validates: Requirements 4.5**
 
+- [x] 7. consolidate the report and in-editor experience
+  - [x] now consolidate both UX in the same gap-analysis.html, offer 2 button to generate the 2 different view. The report review that list out the alerts will be helpful when the document is relatively empty, while the editor view with inline indicator will be more effective for later-stage editing. Make sure you still display indicators in the editor view
+  - [x] add a feature that when user clicks validate button, you actually generate results for both views. so when user switch between report/edit view, they will see results immediately, and they don't need to to reclick validate 
+  - [ ] generate a .md report about if we really need TipTap
+  - [ ] generate a .md report about how to finalize the branch for production deployment: cleanup the intermediate docs/tests, only maintain the most important readme and integ tests, and also how to refactor the code/files under folder gap_analysis_scoping into where they belongs
+
 - [ ] 7. Final checkpoint - Ensure complete system works
   - Ensure all tests pass, ask the user if questions arise.
 
