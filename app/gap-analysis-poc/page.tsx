@@ -78,7 +78,7 @@ export default function GapAnalysisPOC() {
       const templateBase64 = await fileToBase64(templateFile);
       const documentBase64 = await fileToBase64(documentFile);
 
-      const response = await fetch('/api/validation', {
+      const response = await fetch('/api/gap-analysis/validation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -8,7 +8,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 describe('API Validation Integration', () => {
-  const API_URL = 'http://localhost:3000/api/validation';
+  const API_URL = 'http://localhost:3000/api/gap-analysis/validation';
   let templateData: any;
   let documentData: any;
 

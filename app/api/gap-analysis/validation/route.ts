@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TemplateParser } from './validation/template-parser';
-import { DocumentAnalyzer } from './validation/document-analyzer';
-import { RuleEngine } from './validation/rule-engine';
-import { AlertGenerator } from './validation/alert-generator';
+import { TemplateParser } from '@/lib/gap-analysis/validation/template-parser';
+import { DocumentAnalyzer } from '@/lib/gap-analysis/validation/document-analyzer';
+import { RuleEngine } from '@/lib/gap-analysis/validation/rule-engine';
+import { AlertGenerator } from '@/lib/gap-analysis/validation/alert-generator';
 
 /**
- * POST /api/validation
+ * POST /api/gap-analysis/validation
  * Validates a document against a template
  * 
  * Expected request body:
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/validation
+ * GET /api/gap-analysis/validation
  * Health check endpoint
  */
 export async function GET() {

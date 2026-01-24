@@ -8,7 +8,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 describe('HTML Editor API Integration', () => {
-  const API_URL = 'http://localhost:3000/api/validation';
+  const API_URL = 'http://localhost:3000/api/gap-analysis/validation';
   let templateData: any;
   let documentData: any;
 
@@ -235,7 +235,7 @@ describe('HTML Editor API Integration', () => {
 
     it('should handle network errors gracefully', async () => {
       // Test with invalid URL to simulate network error
-      const invalidUrl = 'http://localhost:9999/api/validation';
+      const invalidUrl = 'http://localhost:9999/api/gap-analysis/validation';
       
       try {
         await fetch(invalidUrl, {

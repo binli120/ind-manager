@@ -37,8 +37,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const protectedRoutes = ["/protected", "/dashboard", "/profile"]
-  const publicRoutes = ["/gap-analysis-poc", "/gap-analysis-html", "/api/validation", "/api/gap-analysis"]
+  const protectedRoutes = ["/protected", "/dashboard", "/profile", "/gap-analysis"]
+  const publicRoutes = ["/gap-analysis-html", "/api/gap-analysis"]
   const isProtectedRoute = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
   const isPublicRoute = publicRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
 

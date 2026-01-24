@@ -168,17 +168,147 @@ This implementation plan creates a simplified proof-of-concept for document comp
 - [x] 7. consolidate the report and in-editor experience
   - [x] now consolidate both UX in the same gap-analysis.html, offer 2 button to generate the 2 different view. The report review that list out the alerts will be helpful when the document is relatively empty, while the editor view with inline indicator will be more effective for later-stage editing. Make sure you still display indicators in the editor view
   - [x] add a feature that when user clicks validate button, you actually generate results for both views. so when user switch between report/edit view, they will see results immediately, and they don't need to to reclick validate 
-  - [ ] generate a .md report about if we really need TipTap
-  - [ ] generate a .md report about how to finalize the branch for production deployment: cleanup the intermediate docs/tests, only maintain the most important readme and integ tests, and also how to refactor the code/files under folder gap_analysis_scoping into where they belongs
+  - [x] generate a .md report about if we really need TipTap
+  - [x] generate a .md report about how to finalize the branch for production deployment: cleanup the intermediate docs/tests, only maintain the most important readme and integ tests, and also how to refactor the code/files under folder gap_analysis_scoping into where they belongs
+  - [x] update gap_analysis_scoping\docs\7-production-deployment-guide.md to reflect the latest code changes and add it as a new series of tasks into .kiro\specs\gap-analysis-initial-poc\tasks.md
+
+- [x] 8. Production Deployment Preparation
+  - [x] 8.1 Archive intermediate documentation
+    - Create `gap_analysis_scoping/docs/archive/` directory
+    - Move task-specific completion reports to archive (2.1, 2.2, 3.2, 4, 5.1, 6.5, 6.7, 6.8)
+    - Move bug fix documentation to archive (fix-*.md)
+    - Move development docs to archive (structure-refactoring-summary.md, in-editor-validation-design.md, template-structure.md, 2.2-summary.md)
+    - Keep essential docs: README.md, user-guide.md, validation-readme.md, 5.4-e2e-testing-runbook.md, 7-consolidated-view-complete.md, 7.1-dual-view-validation-complete.md, 7-tiptap-evaluation.md, 7-production-deployment-guide.md
+    - _Requirements: Production readiness_
+  
+  - [x] 8.2 Archive unit tests and utility scripts
+    - Create `gap_analysis_scoping/tests/archive/` directory
+    - Move component unit tests to archive (acknowledgment-manager.test.ts, alert-generator.test.ts, alert-manager.test.ts, indicator-grouping.test.ts, outline-view.test.ts, rule-engine.test.ts, rule-engine-integration.test.ts, template-parser.test.ts, in-editor-validation-pbt.test.ts)
+    - Move utility scripts to archive (convert-template-to-json.ts, template-analysis.ts, test-api-validation.ts, test-document-analyzer.ts, test-excel-parsing.ts, test-rule-engine-integration.ts)
+    - Keep essential tests: api-validation-integration.test.ts, frontend-backend-integration.test.ts, html-editor-api-integration.test.ts, dual-view-validation.test.ts, load-test-files-api.test.ts, manual/ directory
+    - _Requirements: Production readiness_
+  
+  - [x] 8.3 Archive legacy HTML files
+    - Create `public/archive/` directory
+    - Move legacy files to archive: gap-analysis-poc.html, gap-analysis-editor.html
+    - Create `gap_analysis_scoping/features/archive/` directory
+    - Move legacy feature file to archive: gap-analysis-poc.html
+    - Keep current file: gap-analysis.html (consolidated dual-view interface)
+    - _Requirements: Production readiness_
+  
+  - [x] 8.4 Reorganize validation code into proper app structure
+    - Move `gap_analysis_scoping/features/validation-api-route.ts` to `app/api/gap-analysis/validation/route.ts`
+    - Update import paths in the API route to use `@/lib/gap-analysis/validation/*`
+    - Verify API route follows Next.js App Router conventions
+    - Test API endpoint responds correctly after move
+    - _Requirements: Production readiness_
+  
+  - [x] 8.5 Create React component wrapper for gap analysis
+    - Create `components/gap-analysis/gap-analysis-view.tsx` component
+    - Implement iframe wrapper for gap-analysis.html
+    - Add proper TypeScript types and props
+    - Test component renders correctly
+    - _Requirements: Production readiness_
+
+- [ ] 9. Remove authentication backdoor for gap-analysis routes
+  - [ ] 9.1 Remove public routes from middleware
+    - Remove `/gap-analysis-poc` from publicRoutes in `lib/supabase/middleware.ts`
+    - Remove `/gap-analysis-html` from publicRoutes in `lib/supabase/middleware.ts`
+    - Verify middleware properly protects gap analysis routes
+    - _Requirements: Security_
+  
+  - [ ] 9.2 Remove public routes from auth guard
+    - Remove `/gap-analysis-poc` from public pages in `components/auth/auth-guard.tsx`
+    - Remove `/gap-analysis-html` from public pages in `components/auth/auth-guard.tsx`
+    - Verify auth guard properly protects gap analysis routes
+    - _Requirements: Security_
+  
+  - [ ] 9.3 Test authentication protection
+    - Test unauthenticated access redirects to login
+    - Test authenticated access works correctly
+    - Test session expiration handling
+    - Verify no backdoor routes remain accessible
+    - _Requirements: Security_
+  
+  - [x] 8.6 Create authenticated gap analysis page route
+    - Create `app/gap-analysis/page.tsx` with server-side authentication
+    - Import and use GapAnalysisView component
+    - Add authentication check using Supabase
+    - Redirect unauthenticated users to login
+    - Test authentication flow works correctly
+    - _Requirements: Production readiness_
+
+
+- [ ] 10. Production deployment testing and validation
+  - [ ] 10.1 Run all integration tests
+    - Run api-validation-integration.test.ts
+    - Run frontend-backend-integration.test.ts
+    - Run html-editor-api-integration.test.ts
+    - Run dual-view-validation.test.ts
+    - Run load-test-files-api.test.ts
+    - Verify all tests pass
+    - _Requirements: Quality assurance_
+  
+  - [ ] 10.2 Execute manual testing checklist
+    - Test file upload (Excel and JSON templates)
+    - Test document upload (JSON format)
+    - Test load test files button
+    - Test validation execution (< 5 seconds)
+    - Test Report View display and functionality
+    - Test Editor View display and inline indicators
+    - Test view switching (instant, no re-validation)
+    - Test alert actions (acknowledge, resolve, dismiss)
+    - Test authentication and authorization
+    - Test error handling scenarios
+    - _Requirements: Quality assurance_
+  
+  - [ ] 10.3 Performance and browser compatibility testing
+    - Test page load time (< 2 seconds)
+    - Test validation execution time (< 5 seconds)
+    - Test view switching time (< 100ms)
+    - Test memory usage (no leaks over 30 minutes)
+    - Test on Chrome, Firefox, Safari, Edge
+    - Test on mobile browsers (iOS Safari, Android Chrome)
+    - _Requirements: Quality assurance_
+  
+  - [ ] 10.4 Update navigation and documentation
+    - Add gap analysis link to main navigation/sidebar
+    - Update main README with gap analysis feature description
+    - Update user-guide.md with latest features
+    - Create deployment runbook if needed
+    - _Requirements: Documentation_
+
+- [ ] 11. Build and deploy to production
+  - [ ] 11.1 Verify environment variables
+    - Check NEXT_PUBLIC_SUPABASE_URL is set
+    - Check NEXT_PUBLIC_SUPABASE_ANON_KEY is set
+    - Verify all required environment variables are configured
+    - _Requirements: Deployment_
+  
+  - [ ] 11.2 Build and test production build
+    - Run `npm run build`
+    - Fix any build errors or warnings
+    - Run `npm run start` to test production build locally
+    - Verify gap analysis works in production mode
+    - _Requirements: Deployment_
+  
+  - [ ] 11.3 Deploy to production
+    - Deploy to Vercel (or hosting platform)
+    - Verify deployment succeeds
+    - Test production URL
+    - Monitor for errors in production logs
+    - _Requirements: Deployment_
+  
+  - [ ] 11.4 Post-deployment verification
+    - Access `/gap-analysis` route in production
+    - Verify authentication works
+    - Test validation with sample files
+    - Check API endpoints respond correctly
+    - Verify error handling
+    - Test on multiple browsers and devices
+    - _Requirements: Deployment_
 
 - [ ] 7. Final checkpoint - Ensure complete system works
-  - Ensure all tests pass, ask the user if questions arise.
-
-- [ ] 8. Remove authentication backdoor for gap-analysis-poc routes
-  - Remove `/gap-analysis-poc` and `/gap-analysis-html` from public routes in `lib/supabase/middleware.ts`
-  - Remove `/gap-analysis-poc` and `/gap-analysis-html` from public pages in `components/auth/auth-guard.tsx`
-  - Add proper authentication to the gap analysis POC pages
-  - Or move the POC to a proper authenticated section of the application
 
 - [ ] 9. Integrate in-editor validation with Tiptap (follow-up)
   - [ ] 9.1 Create Tiptap validation extension

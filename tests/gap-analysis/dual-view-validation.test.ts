@@ -207,7 +207,7 @@ describe('Dual View Validation Results', () => {
     global.fetch = errorFetch;
 
     try {
-      await fetch('/api/validation', { method: 'POST', body: '{}' });
+      await fetch('/api/gap-analysis/validation', { method: 'POST', body: '{}' });
       expect(true).toBe(false); // Should not reach here
     } catch (error: any) {
       expect(error.message).toBe('Validation failed');
