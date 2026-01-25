@@ -311,28 +311,6 @@ This implementation plan creates a simplified proof-of-concept for document comp
     - Test on multiple browsers and devices
     - _Requirements: Deployment_
 
-- [ ] 7. Final checkpoint - Ensure complete system works
-
-- [ ] 9. Integrate in-editor validation with Tiptap (follow-up)
-  - [ ] 9.1 Create Tiptap validation extension
-    - Create ValidationIndicatorExtension for Tiptap
-    - Implement decoration management (widget, inline, node decorations)
-    - Add ProseMirror plugin for validation state management
-    - _Requirements: 4.1, 4.3_
-  
-  - [ ] 9.2 Migrate HTML validation to Tiptap decorations
-    - Convert HTML spans to Tiptap decorations
-    - Implement widget decorations for placeholder hints
-    - Implement inline decorations for format errors
-    - Implement node decorations for section-level issues
-    - _Requirements: 4.2, 4.3, 4.7_
-  
-  - [ ] 9.3 Integrate with existing Tiptap editor
-    - Add validation extension to components/section-editor/tiptap-editor.tsx
-    - Connect to validation API
-    - Add validation toolbar button
-    - Test with existing editor features (comments, smart assistant)
-    - _Requirements: 4.1, 4.6_
 
 ## Notes
 
