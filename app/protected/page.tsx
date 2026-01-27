@@ -1,16 +1,16 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
 export default async function ProtectedPage() {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
-  const { data, error } = await supabase.auth.getUser()
+  const { data, error } = await supabase.auth.getUser();
   if (error || !data?.user) {
-    redirect("/auth/login")
+    redirect('/auth/login');
   }
 
-  redirect("/workspace/ind_editor")
+  redirect('/workspace/ind_editor');
 }

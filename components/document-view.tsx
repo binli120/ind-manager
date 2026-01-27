@@ -25,7 +25,10 @@ import {
   Users,
 } from 'lucide-react';
 
-interface DocumentViewProps {
+// src/pages/DocumentView.tsx (or wherever you declare the props)
+
+export interface DocumentViewProps {
+  /** Callback fired when the user clicks one of the “view” action cards. */
   onViewChange?: (
     view:
       | 'workspace'
@@ -39,6 +42,18 @@ interface DocumentViewProps {
       | 'tenants'
       | 'users'
   ) => void;
+
+  /** Show the loading skeleton instead of the real UI. */
+  loading?: boolean;
+
+  /**
+   * When `true` the component will render the “No document selected” panel.
+   *
+   * In practice you can set this to the inverse of
+   * `!!state.documents.currentDocument` – but having it as a prop makes
+   * Storybook controls and tests easier.
+   */
+  noDocument?: boolean;
 }
 
 export function DocumentView({ onViewChange }: DocumentViewProps) {
@@ -230,12 +245,13 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
                   {/* Document Content Area */}
                   <div className='flex-1'>
                     <div className='bg-card rounded-lg p-6 border border-border'>
-	                      <div className='flex items-center gap-2 text-sm text-muted mb-4'>
-	                        <Play className='w-4 h-4' />
-	                        <span>
-	                          Click &quot;Start Editing&quot; to begin editing this section
-	                        </span>
-	                      </div>
+                      <div className='flex items-center gap-2 text-sm text-muted mb-4'>
+                        <Play className='w-4 h-4' />
+                        <span>
+                          Click &quot;Start Editing&quot; to begin editing this
+                          section
+                        </span>
+                      </div>
 
                       <div className='space-y-6'>
                         <div>

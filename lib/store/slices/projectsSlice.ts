@@ -1,6 +1,7 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
+
 import { createBrowserClient, type Database } from "@/lib/supabase";
 import {
   createAsyncThunk,
@@ -272,13 +273,14 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
         throw new Error("user_project returned no data");
       }
 
-      const isMembershipRow = (row: unknown): row is { project_id: string | null } =>
+      const isMembershipRow = (
+        row: unknown,
+      ): row is { project_id: string | null } =>
         typeof row === "object" && row !== null && "project_id" in row;
 
-      const projectIds =
-        userProjects
-          ?.map((row) => (isMembershipRow(row) ? row.project_id : null))
-          .filter((id): id is string => Boolean(id)) ?? [];
+      const projectIds = userProjects
+        ?.map((row) => (isMembershipRow(row) ? row.project_id : null))
+        .filter((id): id is string => Boolean(id)) ?? [];
 
       console.info(
         "[projects] membership rows",

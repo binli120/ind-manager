@@ -5,6 +5,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ROUTES } from '@/lib/common/routes';
 import { cn } from '@/lib/utils';
 import {
   AlertTriangle,
@@ -23,31 +24,40 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+import { ComponentType } from 'react';
 
 interface SidebarProps {
   isOpen: boolean;
+  view: string;
   onToggle: () => void;
+  onViewChange: (view: string) => void;
 }
+
+type MenuItem = {
+  icon: ComponentType<Record<string, unknown>>;
+  label: string;
+  path: (typeof ROUTES)[keyof typeof ROUTES];
+};
 
 export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const navigationItems = [
+  const navigationItems: MenuItem[] = [
     {
       icon: FileText,
       label: 'Document Authoring',
-      path: '/workspace/ind_editor',
+      path: ROUTES.workspace.indEditorPage,
     },
     {
       icon: MessageSquare,
       label: 'Review Center',
-      path: '/workspace/document_review',
+      path: ROUTES.workspace.documentReviewPage,
     },
     {
       icon: AlertTriangle,
       label: 'Gap Analysis',
-      path: '/workspace/gap_analysis',
+      path: ROUTES.workspace.GapAnalysisPage,
     },
   ];
 
@@ -55,12 +65,12 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     {
       icon: FileText,
       label: 'Projects',
-      path: '/projects',
+      path: ROUTES.project,
     },
     {
       icon: Calendar,
       label: 'Calendar',
-      path: '/calendar',
+      path: ROUTES.Calendar,
     },
   ];
 
@@ -68,17 +78,17 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     {
       icon: Upload,
       label: 'IND Submission',
-      path: '/submission/IND',
+      path: ROUTES.Submission.IND,
     },
     {
       icon: CheckSquare,
       label: 'Acknowledge',
-      path: '/submission/acknowledge',
+      path: ROUTES.Submission.IND,
     },
     {
       icon: FileText,
       label: 'Post Submission',
-      path: '/submission/post',
+      path: ROUTES.Submission.post,
     },
   ];
 
@@ -87,13 +97,13 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       title: 'Tenants',
       icon: Building2Icon,
       label: 'tenants',
-      path: '/admin/tenants',
+      path: ROUTES.admin.tenant,
     },
     {
       title: 'Users',
       icon: UserIcon,
       label: 'users',
-      path: '/admin/users',
+      path: ROUTES.admin.users,
     },
   ];
 
@@ -109,7 +119,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     {
       icon: Palette,
       label: 'Design System',
-      path: '/design/system',
+      path: ROUTES.design.designPage,
     },
   ];
 
@@ -181,7 +191,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               <Button
                 key={item.label}
                 variant={item.path === pathname ? 'secondary' : 'ghost'}
-                onClick={() => router.push(item.path)}
+                onClick={() => router.push(item.path.toString())}
                 className={cn(
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',

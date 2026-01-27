@@ -1,42 +1,45 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import { useLogger } from '@/hooks/useLogger';
 
-const logger = useLogger('env-validation');
+import { useLogger } from "@/hooks/useLogger";
+
+const logger = useLogger("env-validation");
 
 // Define all required environment variables
 const REQUIRED_ENV_VARS = {
   // Supabase
-  NEXT_PUBLIC_SUPABASE_URL: 'Supabase project URL',
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'Supabase anonymous key',
+  NEXT_PUBLIC_SUPABASE_URL: "Supabase project URL",
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "Supabase anonymous key",
 
   // TipTap (optional for some features)
-  TIPTAP_CONVERSION_APP_ID: 'TipTap conversion app ID (optional)',
-  TIPTAP_CONVERSION_SECRET: 'TipTap conversion secret (optional)',
-  CLOUDCONVERT_API_KEY: 'CloudConvert API key (optional)',
-  TIPTAP_DOCUMENT_SERVER_SECRET_KEY: 'TipTap document server secret (optional)',
+  TIPTAP_CONVERSION_APP_ID: "TipTap conversion app ID (optional)",
+  TIPTAP_CONVERSION_SECRET: "TipTap conversion secret (optional)",
+  CLOUDCONVERT_API_KEY: "CloudConvert API key (optional)",
+  TIPTAP_DOCUMENT_SERVER_SECRET_KEY: "TipTap document server secret (optional)",
 
   // OpenAI (optional)
-  OPENAI_API_KEY: 'OpenAI API key (optional)',
+  OPENAI_API_KEY: "OpenAI API key (optional)",
 
   // PDF analysis API (optional)
-  NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL: 'PDF analysis API base URL (optional)',
+  NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL: "PDF analysis API base URL (optional)",
 
   // Session timeout (optional)
-  NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES: 'Session idle timeout in minutes (optional)',
-  NEXT_PUBLIC_SESSION_WARNING_SECONDS: 'Session warning countdown in seconds (optional)',
+  NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES:
+    "Session idle timeout in minutes (optional)",
+  NEXT_PUBLIC_SESSION_WARNING_SECONDS:
+    "Session warning countdown in seconds (optional)",
 } as const;
 
 const OPTIONAL_ENV_VARS = [
-  'TIPTAP_CONVERSION_APP_ID',
-  'TIPTAP_CONVERSION_SECRET',
-  'CLOUDCONVERT_API_KEY',
-  'TIPTAP_DOCUMENT_SERVER_SECRET_KEY',
-  'OPENAI_API_KEY',
-  'NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL',
-  'NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES',
-  'NEXT_PUBLIC_SESSION_WARNING_SECONDS',
+  "TIPTAP_CONVERSION_APP_ID",
+  "TIPTAP_CONVERSION_SECRET",
+  "CLOUDCONVERT_API_KEY",
+  "TIPTAP_DOCUMENT_SERVER_SECRET_KEY",
+  "OPENAI_API_KEY",
+  "NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL",
+  "NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES",
+  "NEXT_PUBLIC_SESSION_WARNING_SECONDS",
 ];
 
 export interface EnvValidationResult {
@@ -58,7 +61,7 @@ export function validateEnvironment(): EnvValidationResult {
   for (const [envVar, description] of Object.entries(REQUIRED_ENV_VARS)) {
     const value = process.env[envVar];
 
-    if (!value || value.trim() === '') {
+    if (!value || value.trim() === "") {
       if (OPTIONAL_ENV_VARS.includes(envVar)) {
         missingOptional.push(`${envVar}: ${description}`);
       } else {
@@ -67,20 +70,20 @@ export function validateEnvironment(): EnvValidationResult {
       }
     } else {
       // Validate format for specific variables
-      if (envVar === 'NEXT_PUBLIC_SUPABASE_URL') {
+      if (envVar === "NEXT_PUBLIC_SUPABASE_URL") {
         try {
           new URL(value);
         } catch {
           errors.push(
-            `Invalid NEXT_PUBLIC_SUPABASE_URL format: must be a valid URL`
+            `Invalid NEXT_PUBLIC_SUPABASE_URL format: must be a valid URL`,
           );
         }
       }
 
-      if (envVar === 'NEXT_PUBLIC_SUPABASE_ANON_KEY') {
+      if (envVar === "NEXT_PUBLIC_SUPABASE_ANON_KEY") {
         if (value.length < 100) {
           errors.push(
-            `Invalid NEXT_PUBLIC_SUPABASE_ANON_KEY: appears to be too short`
+            `Invalid NEXT_PUBLIC_SUPABASE_ANON_KEY: appears to be too short`,
           );
         }
       }
@@ -91,14 +94,14 @@ export function validateEnvironment(): EnvValidationResult {
 
   // Log results
   if (!isValid) {
-    logger.error('Environment validation failed:', {
+    logger.error("Environment validation failed:", {
       missingRequired,
       errors,
     });
   } else {
-    logger.info('Environment validation passed');
+    logger.info("Environment validation passed");
     if (missingOptional.length > 0) {
-      logger.warn('Optional environment variables missing:', missingOptional);
+      logger.warn("Optional environment variables missing:", missingOptional);
     }
   }
 
@@ -118,16 +121,16 @@ export function validateEnvironmentOrThrow(): void {
 
   if (!result.isValid) {
     const errorMessage = [
-      'Environment validation failed!',
-      '',
-      'Missing required environment variables:',
+      "Environment validation failed!",
+      "",
+      "Missing required environment variables:",
       ...result.missingRequired.map((item) => `  - ${item}`),
-      '',
-      'Errors:',
+      "",
+      "Errors:",
       ...result.errors.map((error) => `  - ${error}`),
-      '',
-      'Please check your .env.local file and ensure all required variables are set.',
-    ].join('\n');
+      "",
+      "Please check your .env.local file and ensure all required variables are set.",
+    ].join("\n");
 
     throw new Error(errorMessage);
   }
@@ -137,7 +140,7 @@ export function validateEnvironmentOrThrow(): void {
  * Get environment info for debugging
  */
 export function getEnvironmentInfo() {
-  const nodeEnv = process.env.NODE_ENV || 'development';
+  const nodeEnv = process.env.NODE_ENV || "development";
   const result = validateEnvironment();
 
   return {
