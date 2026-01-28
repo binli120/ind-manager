@@ -27,8 +27,6 @@ import {
   fetchProjectDetails,
 } from '@/lib/store/slices/projectsSlice';
 
-import type { ViewType } from '@/lib/store/slices/uiSlice';
-
 import { useTenant } from "@/hooks/useTenant";
 import { fetchUserTenants } from "@/lib/store/slices/tenantsSlice";
 
@@ -41,8 +39,7 @@ import { NotificationsPanel } from "@/components/notifications/NotificationsPane
 interface HeaderProps {
   onToggleSidebar: () => void;
   onToggleComments: () => void;
-  currentView?:
-    | 'workspace'
+  currentView?: 'workspace'
     | 'projects'
     | 'calendar'
     | 'submission'

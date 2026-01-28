@@ -792,40 +792,6 @@ const dbToClientProject = (
   };
 };
 
-const mapProjectRow = (
-  project: Database["public"]["Tables"]["projects"]["Row"],
-  settings?: Database["public"]["Tables"]["project_settings"]["Row"],
-): Project => {
-  return {
-    id: project.id,
-    title: project.ind_title,
-    code: project.ind_number ?? "",
-    description: project.description ?? "",
-    status: (project.status ?? "draft") as Project["status"],
-    priority: (project.priority ?? "low") as Project["priority"],
-    progress: project.progress ?? 0,
-    sponsor: project.sponsor_name ?? "",
-    drug: project.drug_name ?? "",
-    targetDate: project.target_ind_submission_date ?? "",
-    teamId: project.team_id,
-    ownerId: project.project_creator_id ?? "",
-    teamSize: 0,
-    teamMembers: [],
-    createdAt: project.created_at ?? "",
-    updatedAt: project.updated_at ?? "",
-    settings: project.settings || settings ||
-      { isPublic: false, allowCollaboration: true },
-    metadata: project.metadata || {},
-    targetIndSubmissionDate: project.target_ind_submission_date ?? "",
-    preIndMeetingDate: project.pre_ind_meeting_date ?? null,
-    projectStartDate: project.project_start_date ?? "",
-    fdaContactEmail: project.fda_contact_email ?? null,
-    sponsorContactEmail: project.sponsor_contact_email ?? "",
-    additionalNotes: project.additional_notes ?? null,
-    productType: project.product_type ?? "",
-  };
-};
-
 export const {
   setCurrentProject,
   setSelectedProjectId,

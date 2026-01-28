@@ -37,7 +37,6 @@ export function NotificationsPanel({ userId, className }: Props) {
     error,
     isOpen,
     close,
-    toggle,
     markOne,
     markAll,
   } = useNotifications(userId);
