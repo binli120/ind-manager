@@ -31,10 +31,16 @@ export type ProjectPriority =
 
 export const PRODUCT_TYPES = [
   { value: "small-molecule", label: "Small Molecule" },
-  { value: "biologic", label: "Biologic" },
-  { value: "biosimilar", label: "Biosimilar" },
-  { value: "gene-therapy", label: "Gene Therapy" },
-  { value: "cell-therapy", label: "Cell Therapy" },
+  { value: "mab", label: "mAb" },
+  { value: "bispecific", label: "Bispecific" },
+  { value: "adc", label: "ADC" },
+  { value: "peptide", label: "Peptide" },
+  { value: "oligo", label: "Oligo" },
+  { value: "aav-gene-therapy", label: "AAV Gene Therapy" },
+  { value: "lnp-gene-therapy", label: "LNP Gene Therapy" },
+  { value: "autologous-cell-therapy", label: "Autologous Cell Therapy" },
+  { value: "allogeneic-cell-therapy", label: "Allogeneic Cell Therapy" },
+  { value: "vaccine", label: "Vaccine" },
   { value: "other", label: "Other" },
 ] as const;
 
@@ -43,7 +49,7 @@ export const PROJECT_CREATION_STEPS = [
     id: 1,
     title: "Basic Information",
     description: "Project details and drug information",
-    requiredFields: ["ind_title", "drug_name", "product_type"],
+    requiredFields: ["ind_title", "ind_number", "drug_name", "product_type"],
   },
   {
     id: 2,
@@ -121,13 +127,18 @@ export const validateProjectStep = (
 // Default project form data
 export const getDefaultProjectData = () =>
   ({
-    team_id: "demo-team",
     ind_title: "",
+    ind_number: "",
     drug_name: "",
     product_type: "",
+    description: "",
+    priority: "medium",
+    status: "draft",
+    progress: 0,
     sponsor_name: "",
     sponsor_contact_email: "",
     fda_contact_email: "",
+    project_start_date: "",
     target_ind_submission_date: "",
     pre_ind_meeting_date: "",
     additional_notes: "",

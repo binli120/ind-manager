@@ -5,12 +5,7 @@
 
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
-import { useAppDispatch, useAppSelector } from '@/lib/store';
-import {
-  setCommentsPanelOpen,
-  setSidebarOpen,
-  logoutUser,
-} from '@/lib/store/slices';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -19,10 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useEffect, useMemo, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '@/lib/store';
+import { setCommentsPanelOpen, setSidebarOpen } from '@/lib/store/slices/uiSlice';
 import { usePathname } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { authServices } from '@/app/api/auth/auth-services';
+import type { UserPrivilege } from '@/components/ui/users/users-page';
 
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -53,6 +50,20 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     setShowNoProjectDialog(shouldLockWorkspace);
   }, [shouldLockWorkspace]);
 
+  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<UserPrivilege | ''>('');
+
+  useEffect(() => {
+    async function getUserPrivilege() {
+      const authData = await authServices.getUser();
+      const authUser = authData.data?.user;
+      if (authUser) {
+        const privilege = (authUser?.user_metadata?.privilege as UserPrivilege) ?? 'user';
+        setCurrentUserPrivilege(privilege);
+      }
+    }
+    getUserPrivilege();
+  }, []);
+
   const handleToggleSidebar = () => {
     dispatch(setSidebarOpen(!sidebarOpen));
   };
@@ -61,30 +72,33 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     dispatch(setCommentsPanelOpen(!commentsPanelOpen));
   };
 
-  const handleLogout = () => {
-    dispatch(logoutUser());
+  const handleLogout = async () => {
+    await authServices.signOut();
+    window.location.href = '/login';
   };
 
   const handleNotify = () => {
-    // Placeholder hook for future notification implementation
-    console.info('Notify project manager placeholder');
-    dispatch(logoutUser());
+    const subject = encodeURIComponent('Project assignment request');
+    const body = encodeURIComponent(
+      `Hi team,\n\nI do not have any project assigned in the IND workspace.\nPlease assign one to my account (${user?.email ?? 'user email unknown'}).\n\nThanks!`
+    );
+    window.location.href = `mailto:pm@filynai.com?subject=${subject}&body=${body}`;
   };
 
-  const isAuthPage = pathname?.startsWith('/auth/') || pathname === '/login';
+  const isAuthPage = pathname?.startsWith('/auth/') || pathname === '/login' || pathname === '/register';
+
   if (isAuthPage) {
-    return <>{children}</>;
+    return <main className='h-screen w-full bg-background'>{children}</main>;
   }
 
   return (
     <>
-      <div
-        className={cn(
-          'flex h-screen bg-background relative',
-          shouldLockWorkspace && 'pointer-events-none opacity-50 blur-[2px]'
-        )}
-      >
-        <Sidebar isOpen={sidebarOpen} onToggle={handleToggleSidebar} />
+      <div className='flex h-screen bg-background'>
+        <Sidebar
+          isOpen={sidebarOpen}
+          onToggle={handleToggleSidebar}
+          currentUserPrivilege={currentUserPrivilege}
+        />
 
         <div className='flex-1 flex flex-col min-w-0'>
           <Header
@@ -95,27 +109,24 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
 
           <div className='flex-1 flex min-h-0'>{children}</div>
         </div>
+
+        {isAuthenticated &&
+          ((!hasLoadedOnce && !projectsError) || isProjectsLoading || isAuthLoading) && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-10 w-10 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading workspace…</p>
+              </div>
+            </div>
+          )}
       </div>
 
-      {isAuthenticated && ((!hasLoadedOnce && !projectsError) || isProjectsLoading || isAuthLoading) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading workspace…</p>
-          </div>
-        </div>
-      )}
-
-      <Dialog
-        open={showNoProjectDialog}
-        onOpenChangeAction={setShowNoProjectDialog}
-      >
+      <Dialog open={showNoProjectDialog} onOpenChange={setShowNoProjectDialog}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>No project assigned</DialogTitle>
             <DialogDescription>
-              Hi {greetingName}. You don&apos;t have any project assigned, please
-              notify the project manager.
+              Hi {greetingName}. You don&apos;t have any project assigned, please notify the project manager.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className='flex justify-end gap-2 sm:justify-end'>

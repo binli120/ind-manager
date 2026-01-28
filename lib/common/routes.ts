@@ -4,7 +4,7 @@ export const ROUTES = {
         documentReviewPage: "/workspace/document_review",
         GapAnalysisPage: "/workspace/gap_analysis",
     },
-    project: "/project",
+    project: "/projects",
     Calendar: "/calendar",
     Submission: {
         IND: "/submission/ind",

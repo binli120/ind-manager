@@ -3,24 +3,24 @@
 // Email: blee@filynai.com
 import { configureStore } from "@reduxjs/toolkit"
 import { type TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
-import {
-  authReducer,
-  projectsReducer,
-  hydrateSelectedProjectFromStorage,
-  documentsReducer,
-  hydrateSelectedDocumentFromStorage,
-  uiReducer,
-  hydrateCurrentViewFromStorage,
-  pdfAnalysisApiReducer,
-} from "./slices"
+import authSlice from "./slices/authSlice"
+import projectsSlice, { hydrateSelectedProjectFromStorage } from "./slices/projectsSlice"
+import documentsSlice, { hydrateSelectedDocumentFromStorage } from "./slices/documentsSlice"
+import uiSlice, { hydrateCurrentViewFromStorage } from "./slices/uiSlice"
+import notificationsSlice from "./slices/notificationsSlice"
+import tenantsSlice from "./slices/tenantsSlice";
+
+
+
 
 export const store = configureStore({
   reducer: {
-    auth: authReducer,
-    projects: projectsReducer,
-    documents: documentsReducer,
-    ui: uiReducer,
-    pdfAnalysisApi: pdfAnalysisApiReducer,
+    auth: authSlice,
+    tenants: tenantsSlice,
+    projects: projectsSlice,
+    documents: documentsSlice,
+    ui: uiSlice,
+    notifications: notificationsSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

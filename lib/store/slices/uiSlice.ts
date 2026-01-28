@@ -43,12 +43,32 @@ export interface Modal {
   isOpen: boolean;
 }
 
-interface ModelState {
-  [id: string]: Modal;
-}
 const initialState: UIState = {
-  ...,
-  modals: {}
+  sidebarOpen: true,
+  commentsPanelOpen: true,
+  currentView: "workspace",
+
+  modals: [],
+  notifications: [],
+
+  globalLoading: false,
+  loadingStates: {},
+
+  breadcrumbs: [],
+
+  theme: "system",
+  compactMode: false,
+
+  globalSearch: "",
+
+  errors: {},
+
+  features: {
+    realTimeCollaboration: true,
+    advancedSearch: true,
+    aiAssistant: false,
+    exportToPdf: true,
+  },
 };
 
 export interface Notification {

@@ -15,7 +15,7 @@ export const tourSteps: TourStep[] = [
     title: "Subsection Title",
     description:
       "This is the subsection title. Click on it to edit the header text. Press Enter or click outside to save changes.",
-    targetSelector: "[data-tour='subsection-header']",
+    targetSelector: "[data-tour='section-title']",
     position: "bottom",
   },
   {
@@ -23,14 +23,14 @@ export const tourSteps: TourStep[] = [
     title: "View & Edit Template",
     description:
       "View Filyn's proprietary, customizable template informed by FDA and ICH guidelines, Filyn's regulatory expertise, and prior project experience. Use it as-is, modify it, or skip it entirely.",
-    targetSelector: "[data-tour='see-details-template']",
+    targetSelector: "[data-tour='detailed-template']",
     position: "bottom",
   },
   {
     id: "jump-nav",
     title: "Jump To Section",
     description: "View and update this section's status: Draft or Accepted. Toggle Required on or off as needed.",
-    targetSelector: "[data-tour='jump-nav']",
+    targetSelector: "[data-tour='jump-navigation']",
     position: "bottom",
   },
   {

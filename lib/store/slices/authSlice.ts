@@ -18,7 +18,6 @@ export interface User {
   role?: string | null; // submission/project role
   privilege?: string | null; // system-level privilege
   permissions?: string[] | null;
-  teamId?: string;
   createdAt: string;
   lastLoginAt?: string;
 }

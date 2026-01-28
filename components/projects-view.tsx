@@ -117,10 +117,13 @@ const priorityConfig = {
 
 export function ProjectsView() {
   const dispatch = useAppDispatch();
-  const { projects, viewMode, filters, isLoading } = useAppSelector(
+  const { viewMode, filters, projects, isLoading } = useAppSelector(
     (state) => state.projects,
   );
+  //const { teams } = useAppSelector((state) => state.teams);
+  //const { selectedTeamId } = useAppSelector((state) => state.teams);
   const { user } = useAppSelector((state) => state.auth);
+
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -131,10 +134,10 @@ export function ProjectsView() {
   useEffect(() => setPage(1), [filters]);
 
   useEffect(() => {
-    void user;
-    // TODO: wire team selection; default to persisted team in Redux or fetch all when available
-    dispatch(fetchProjects(null));
-  }, [dispatch, user]);
+    if (user?.id) {
+      dispatch(fetchProjects({ userId: user.id }));
+    }
+  }, [dispatch, user?.id]);
 
   
 
@@ -203,7 +206,7 @@ export function ProjectsView() {
     setShowEditDialog(true);
     setEditProject({
       id: proj.id,
-      team_id: proj.teamId,
+      tenantid: proj.tenantId,
       drug_name: proj.drug,
       ind_title: proj.title,
       ind_number: proj.code,
@@ -570,6 +573,7 @@ export function ProjectsView() {
       </div>
       {showCreateDialog && (
         <ProjectForm
+          
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateDialog(false)}
           defaultTeamId="demo-team"
@@ -577,6 +581,7 @@ export function ProjectsView() {
       )}
       {showEditDialog && editProject && (
         <ProjectForm
+          
           initialData={editProject}
           isEditing
           onSubmit={handleEditProject}

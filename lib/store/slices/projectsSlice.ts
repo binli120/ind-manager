@@ -2,12 +2,15 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 
-import { createBrowserClient, type Database } from "@/lib/supabase";
+import { createBrowserClient } from "@/lib/supabase";
 import {
   createAsyncThunk,
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
+import { createClient } from "@/lib/supabase/client";
+import { Database } from "@/lib/supabase/schema";
+import { getErrorMessage, isAdminEmail } from "@/lib/utils";
 import { logoutUser } from "./authSlice";
 
 export interface ProjectMember {
@@ -44,7 +47,7 @@ export interface Project {
   sponsor: string;
   drug: string;
   targetDate: string;
-  teamId: string;
+  tenantId: string;
   ownerId: string;
   teamSize: number;
   teamMembers: ProjectMember[];
@@ -74,11 +77,12 @@ export type ProjectCreation =
 
 export type ProjectUpdate = Database["public"]["Tables"]["projects"]["Update"];
 
+
 interface ProjectFilters {
   search: string;
   status: string;
   priority: string;
-  teamId?: string;
+  tenantId?: string;
 }
 
 interface ProjectsState {
@@ -107,90 +111,69 @@ const initialState: ProjectsState = {
   selectedProjectId: null,
 };
 
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return "Unknown error";
-};
 
 // MOCK: Remove mock mode when Supabase projects are live.
-const useMockProjects = false;
-const MOCK_TEAM_ID = "demo-team";
+//const useMockProjects = true;
+//const MOCK_TENANT_ID = "demo-tenant";
 // Async thunks
 export const fetchProjects = createAsyncThunk(
   "projects/fetchProjects",
-  async (teamId: string | null, { rejectWithValue }) => {
+  async ({ userId }: { userId: string }, { rejectWithValue }) => {
     try {
-      // MOCK: Remove mock branch once Supabase data is wired up.
-      if (useMockProjects && teamId === MOCK_TEAM_ID) {
-        try {
-          const response = await fetch(
-            `/api/mock/projects${teamId ? `?teamId=${teamId}` : ""}`,
-            { cache: "no-store" },
-          );
-
-          if (!response.ok) throw new Error("Failed to load mock projects");
-
-          const { data } = await response.json();
-          return data as Project[];
-        } catch (error) {
-          return rejectWithValue(
-            error instanceof Error
-              ? error.message
-              : "Mock project fetch failed",
-          );
-        }
+      // MOCK: update if you keep mock mode
+      /*
+      if (useMockProjects && tenantId === MOCK_TEAM_ID) {
+        const response = await fetch(
+          `/api/mock/projects${tenantId ? `?tenantId=${tenantId}` : ""}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) throw new Error("Failed to load mock projects");
+        const { data } = await response.json();
+        return data as Project[];
       }
-      //END MOCK
+      */
+      const supabase = createClient();
 
-      const supabase = createBrowserClient();
+      const { data: userRow, error: userError } = await supabase
+        .from("users")
+        .select("tenantid,email")
+        .eq("id", userId)
+        .single();
 
-      let query = supabase.from("projects").select(`
-          *,
-          teams (
-            user_teams (
-              user_id,
-              role,
-              joined_at,
-              users (
-                name,
-                avatar_url
-              )
-            )
-          ),
-          settings:project_settings (
-            isPublic:is_public,
-            allowCollaboration:allow_collaboration
-          )
-        `);
+      if (userError) throw userError;
+      const isAdmin = isAdminEmail(userRow?.email);
+      if (!isAdmin && !userRow?.tenantid) return [];
 
-      if (teamId) {
-        query = query.eq("team_id", teamId);
+      // MOCK: update if you keep mock mode
+      /*
+      if (useMockProjects && userRow.tenantid === MOCK_TENANT_ID) {
+        const response = await fetch(
+          `/api/mock/projects${userRow.tenantid ? `?tenantId=${userRow.tenantid}` : ""}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) throw new Error("Failed to load mock projects");
+        const { data } = await response.json();
+        return data as Project[];
+      }
+      */
+
+      let query = supabase
+        .from("projects")
+        .select("*")
+        .order("updated_at", { ascending: false });
+
+      if (!isAdmin) {
+        query = query.eq("tenantid", userRow.tenantid);
       }
 
-      const { data: projects, error } = await query.order("updated_at", {
-        ascending: false,
-      });
+      const { data: projects, error } = await query;
 
       if (error) throw error;
+      
+      const rows = (projects ?? []) as Database["public"]["Tables"]["projects"]["Row"][];
 
-      const transformedProjects: Project[] = projects?.map((project) => {
-        const members: ProjectMember[] =
-          project.teams?.user_teams?.map((member) => ({
-            id: member.user_id,
-            userId: member.user_id,
-            projectId: project.id,
-            name: member.users?.name || "Unknown User",
-            avatar: member.users?.avatar_url,
-            initials: member.users?.name
-              ?.split(" ")
-              .map((n: string) => n[0])
-              .join("") || "U",
-            role: member.role as ProjectMember["role"],
-            joinedAt: member.joined_at,
-          })) || [];
-
-        return {
+      const transformedProjects: Project[] =
+        rows.map((project) => ({
           id: project.id,
           title: project.ind_title,
           code: project.ind_number || "",
@@ -201,13 +184,13 @@ export const fetchProjects = createAsyncThunk(
           sponsor: project.sponsor_name || "",
           drug: project.drug_name || "",
           targetDate: project.target_ind_submission_date || "",
-          teamId: project.team_id,
+          tenantId: project.tenantid ?? "",
           ownerId: project.project_creator_id ?? "",
-          teamSize: members.length,
-          teamMembers: members,
+          teamSize: 0,
+          teamMembers: [],
           createdAt: project.created_at,
           updatedAt: project.updated_at,
-          settings: project.settings || {
+          settings:{
             isPublic: false,
             allowCollaboration: true,
           },
@@ -219,8 +202,7 @@ export const fetchProjects = createAsyncThunk(
           sponsorContactEmail: project.sponsor_contact_email,
           additionalNotes: project.additional_notes,
           productType: project.product_type,
-        };
-      }) || [];
+        })) || [];
 
       return transformedProjects;
     } catch (error: unknown) {
@@ -231,141 +213,83 @@ export const fetchProjects = createAsyncThunk(
   },
 );
 
-// Fetch projects accessible to current user via user_project or lead/owner roles
 export const fetchProjectsForCurrentUser = createAsyncThunk(
   "projects/fetchProjectsForCurrentUser",
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const supabase = createBrowserClient();
-      const state = getState() as { auth: { user: { id: string } | null } };
-      const userId = state.auth.user?.id;
-      if (!userId) throw new Error("User not authenticated");
-
-      // Lookup project memberships first
+      const supabase = createClient();
       const {
-        data: userProjects,
-        error: userProjError,
-        status: userProjectsStatus,
-      } = await supabase.from("user_project").select("project_id").eq(
-        "user_id",
-        userId,
-      );
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-      if (userProjError) {
-        console.error("user_project lookup failed", {
-          message: userProjError.message,
-          code: userProjError.code,
-          hint: userProjError.hint,
-          details: userProjError.details,
-          status: userProjectsStatus,
-        });
-        throw new Error(
-          `user_project lookup failed: ${
-            userProjError.message || "unknown error"
-          } (${userProjError.code || "no-code"})`,
-        );
-      }
+      if (authError) throw authError;
+      if (!user?.id) return [];
 
-      if (!userProjects) {
-        console.error("user_project returned null data", {
-          status: userProjectsStatus,
-        });
-        throw new Error("user_project returned no data");
-      }
+      const { data: userRow, error: userError } = await supabase
+        .from("users")
+        .select("tenantid,email")
+        .eq("id", user.id)
+        .single();
 
-      const isMembershipRow = (
-        row: unknown,
-      ): row is { project_id: string | null } =>
-        typeof row === "object" && row !== null && "project_id" in row;
+      if (userError) throw userError;
+      const isAdmin = isAdminEmail(userRow?.email);
+      if (!isAdmin && !userRow?.tenantid) return [];
 
-      const projectIds = userProjects
-        ?.map((row) => (isMembershipRow(row) ? row.project_id : null))
-        .filter((id): id is string => Boolean(id)) ?? [];
-
-      console.info(
-        "[projects] membership rows",
-        userProjects?.length || 0,
-        "ids",
-        projectIds,
-      );
-
-      if (projectIds.length > 0) {
-        const {
-          data: projectsByMembership,
-          error: projectsByMembershipError,
-          status: projectsByMembershipStatus,
-        } = await supabase
-          .from("projects")
-          .select("*")
-          .in("id", projectIds as string[]);
-
-        if (projectsByMembershipError) {
-          console.error("projects lookup by membership failed", {
-            message: projectsByMembershipError.message,
-            code: projectsByMembershipError.code,
-            hint: projectsByMembershipError.hint,
-            details: projectsByMembershipError.details,
-            status: projectsByMembershipStatus,
-          });
-          throw projectsByMembershipError;
-        }
-
-        const projectCount = projectsByMembership?.length || 0;
-        console.info("[projects] fetched via membership", projectCount);
-
-        if (projectCount === 0) {
-          throw new Error(
-            "Projects not returned for memberships; check database policies and project visibility",
-          );
-        }
-
-        return (projectsByMembership || []).map((project) =>
-          mapProjectRow(project)
-        );
-      }
-
-      // If no memberships, fall back to legacy lead/owner role fields
-      const {
-        data: projectsByRole,
-        error: projectsByRoleError,
-        status: projectsByRoleStatus,
-      } = await supabase
+      let query = supabase
         .from("projects")
         .select("*")
-        .or(
-          `cmc_lead.eq.${userId},clinical_lead.eq.${userId},preclinical_lead.eq.${userId},regulary_owner.eq.${userId}`,
-        );
+        .order("updated_at", { ascending: false });
 
-      if (projectsByRoleError) {
-        console.error("projects lookup by lead/owner failed", {
-          message: projectsByRoleError.message,
-          code: projectsByRoleError.code,
-          hint: projectsByRoleError.hint,
-          details: projectsByRoleError.details,
-          status: projectsByRoleStatus,
-        });
-        throw projectsByRoleError;
+      if (!isAdmin) {
+        query = query.eq("tenantid", userRow.tenantid);
       }
 
-      const roleCount = projectsByRole?.length || 0;
-      console.info("[projects] fetched via lead/owner roles", roleCount);
-      if (roleCount > 0) {
-        return (projectsByRole || []).map((project) => mapProjectRow(project));
-      }
+      const { data: projects, error } = await query;
+      if (error) throw error;
 
-      console.info(
-        "[projects] no memberships or lead/owner roles found, returning empty list",
-      );
-      return [];
+      const rows = (projects ?? []) as Database["public"]["Tables"]["projects"]["Row"][];
+      const transformedProjects: Project[] =
+        rows.map((project) => ({
+          id: project.id,
+          title: project.ind_title,
+          code: project.ind_number || "",
+          description: project.description || "No description available",
+          status: project.status as Project["status"],
+          priority: project.priority as Project["priority"],
+          progress: project.progress || 0,
+          sponsor: project.sponsor_name || "",
+          drug: project.drug_name || "",
+          targetDate: project.target_ind_submission_date || "",
+          tenantId: project.tenantid ?? "",
+          ownerId: project.project_creator_id ?? "",
+          teamSize: 0,
+          teamMembers: [],
+          createdAt: project.created_at,
+          updatedAt: project.updated_at,
+          settings: {
+            isPublic: false,
+            allowCollaboration: true,
+          },
+          metadata: {},
+          targetIndSubmissionDate: project.target_ind_submission_date,
+          preIndMeetingDate: project.pre_ind_meeting_date,
+          projectStartDate: project.project_start_date,
+          fdaContactEmail: project.fda_contact_email,
+          sponsorContactEmail: project.sponsor_contact_email,
+          additionalNotes: project.additional_notes,
+          productType: project.product_type,
+        })) || [];
+
+      return transformedProjects;
     } catch (error: unknown) {
-      const message = getErrorMessage(error);
-      console.error("fetchProjectsForCurrentUser failed", message, {
-        raw: error,
-      });
-      return rejectWithValue(message || "Failed to fetch projects");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to fetch projects for current user",
+      );
     }
   },
 );
+
 
 export const fetchProjectDetails = createAsyncThunk(
   "projects/fetchProjectDetails",
@@ -381,18 +305,6 @@ export const fetchProjectDetails = createAsyncThunk(
           settings:project_settings (
             allowCollaboration:allow_collaboration,
             isPublic:is_public
-          ),
-          teams (
-            user_teams (
-              team_id,
-              user_id,
-              role,
-              joined_at,
-              users (
-                name,
-                avatar_url
-              )
-            )
           )
         `,
         )
@@ -400,21 +312,7 @@ export const fetchProjectDetails = createAsyncThunk(
         .single();
 
       if (error) throw error;
-
-      const members: ProjectMember[] =
-        project.teams.user_teams?.map((member) => ({
-          id: member.user_id,
-          userId: member.user_id,
-          projectId: project.id,
-          name: member.users?.name || "Unknown User",
-          avatar: member.users?.avatar_url,
-          initials: member.users?.name
-            ?.split(" ")
-            .map((n: string) => n[0])
-            .join("") || "U",
-          role: member.role as ProjectMember["role"],
-          joinedAt: member.joined_at,
-        })) || [];
+      
 
       const transformedProject: Project = {
         id: project.id,
@@ -427,10 +325,10 @@ export const fetchProjectDetails = createAsyncThunk(
         sponsor: project.sponsor_name || "",
         drug: project.drug_name || "",
         targetDate: project.target_ind_submission_date || "",
-        teamId: project.team_id,
+        tenantId: project.tenantid ?? "",
         ownerId: project.project_creator_id ?? "",
-        teamSize: members.length,
-        teamMembers: members,
+        teamSize: 0,
+        teamMembers: [],
         createdAt: project.created_at,
         updatedAt: project.updated_at,
         settings: project.settings || {
@@ -469,28 +367,26 @@ export const createProject = createAsyncThunk(
       if (!userId) throw new Error("User not authenticated");
       if (!projectData.ind_title) throw new Error("Project title required");
 
-      const DEFAULT_TEAM_ID = "demo-team";
-      const teamId = projectData.team_id || DEFAULT_TEAM_ID;
+      const { data: userRow, error: userError } = await supabase
+        .from("users")
+        .select("tenantid")
+        .eq("id", userId)
+        .single();
+
+      if (userError) throw userError;
+      if (!userRow?.tenantid) throw new Error("User has no tenant");
 
       const { data: newProject, error } = await supabase
         .from("projects")
-        .insert({ ...projectData, project_creator_id: userId, team_id: teamId })
+        .insert({
+          ...projectData,
+          project_creator_id: userId,
+          tenantid: userRow.tenantid,
+        })
         .select()
         .single();
 
       if (error) throw error;
-
-      // Add creator as project lead
-      // Project members = team members for now
-      // const { error: memberError } = await supabase
-      //   .from("project_members")
-      //   .insert({
-      //     project_id: project.id,
-      //     user_id: userId,
-      //     role: "lead",
-      //   });
-
-      // if (memberError) throw memberError;
 
       return newProject;
     } catch (error: unknown) {
@@ -500,6 +396,7 @@ export const createProject = createAsyncThunk(
     }
   },
 );
+
 
 export const updateProject = createAsyncThunk(
   "projects/updateProject",
@@ -554,11 +451,7 @@ export const deleteProject = createAsyncThunk(
 export const addProjectMember = createAsyncThunk(
   "projects/addProjectMember",
   async (
-    {
-      projectId,
-      userId,
-      role,
-    }: {
+    {}: {
       projectId: string;
       userId: string;
       role: "lead" | "member" | "viewer";
@@ -566,7 +459,10 @@ export const addProjectMember = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createBrowserClient();
+      throw new Error("Members management temporarily stopped");
+
+      /*
+      const supabase = createClient();
 
       // TODO: Fix query, team member = project member?
       const { data, error } = await supabase
@@ -590,6 +486,7 @@ export const addProjectMember = createAsyncThunk(
       if (error) throw error;
 
       return data;
+      */
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to add project member",
@@ -602,7 +499,9 @@ export const removeProjectMember = createAsyncThunk(
   "projects/removeProjectMember",
   async (memberId: string, { rejectWithValue }) => {
     try {
-      const supabase = createBrowserClient();
+      throw new Error("Members management temporarily stopped");
+      /*
+      const supabase = createClient();
 
       // TODO: Fix query, team member = project member?
       const { error } = await supabase
@@ -613,6 +512,7 @@ export const removeProjectMember = createAsyncThunk(
       if (error) throw error;
 
       return memberId;
+      */
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to remove project member",
@@ -703,6 +603,7 @@ const projectsSlice = createSlice({
         state.isLoading = false;
         state.hasLoadedOnce = true;
         state.error = action.payload as string;
+        console.error("fetchProjects failed:", action.payload ?? action.error.message);
       })
       // Fetch projects for current user
       .addCase(fetchProjectsForCurrentUser.pending, (state) => {
@@ -862,7 +763,7 @@ const dbToClientProject = (
   return {
     ...project,
     description: project.description ?? "",
-    teamId: project.team_id,
+    tenantId: project.tenantid ?? "",
     title: project.ind_title,
     code: project.ind_number ?? "",
     sponsor: project.sponsor_name ?? "",
@@ -872,7 +773,7 @@ const dbToClientProject = (
     createdAt: project.created_at ?? "",
     updatedAt: project.updated_at ?? "",
     teamMembers: [],
-    teamSize: 1,
+    teamSize: 0,
     status: (project.status ?? "draft") as Project["status"],
     priority: (project.priority ?? "low") as Project["priority"],
     progress: project.progress ?? 0,
