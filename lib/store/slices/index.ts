@@ -10,6 +10,7 @@ export {
   clearError as clearAuthError,
   setUser,
   setSession,
+  setLoading,
   setLoading as setAuthLoading,
   clearAuth,
 } from "./authSlice";
