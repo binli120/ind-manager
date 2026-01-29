@@ -96,6 +96,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
       <div className='flex h-screen bg-background'>
         <Sidebar
           isOpen={sidebarOpen}
+          view={currentView}
           onToggle={handleToggleSidebar}
           currentUserPrivilege={currentUserPrivilege}
         />

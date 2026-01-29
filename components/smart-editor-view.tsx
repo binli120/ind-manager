@@ -17,31 +17,7 @@ import {
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
-interface SubsectionContent {
-  id: string;
-  subsectionNumber: string;
-  title: string;
-  header: string;
-  content: string;
-  isRequired: boolean;
-  status: 'draft' | 'complete' | 'review';
-  isCategory?: boolean;
-  isUserAdded?: boolean;
-  subsections?: SubsectionContent[];
-}
-
-interface Section {
-  id: string;
-  number: string;
-  title: string;
-  parentSection: string;
-  isRequired: boolean;
-  status: 'draft' | 'complete' | 'review';
-  isCategory: boolean;
-  isUserAdded: boolean;
-  subsections?: SubsectionContent[];
-}
+import type { Section, SubsectionContent } from '@/types/section';
 
 const sections: Section[] = [
   {
@@ -515,7 +491,6 @@ export function SmartEditorView() {
         selectedSubsection={selectedSubsection}
         onSelectSection={handleSelectSection}
         onSelectSubsection={handleSelectSubsection}
-        onStartTour={handleStartTour}
         onUploadPdf={() => setShowUploadDialog(true)}
         onReorderSubsections={handleReorderSubsections}
       />
@@ -548,7 +523,7 @@ export function SmartEditorView() {
       <OnboardingTour isOpen={showTour} onClose={handleCloseTour} />
       <PdfUploadDialog
         open={showUploadDialog}
-        onOpenChangeAction={setShowUploadDialog}
+        onOpenChange={setShowUploadDialog}
         onUploadComplete={handleUploadComplete}
       />
     </div>

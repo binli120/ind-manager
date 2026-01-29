@@ -22,6 +22,7 @@ export interface Section {
   isRequired: boolean;
   status: "draft" | "accepted" | "in-review" | "approved";
   isCategory?: boolean;
+   isUserAdded?: boolean;
   subsections?: SubsectionContent[];
 }
 

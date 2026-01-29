@@ -32,7 +32,7 @@ import { roleLabels } from './users-page';
 type AddUserDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (user: Omit<User, 'id' | 'status'>) => void;
+  onAdd: (user: Omit<User, 'id' | 'status'> & { password: string; privilege: UserPrivilege }) => void;
   companies: string[];
   currentUserPrivilege: UserPrivilege;
 };

@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useEffect } from "react";
 import { User } from "./users-page";
-import { Project } from "@/components/projects-view";
+import type { Project } from "@/lib/store/slices/projectsSlice";
 import { fetchUserProjectIds, addUserToProject, removeUserFromProject } from "@/lib/supabase/users";
 
 interface AssignProjectDialogProps {

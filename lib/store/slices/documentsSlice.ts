@@ -3,6 +3,7 @@
 // Email: blee@filynai.com
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
 import { createBrowserClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 
 export interface DocumentSection {
   id: string
@@ -179,11 +180,12 @@ const getErrorMessage = (error: unknown) => {
 // Async thunks
 export const fetchDocuments = createAsyncThunk(
   "documents/fetchDocuments",
-  async (projectId?: string, { rejectWithValue }) => {
+  async (projectId: string | undefined, { rejectWithValue }) => {
     try {
     const supabase = createBrowserClient()
 
-      let query = supabase.from("documents").select(`
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (supabase as any).from("documents").select(`
           *,
           document_sections (
             id,
@@ -230,18 +232,19 @@ export const fetchDocuments = createAsyncThunk(
         rawDocuments.map((doc) => ({
           id: doc.id,
           title: doc.title,
-          description: doc.description,
+          description: doc.description ?? undefined,
           projectId: doc.project_id,
           teamId: doc.team_id,
           ownerId: doc.owner_id,
           ownerName: doc.profiles?.name || "Unknown User",
           status: doc.status,
           type: doc.type,
-          dueDate: doc.due_date,
-          lastModified: doc.updated_at,
+          dueDate: doc.due_date ?? "",
+          lastModified: doc.updated_at ?? "",
           activeUsers: doc.active_users || 0,
           version: doc.version || 1,
           isTemplate: doc.is_template || false,
+          metadata: undefined,
           sections:
             doc.document_sections?.map((section) => ({
               id: section.id,
@@ -250,8 +253,8 @@ export const fetchDocuments = createAsyncThunk(
               content: section.content || "",
               order: section.order_index,
               isLocked: section.is_locked || false,
-              lockedBy: section.locked_by,
-              lockedAt: section.locked_at,
+              lockedBy: section.locked_by ?? undefined,
+              lockedAt: section.locked_at ?? undefined,
               version: section.version || 1,
               createdAt: section.created_at,
               updatedAt: section.updated_at,
@@ -260,14 +263,14 @@ export const fetchDocuments = createAsyncThunk(
             doc.document_comments?.map((comment) => ({
               id: comment.id,
               documentId: doc.id,
-              sectionId: comment.section_id,
+              sectionId: comment.section_id ?? undefined,
               userId: comment.user_id,
               userName: comment.profiles?.name || "Unknown User",
-              userAvatar: comment.profiles?.avatar_url,
-              content: comment.content,
-              position: comment.position,
+              userAvatar: comment.profiles?.avatar_url ?? undefined,
+              content: comment.content ?? "",
+              position: comment.position ?? undefined,
               isResolved: comment.is_resolved || false,
-              parentId: comment.parent_id,
+              parentId: comment.parent_id ?? undefined,
               createdAt: comment.created_at,
               updatedAt: comment.updated_at,
             })) || [],
@@ -277,8 +280,7 @@ export const fetchDocuments = createAsyncThunk(
             canComment: true,
             canView: true,
           },
-          metadata: doc.metadata,
-        }))
+        })) as Document[]
 
       return transformedDocuments
     } catch (error: unknown) {
@@ -293,7 +295,8 @@ export const fetchDocumentDetails = createAsyncThunk(
     try {
       const supabase = createClient()
 
-      const { data: document, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: document, error } = await (supabase as any)
         .from("documents")
         .select(`
           *,
@@ -366,8 +369,8 @@ export const fetchDocumentDetails = createAsyncThunk(
               content: section.content || "",
               order: section.order_index,
               isLocked: section.is_locked || false,
-              lockedBy: section.locked_by,
-              lockedAt: section.locked_at,
+              lockedBy: section.locked_by ?? undefined,
+              lockedAt: section.locked_at ?? undefined,
               version: section.version || 1,
               createdAt: section.created_at,
               updatedAt: section.updated_at,
@@ -377,17 +380,17 @@ export const fetchDocumentDetails = createAsyncThunk(
           rawDocument.document_comments?.map((comment) => ({
             id: comment.id,
             documentId: rawDocument.id,
-            sectionId: comment.section_id,
+            sectionId: comment.section_id ?? undefined,
             userId: comment.user_id,
             userName: comment.profiles?.name || "Unknown User",
-            userAvatar: comment.profiles?.avatar_url,
-            content: comment.content,
-            position: comment.position,
+            userAvatar: comment.profiles?.avatar_url ?? undefined,
+            content: comment.content ?? "",
+            position: comment.position ?? undefined,
             isResolved: comment.is_resolved || false,
-            parentId: comment.parent_id,
+            parentId: comment.parent_id ?? undefined,
             createdAt: comment.created_at,
             updatedAt: comment.updated_at,
-          })) || [],
+          })) as DocumentComment[] || [],
         versions:
           rawDocument.document_versions?.map((version) => ({
             id: version.id,
@@ -421,7 +424,8 @@ export const lockSection = createAsyncThunk(
 
       const expiresAt = new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
 
-      const { error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
         .from("document_sections")
         .update({
           is_locked: true,
@@ -447,7 +451,8 @@ export const unlockSection = createAsyncThunk(
     try {
       const supabase = createClient()
 
-      const { error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
         .from("document_sections")
         .update({
           is_locked: false,
@@ -471,7 +476,8 @@ export const updateSectionContent = createAsyncThunk(
     try {
       const supabase = createClient()
 
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from("document_sections")
         .update({
           content,
@@ -494,12 +500,10 @@ export const addComment = createAsyncThunk(
   "documents/addComment",
   async (
     {
-      documentId,
       sectionId,
       content,
       position,
     }: {
-      documentId: string
       sectionId?: string
       content: string
       position?: { x: number; y: number }
@@ -513,10 +517,10 @@ export const addComment = createAsyncThunk(
 
       if (!userId) throw new Error("User not authenticated")
 
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from("document_comments")
         .insert({
-          document_id: documentId,
           section_id: sectionId,
           user_id: userId,
           content,
@@ -535,15 +539,15 @@ export const addComment = createAsyncThunk(
 
       const comment: DocumentComment = {
         id: data.id,
-        documentId: data.document_id,
-        sectionId: data.section_id,
+        documentId: data.document_id ?? "",
+        sectionId: data.section_id ?? undefined,
         userId: data.user_id,
         userName: data.profiles?.name || "Unknown User",
-        userAvatar: data.profiles?.avatar_url,
-        content: data.content,
-        position: data.position,
+        userAvatar: data.profiles?.avatar_url ?? undefined,
+        content: data.content ?? "",
+        position: data.position ?? undefined,
         isResolved: data.is_resolved || false,
-        parentId: data.parent_id,
+        parentId: data.parent_id ?? undefined,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       }
@@ -561,7 +565,8 @@ export const resolveComment = createAsyncThunk(
     try {
       const supabase = createClient()
 
-      const { error } = await supabase.from("document_comments").update({ is_resolved: true }).eq("id", commentId)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from("document_comments").update({ is_resolved: true }).eq("id", commentId)
 
       if (error) throw error
 
@@ -578,7 +583,8 @@ export const fetchUserDocuments = createAsyncThunk(
     try {
       const supabase = createClient()
 
-      const { data: documents, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: documents, error } = await (supabase as any)
         .from("documents")
         .select(`
           *,
@@ -623,18 +629,19 @@ export const fetchUserDocuments = createAsyncThunk(
         rawDocuments.map((doc) => ({
           id: doc.id,
           title: doc.title,
-          description: doc.description,
+          description: doc.description ?? undefined,
           projectId: doc.project_id,
           teamId: doc.team_id,
           ownerId: doc.owner_id,
           ownerName: doc.profiles?.name || "Unknown User",
           status: doc.status,
           type: doc.type,
-          dueDate: doc.due_date,
-          lastModified: doc.updated_at,
+          dueDate: doc.due_date ?? "",
+          lastModified: doc.updated_at ?? "",
           activeUsers: doc.active_users || 0,
           version: doc.version || 1,
           isTemplate: doc.is_template || false,
+          metadata: undefined,
           sections:
             doc.document_sections?.map((section) => ({
               id: section.id,
@@ -643,8 +650,8 @@ export const fetchUserDocuments = createAsyncThunk(
               content: section.content || "",
               order: section.order_index,
               isLocked: section.is_locked || false,
-              lockedBy: section.locked_by,
-              lockedAt: section.locked_at,
+              lockedBy: section.locked_by ?? undefined,
+              lockedAt: section.locked_at ?? undefined,
               version: section.version || 1,
               createdAt: section.created_at,
               updatedAt: section.updated_at,
@@ -653,14 +660,14 @@ export const fetchUserDocuments = createAsyncThunk(
             doc.document_comments?.map((comment) => ({
               id: comment.id,
               documentId: doc.id,
-              sectionId: comment.section_id,
+              sectionId: comment.section_id ?? undefined,
               userId: comment.user_id,
               userName: comment.profiles?.name || "Unknown User",
-              userAvatar: comment.profiles?.avatar_url,
-              content: comment.content,
-              position: comment.position,
+              userAvatar: comment.profiles?.avatar_url ?? undefined,
+              content: comment.content ?? "",
+              position: comment.position ?? undefined,
               isResolved: comment.is_resolved || false,
-              parentId: comment.parent_id,
+              parentId: comment.parent_id ?? undefined,
               createdAt: comment.created_at,
               updatedAt: comment.updated_at,
             })) || [],
@@ -670,8 +677,7 @@ export const fetchUserDocuments = createAsyncThunk(
             canComment: true,
             canView: true,
           },
-          metadata: doc.metadata,
-        }))
+        })) as Document[]
 
       return transformedDocuments
     } catch (error: unknown) {

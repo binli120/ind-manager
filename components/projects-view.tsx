@@ -206,7 +206,7 @@ export function ProjectsView() {
     setShowEditDialog(true);
     setEditProject({
       id: proj.id,
-      tenantid: proj.tenantId,
+      team_id: proj.tenantId ?? "",
       drug_name: proj.drug,
       ind_title: proj.title,
       ind_number: proj.code,
@@ -273,7 +273,7 @@ export function ProjectsView() {
                       {opt.header}
                     </div>
                   ) : (
-                    <SelectItem key={opt.value} value={opt.value} className="whitespace-normal text-left">
+                    <SelectItem key={opt.value ?? `opt-${idx}`} value={opt.value ?? ""} className="whitespace-normal text-left">
                       {opt.label}
                     </SelectItem>
                   )
@@ -576,7 +576,6 @@ export function ProjectsView() {
           
           onSubmit={handleCreateProject}
           onCancel={() => setShowCreateDialog(false)}
-          defaultTeamId="demo-team"
         />
       )}
       {showEditDialog && editProject && (
@@ -586,7 +585,6 @@ export function ProjectsView() {
           isEditing
           onSubmit={handleEditProject}
           onCancel={() => setShowEditDialog(false)}
-          defaultTeamId="demo-team"
         />
       )}
     </div>

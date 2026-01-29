@@ -5,7 +5,7 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TiptapEditor } from "@/components/section-editor/tiptap-editor"
@@ -45,7 +45,6 @@ function SubsectionEditor({
   const [showTemplate, setShowTemplate] = useState(false)
   const [showTableInsert, setShowTableInsert] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const editorRef = useRef<unknown>(null)
 
   const [isAnimating, setIsAnimating] = useState(subsection.isUserAdded)
 
@@ -143,7 +142,6 @@ function SubsectionEditor({
 
       <div className="px-6 py-4" data-tour="editor-toolbar">
         <TiptapEditor
-          ref={editorRef}
           content={content}
           onChange={setContent}
           materialsCount={materialsCount}
@@ -193,13 +191,12 @@ function SubsectionEditor({
           open={showTableInsert}
           onOpenChange={setShowTableInsert}
           onInsert={handleTableInsert}
-          editorRef={editorRef}
         />
       )}
 
       <DeleteSubsectionDialog
         open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
+        onOpenChangeAction={setShowDeleteDialog}
         subsectionNumber={subsection.subsectionNumber}
         onConfirm={() => onDelete(subsection.id)}
       />

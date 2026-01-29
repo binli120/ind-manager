@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   Sector,
 } from 'recharts';
+import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
 
 interface Module {
   id: number;
@@ -52,22 +53,16 @@ export function RadialProgressChart({ modules }: RadialProgressChartProps) {
     startAngle,
     endAngle,
     fill,
-  }: PieSectorDataItem & {
-    cx: number;
-    cy: number;
-    innerRadius: number;
-    outerRadius: number;
-    startAngle: number;
-    endAngle: number;
-    fill: string;
-  }) => {
+  }: PieSectorDataItem) => {
+    const safeOuter = outerRadius ?? 0;
+    const safeInner = innerRadius ?? 0;
     return (
       <g>
         <Sector
           cx={cx}
           cy={cy}
-          innerRadius={innerRadius}
-          outerRadius={outerRadius + 10}
+          innerRadius={safeInner}
+          outerRadius={safeOuter + 10}
           startAngle={startAngle}
           endAngle={endAngle}
           fill={fill}
@@ -75,8 +70,8 @@ export function RadialProgressChart({ modules }: RadialProgressChartProps) {
         <Sector
           cx={cx}
           cy={cy}
-          innerRadius={outerRadius + 12}
-          outerRadius={outerRadius + 16}
+          innerRadius={safeOuter + 12}
+          outerRadius={safeOuter + 16}
           startAngle={startAngle}
           endAngle={endAngle}
           fill={fill}

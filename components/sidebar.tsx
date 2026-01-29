@@ -3,6 +3,7 @@
 // Email: blee@filynai.com
 'use client';
 
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ROUTES } from '@/lib/common/routes';
@@ -31,6 +32,14 @@ interface SidebarProps {
   view: string;
   onToggle: () => void;
   currentUserPrivilege: UserPrivilege | string;
+}
+
+interface MenuItem {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  path: string;
+  title?: string;
+  allowedRoles?: string[];
 }
 
 export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps) {

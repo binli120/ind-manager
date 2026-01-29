@@ -6,7 +6,6 @@
 import { useEditor, EditorContent } from "@tiptap/react"
 import { useState, useEffect, useRef } from "react"
 import StarterKit from "@tiptap/starter-kit"
-import Underline from "@tiptap/extension-underline"
 import TextAlign from "@tiptap/extension-text-align"
 import { Table } from "@tiptap/extension-table"
 import { TableRow } from "@tiptap/extension-table-row"
@@ -15,7 +14,6 @@ import { TableHeader } from "@tiptap/extension-table-header"
 import {
   Bold,
   Italic,
-  UnderlineIcon,
   List,
   ListOrdered,
   Sparkles,
@@ -81,7 +79,6 @@ export function TiptapEditor({
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Underline,
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
@@ -376,14 +373,6 @@ export function TiptapEditor({
             >
               <Italic className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("underline") && "bg-accent")}
-            >
-              <UnderlineIcon className="h-4 w-4" />
-            </Button>
 
             <div className="w-px h-6 bg-border mx-1" />
 
@@ -490,6 +479,7 @@ export function TiptapEditor({
           position={bubblePosition}
           keyword={detectedKeyword}
           onClose={() => setShowBubble(false)}
+          onOpenMaterials={onOpenMaterials ?? (() => {})}
         />
       )}
 

@@ -153,7 +153,9 @@ export const requestPdfAnalysisApi = async <
 ): Promise<TResponse> => {
   const { path, method = "GET", query, body, headers } = options;
   const url = buildApiUrl(path, query);
-  const requestHeaders: HeadersInit = { ...headers };
+  const requestHeaders: Record<string, string> = {
+    ...(headers as Record<string, string> | undefined),
+  };
 
   let requestBody: BodyInit | undefined;
   if (body !== undefined && body !== null) {

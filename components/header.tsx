@@ -48,7 +48,9 @@ interface HeaderProps {
     | 'review-center'
     | 'tenants'
     | 'users'
-    | 'gap-analysis';
+    | 'gap-analysis'
+    | 'ind-submission'
+    | 'design-system';
 }
 
 export function Header({

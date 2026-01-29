@@ -1,4 +1,4 @@
-import { Project } from "@/components/projects-view";
+import type { Project } from "@/lib/store/slices/projectsSlice";
 
 interface DbProject {
   id: string;
@@ -12,6 +12,8 @@ interface DbProject {
   drug_name: string;
   target_ind_submission_date: string;
   project_creator_id: string;
+  created_at?: string;
+  updated_at?: string;
   project_start_date: string;
   pre_ind_meeting_date: string;
   fda_contact_email: string;
@@ -64,15 +66,22 @@ const mapToProject = (row: DbProject): Project => ({
   title: row.ind_title,
   code: row.ind_number,
   description: row.description,
-  status: row.status,
-  priority: row.priority,
+  status: row.status as Project["status"],
+  priority: row.priority as Project["priority"],
   progress: row.progress,
   sponsor: row.sponsor_name,
   drug: row.drug_name,
   targetDate: row.target_ind_submission_date,
+  tenantId: row.tenantid,
   ownerId: row.project_creator_id,
   teamSize: 0,
   teamMembers: [],
+  createdAt: row.created_at ?? "",
+  updatedAt: row.updated_at ?? "",
+  settings: {
+    isPublic: false,
+    allowCollaboration: true,
+  },
   projectStartDate: row.project_start_date,
   preIndMeetingDate: row.pre_ind_meeting_date,
   targetIndSubmissionDate: row.target_ind_submission_date,

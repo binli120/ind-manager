@@ -7,6 +7,7 @@ import {
   type PayloadAction,
 } from "@reduxjs/toolkit";
 import { createBrowserClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 import { auth_text } from "@/utils/constants";
 
@@ -79,7 +80,10 @@ export const loginUser = createAsyncThunk(
           name: profile?.name || data.user.user_metadata?.name,
           avatar: profile?.avatar_url,
           privilege: (data.user.user_metadata?.privilege as string) ?? "user",
-          role: (profile?.submission_role as string) ?? (data.user.user_metadata?.role as string) ?? null,
+          role:
+            ((profile as { submission_role?: string })?.submission_role as string) ??
+            (data.user.user_metadata?.role as string) ??
+            null,
           // role: profile?.role || "user",
           // permissions: profile?.permissions || [],
           // teamId: profile?.team_id,
@@ -186,7 +190,10 @@ export const getCurrentUser = createAsyncThunk(
           name: profile?.name || user.user_metadata?.name,
           avatar: profile?.avatar_url,
           privilege: (user.user_metadata?.privilege as string) ?? "user",
-          role: (profile?.submission_role as string) ?? (user.user_metadata?.role as string) ?? null,
+          role:
+            ((profile as { submission_role?: string })?.submission_role as string) ??
+            (user.user_metadata?.role as string) ??
+            null,
           // role: profile?.role || "user",
           // permissions: profile?.permissions || [],
           // teamId: profile?.team_id,

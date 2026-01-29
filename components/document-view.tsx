@@ -262,7 +262,7 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
 
                         <div>
                           <h5 className='font-medium mb-2'>
-                            {currentDocument.content ||
+                            {currentDocument.description ??
                               'Document content will appear here'}
                           </h5>
                         </div>

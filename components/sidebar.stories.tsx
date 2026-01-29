@@ -27,19 +27,17 @@ const SidebarPreview: React.FC<React.ComponentProps<typeof Sidebar>> = (
   props
 ) => {
   const [isOpen, setIsOpen] = React.useState(props.isOpen);
-  const [currentView, setCurrentView] = React.useState(props.view);
 
   return (
     <div className='flex h-screen bg-muted/10'>
       <Sidebar
         {...props}
         isOpen={isOpen}
-        view={currentView}
+        view={props.view}
         onToggle={() => setIsOpen((prev) => !prev)}
-        onViewChange={(view) => setCurrentView(view)}
       />
       <div className='flex-1 flex flex-col items-center justify-center text-sm text-muted-foreground'>
-        <p>Current view: {currentView}</p>
+        <p>Current view: {props.view}</p>
         <p>{isOpen ? 'Sidebar expanded' : 'Sidebar collapsed'}</p>
       </div>
     </div>

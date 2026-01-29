@@ -16,8 +16,8 @@ export function SupabaseExample() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      // Example query - replace 'your_table' with your actual table name
-      const { data: result, error } = await supabase.from("your_table").select("*").limit(10)
+      // Example query using the existing "users" table
+      const { data: result, error } = await supabase.from("users").select("*").limit(10)
 
       if (error) throw error
       setData(result || [])

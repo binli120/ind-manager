@@ -27,7 +27,7 @@ const getNextSubsectionLetter = (existingSubsections: ExistingSubsection[]): str
       const parts = sub.subsectionNumber?.split("-")
       return parts && parts.length > 1 ? parts[parts.length - 1] : null
     })
-    .filter(Boolean)
+    .filter((v): v is string => Boolean(v))
 
   if (letters.length === 0) return "a"
 

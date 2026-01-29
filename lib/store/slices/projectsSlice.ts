@@ -141,8 +141,9 @@ export const fetchProjects = createAsyncThunk(
         .single();
 
       if (userError) throw userError;
-      const isAdmin = isAdminEmail(userRow?.email);
-      if (!isAdmin && !userRow?.tenantid) return [];
+      const userData = userRow as { email?: string; tenantid?: string };
+      const isAdmin = isAdminEmail(userData?.email);
+      if (!isAdmin && !userData?.tenantid) return [];
 
       // MOCK: update if you keep mock mode
       /*
@@ -163,7 +164,11 @@ export const fetchProjects = createAsyncThunk(
         .order("updated_at", { ascending: false });
 
       if (!isAdmin) {
-        query = query.eq("tenantid", userRow.tenantid);
+        if (userData?.tenantid) {
+          query = query.eq("tenantid", userData.tenantid);
+        } else {
+          return [];
+        }
       }
 
       const { data: projects, error } = await query;
@@ -184,7 +189,7 @@ export const fetchProjects = createAsyncThunk(
           sponsor: project.sponsor_name || "",
           drug: project.drug_name || "",
           targetDate: project.target_ind_submission_date || "",
-          tenantId: project.tenantid ?? "",
+          tenantId: userData?.tenantid ?? "",
           ownerId: project.project_creator_id ?? "",
           teamSize: 0,
           teamMembers: [],
@@ -233,16 +238,17 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
         .single();
 
       if (userError) throw userError;
-      const isAdmin = isAdminEmail(userRow?.email);
-      if (!isAdmin && !userRow?.tenantid) return [];
+      const userData = userRow as { email?: string; tenantid?: string };
+      const isAdmin = isAdminEmail(userData?.email);
+      if (!isAdmin && !userData?.tenantid) return [];
 
       let query = supabase
         .from("projects")
         .select("*")
         .order("updated_at", { ascending: false });
 
-      if (!isAdmin) {
-        query = query.eq("tenantid", userRow.tenantid);
+      if (!isAdmin && userData?.tenantid) {
+        query = query.eq("tenantid", userData.tenantid);
       }
 
       const { data: projects, error } = await query;
@@ -261,7 +267,7 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
           sponsor: project.sponsor_name || "",
           drug: project.drug_name || "",
           targetDate: project.target_ind_submission_date || "",
-          tenantId: project.tenantid ?? "",
+          tenantId: userData?.tenantid ?? "",
           ownerId: project.project_creator_id ?? "",
           teamSize: 0,
           teamMembers: [],
@@ -325,7 +331,7 @@ export const fetchProjectDetails = createAsyncThunk(
         sponsor: project.sponsor_name || "",
         drug: project.drug_name || "",
         targetDate: project.target_ind_submission_date || "",
-        tenantId: project.tenantid ?? "",
+        tenantId: "",
         ownerId: project.project_creator_id ?? "",
         teamSize: 0,
         teamMembers: [],
@@ -374,14 +380,15 @@ export const createProject = createAsyncThunk(
         .single();
 
       if (userError) throw userError;
-      if (!userRow?.tenantid) throw new Error("User has no tenant");
+      const userData = userRow as { tenantid?: string };
+      if (!userData?.tenantid) throw new Error("User has no tenant");
 
       const { data: newProject, error } = await supabase
         .from("projects")
         .insert({
           ...projectData,
           project_creator_id: userId,
-          tenantid: userRow.tenantid,
+          tenantid: userData.tenantid,
         })
         .select()
         .single();
@@ -702,29 +709,39 @@ const projectsSlice = createSlice({
       })
       // Add project member
       .addCase(addProjectMember.fulfilled, (state, action) => {
+        const payload = action.payload as {
+          id?: string
+          user_id?: string
+          project_id?: string
+          profiles?: { name?: string; avatar_url?: string }
+          role?: ProjectMember["role"]
+          created_at?: string
+        };
+        if (!payload?.id) return;
         const member: ProjectMember = {
-          id: action.payload.id,
-          userId: action.payload.user_id,
-          projectId: action.payload.project_id,
-          name: action.payload.profiles?.name || "Unknown User",
-          avatar: action.payload.profiles?.avatar_url,
-          initials: action.payload.profiles?.name
+          id: payload.id,
+          userId: payload.user_id ?? "",
+          projectId: payload.project_id ?? "",
+          name: payload.profiles?.name || "Unknown User",
+          avatar: payload.profiles?.avatar_url,
+          initials: payload.profiles?.name
             ?.split(" ")
             .map((n: string) => n[0])
             .join("") || "U",
-          role: action.payload.role,
-          joinedAt: action.payload.created_at,
+          role: payload.role ?? "member",
+          joinedAt: payload.created_at ?? new Date().toISOString(),
         };
 
         // Update current project
-        if (state.currentProject?.id === action.payload.project_id) {
-          state.currentProject.teamMembers.push(member);
-          state.currentProject.teamSize += 1;
+        const current = state.currentProject;
+        if (current && current.id === payload.project_id) {
+          current.teamMembers.push(member);
+          current.teamSize += 1;
         }
 
         // Update project in projects array
         const projectIndex = state.projects.findIndex(
-          (project) => project.id === action.payload.project_id,
+          (project) => project.id === payload.project_id,
         );
         if (projectIndex !== -1) {
           state.projects[projectIndex].teamMembers.push(member);
@@ -733,11 +750,13 @@ const projectsSlice = createSlice({
       })
       // Remove project member
       .addCase(removeProjectMember.fulfilled, (state, action) => {
+        if (typeof action.payload !== "string") return;
+        const removedId = action.payload;
         // Update current project
         if (state.currentProject) {
           state.currentProject.teamMembers = state.currentProject.teamMembers
             .filter(
-              (member) => member.id !== action.payload,
+              (member) => member.id !== removedId,
             );
           state.currentProject.teamSize = Math.max(
             0,
@@ -748,7 +767,7 @@ const projectsSlice = createSlice({
         // Update projects array
         state.projects.forEach((project) => {
           project.teamMembers = project.teamMembers.filter(
-            (member) => member.id !== action.payload,
+            (member) => member.id !== removedId,
           );
           project.teamSize = Math.max(0, project.teamSize - 1);
         });
@@ -763,7 +782,7 @@ const dbToClientProject = (
   return {
     ...project,
     description: project.description ?? "",
-    tenantId: project.tenantid ?? "",
+    tenantId: "",
     title: project.ind_title,
     code: project.ind_number ?? "",
     sponsor: project.sponsor_name ?? "",
@@ -782,7 +801,7 @@ const dbToClientProject = (
       allowCollaboration: settings?.allow_collaboration ?? false,
       isPublic: settings?.is_public ?? false,
     },
-    projectStartDate: project.project_start_date ?? null,
+    projectStartDate: project.project_start_date ?? "",
     fdaContactEmail: project.fda_contact_email ?? null,
     additionalNotes: project.additional_notes ?? null,
     preIndMeetingDate: project.pre_ind_meeting_date ?? null,

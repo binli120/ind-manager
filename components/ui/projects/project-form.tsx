@@ -54,6 +54,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   isEditing = false,
 }) => {
   const { currentTenant, selectedTenantId } = useTenant();
+  const defaultTeamId = selectedTenantId ?? currentTenant?.id ?? "demo-team";
   const [currentStep, setCurrentStep] = useState(1);
   const [projectData, setProjectData] = useState<ProjectCreation>(() => {
     const base = initialData || getDefaultProjectData();

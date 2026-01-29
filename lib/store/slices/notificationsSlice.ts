@@ -1,11 +1,29 @@
-import type { Database } from "@/lib/supabase/schema";
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { createClient } from "@/lib/supabase/client";
 
-type NotificationEvent =
-  Database["public"]["Tables"]["notification_events"]["Row"];
-type NotificationRecipient =
-  Database["public"]["Tables"]["notification_recipients"]["Row"];
+type NotificationEvent = {
+  id: string;
+  type?: string | null;
+  title?: string | null;
+  body?: string | null;
+  resource_type?: string | null;
+  resource_id?: string | null;
+  action_url?: string | null;
+  severity?: string | null;
+  created_at?: string | null;
+  creator?: { name?: string | null } | null;
+};
+
+type NotificationRecipient = {
+  id: string;
+  user_id: string;
+  notification_id?: string | null;
+  is_read: boolean;
+  is_dismissed?: boolean;
+  created_at?: string | null;
+  read_at?: string | null;
+  notification?: NotificationEvent | null;
+};
 
 
 export type NotificationItem = {
@@ -46,7 +64,8 @@ export const fetchNotifications = createAsyncThunk<
   { rejectValue: string}
 >("notifications/fetchAll", async ({ userId }, { rejectWithValue }) => {
   const supabase = createClient();
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from("notification_recipients")
     .select(`
       id,
@@ -74,7 +93,7 @@ export const fetchNotifications = createAsyncThunk<
 
   if (error) return rejectWithValue(error.message);
 
-  const items = (data ?? []).map((row) => ({
+  const items = (data ?? []).map((row: NotificationRecipient) => ({
     id: row.id,
     event_id: row.notification?.id ?? "",
     type: row.notification?.type ?? "unknown",
@@ -92,7 +111,7 @@ export const fetchNotifications = createAsyncThunk<
       new Date().toISOString(),
   }));
 
-  const unread = items.filter((n) => !n.is_read).length;
+  const unread = items.filter((n: NotificationItem) => !n.is_read).length;
   return { items, unread };
 });
 
@@ -103,7 +122,8 @@ export const markAsRead = createAsyncThunk<
   { rejectValue: string}
 >("notifications/markAsRead", async ({ id }, { rejectWithValue }) => {
   const supabase = createClient();
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("notification_recipients")
     .update({ is_read: true, read_at: new Date().toISOString() })
     .eq("id", id);
@@ -120,7 +140,8 @@ export const markAllAsRead = createAsyncThunk<
   { rejectValue: string}
 >("notifications/markAllAsRead", async ({ userId }, { rejectWithValue }) => {
   const supabase = createClient();
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("notification_recipients")
     .update({ is_read: true, read_at: new Date().toISOString() })
     .match({ user_id: userId, is_read: false });

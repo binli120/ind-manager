@@ -33,7 +33,7 @@ export function DeleteSubsectionDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChangeAction={onOpenChangeAction}>
+    <Dialog open={open} onOpenChange={onOpenChangeAction}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

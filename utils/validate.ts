@@ -19,7 +19,7 @@ export const isPhoneNumber = (value: string): boolean => {
     //
     // The regex below implements the above rules.
     const phoneRegex =
-        /^(?:\+?(\d{1,3}))?[ .-]?(?:$?(\d{3})$?)[ .-]?(\d{3})[ .-]?(\d{4})$/;
+        /^(?:\+?\d{1,3}[ .-]?)?(?:\(?\d{3}\)?)[ .-]?\d{3}[ .-]?\d{4}$/;
 
     return phoneRegex.test(value.trim());
 };

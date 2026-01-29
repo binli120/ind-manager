@@ -4,7 +4,7 @@
 "use client"
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import type { Template, TemplateRow, TemplateDialogProps } from "@/types/section"
+import type { Template, TemplateRow } from "@/types/section"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +12,17 @@ import { useState } from "react"
 import { Pencil, Save, X, Table, RotateCcw } from "lucide-react"
 import { TableEditorDialog } from "./table-editor-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+interface TemplateDialogProps {
+  section: {
+    id: string
+    number: string
+    title?: string
+    subsections?: { subsectionNumber: string }[]
+  }
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
 
 const mockTemplates: Template[] = [
   {

@@ -64,6 +64,10 @@ export async function POST(request: NextRequest) {
 
     const userData = userProfileSchema.parse(await request.json())
 
+    if (!user.email) {
+      return NextResponse.json({ error: "User email missing" }, { status: 400 })
+    }
+
     // Create or update user profile
     const { data, error } = await supabase
       .from("users")
@@ -71,7 +75,6 @@ export async function POST(request: NextRequest) {
         id: user.id,
         email: user.email,
         ...userData,
-        updated_at: new Date().toISOString(),
       })
       .select()
 

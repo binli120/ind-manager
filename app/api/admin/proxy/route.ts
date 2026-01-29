@@ -161,6 +161,8 @@ export async function POST(request: NextRequest) {
 
   switch (action) {
     case "select": {
+      // Tenants table is not generated in Supabase types yet; bypass type check.
+      // @ts-expect-error table may be "tenants"
       let query = supabase.from(table).select(selectClause)
 
       if (validatedFilters) {
@@ -186,6 +188,7 @@ export async function POST(request: NextRequest) {
       if ("error" in sanitized) {
         return NextResponse.json({ error: sanitized.error }, { status: 400 })
       }
+      // @ts-expect-error table may be "tenants"
       result = await supabase.from(table).insert(sanitized.value).select(selectClause)
       break
     }
@@ -198,6 +201,7 @@ export async function POST(request: NextRequest) {
       if (!validatedFilters || Object.keys(validatedFilters).length === 0) {
         return NextResponse.json({ error: "Filters are required for update" }, { status: 400 })
       }
+      // @ts-expect-error table may be "tenants"
       let updateQuery = supabase.from(table).update(sanitized.value)
 
       Object.entries(validatedFilters).forEach(([key, value]) => {

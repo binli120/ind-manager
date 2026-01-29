@@ -15,6 +15,20 @@ import { AnalysisProgress } from "./analysis-progress"
 import { IssueDetailDialog } from "./issue-detail-dialog"
 import { SubmissionTimeline } from "./submission-timeline"
 
+type SectionStatus = "complete" | "warning" | "missing" | "critical"
+type Section = { id: string; name: string; status: SectionStatus; assignee: string }
+type ModuleData = {
+  id: number
+  name: string
+  progress: number
+  issues: number
+  sections: number
+  totalSections: number
+  complete: number
+  warning: number
+  missing: number
+  sectionsDetail: Section[]
+}
 
 const projects = [
   { id: "ind-001", name: "IND-001: Oncology Phase I" },
@@ -22,7 +36,15 @@ const projects = [
   { id: "ind-003", name: "IND-003: Neurology Phase III" },
 ]
 
-const mockData = {
+const mockData: {
+  overallReadiness: number
+  totalIssues: number
+  criticalIssues: number
+  warnings: number
+  daysToDeadline: number
+  targetDate: string
+  modules: ModuleData[]
+} = {
   overallReadiness: 61,
   totalIssues: 28,
   criticalIssues: 2,
