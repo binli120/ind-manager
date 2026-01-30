@@ -130,17 +130,15 @@ function buildTree(keys: string[], prefix: string) {
 
 function fileToSubsection(
   fileName: string,
-  parentNumber: string,
   parentPath: string
 ): SubsectionContent {
-  const number = `${parentNumber}/${fileName}`;
+  const number = fileName;
   return {
     id: `${parentPath}${fileName}`,
     subsectionNumber: number,
     title: fileName,
     header: fileName,
     // full path for tooltip
-    // @ts-expect-error extra field for UI tooltip
     fullPath: `${parentPath}${fileName}`,
     content: "",
     isRequired: false,
@@ -150,17 +148,13 @@ function fileToSubsection(
   };
 }
 
-function nodeToSubsection(
-  node: TreeNode,
-  parentNumber: string
-): SubsectionContent {
-  const number = `${parentNumber}/${node.name}`;
+function nodeToSubsection(node: TreeNode): SubsectionContent {
+  const number = node.name;
   return {
     id: node.path,
     subsectionNumber: number,
     title: node.name,
     header: node.name,
-    // @ts-expect-error extra field for UI tooltip
     fullPath: node.path,
     content: "",
     isRequired: false,
@@ -168,8 +162,8 @@ function nodeToSubsection(
     isCategory: true,
     isUserAdded: false,
     subsections: [
-      ...node.children.map((child) => nodeToSubsection(child, number)),
-      ...node.files.map((file) => fileToSubsection(file, number, node.path)),
+      ...node.children.map((child) => nodeToSubsection(child)),
+      ...node.files.map((file) => fileToSubsection(file, node.path)),
     ],
   };
 }
@@ -185,8 +179,8 @@ function treeToSections(nodes: TreeNode[], rootFiles: string[], prefix: string):
     isCategory: true,
     isUserAdded: false,
     subsections: [
-      ...node.children.map((child) => nodeToSubsection(child, node.name)),
-      ...node.files.map((file) => fileToSubsection(file, node.name, node.path)),
+      ...node.children.map((child) => nodeToSubsection(child)),
+      ...node.files.map((file) => fileToSubsection(file, node.path)),
     ],
   }));
 
@@ -201,7 +195,7 @@ function treeToSections(nodes: TreeNode[], rootFiles: string[], prefix: string):
       isCategory: true,
       isUserAdded: false,
       subsections: rootFiles.map((file) =>
-        fileToSubsection(file, "root", prefix)
+        fileToSubsection(file, prefix)
       ),
     });
   }
@@ -226,7 +220,8 @@ export async function GET(
   try {
     const url = new URL(_req.url);
     const s3Key = url.searchParams.get("s3Key");
-    const projectCode = url.searchParams.get("projectCode");
+    // projectCode currently unused but kept for potential debug
+    void url.searchParams.get("projectCode");
     const projectName = url.searchParams.get("projectName");
     const company =
       url.searchParams.get("company") || process.env.DEFAULT_COMPANY || undefined;

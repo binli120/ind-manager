@@ -54,6 +54,8 @@ interface TiptapEditorProps {
   materialsCount?: number
   onOpenMaterials?: () => void
   sectionNumber?: string
+  readOnly?: boolean
+  hideToolbar?: boolean
 }
 
 export function TiptapEditor({
@@ -62,6 +64,8 @@ export function TiptapEditor({
   materialsCount = 0,
   onOpenMaterials,
   sectionNumber,
+  readOnly = false,
+  hideToolbar = false,
 }: TiptapEditorProps) {
   const [showBubble, setShowBubble] = useState(false)
   const [bubblePosition, setBubblePosition] = useState({ top: 0, left: 0 })
@@ -90,8 +94,10 @@ export function TiptapEditor({
       TableCell,
     ],
     content,
+    editable: !readOnly,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
+      if (readOnly) return
       const newContent = editor.getHTML()
       onChange(newContent)
 
@@ -233,6 +239,7 @@ export function TiptapEditor({
 
   useEffect(() => {
     if (editor) {
+      editor.setEditable(!readOnly)
       const handleSelectionUpdate = () => {
         if (showBubble) {
           setShowBubble(false)
@@ -244,13 +251,13 @@ export function TiptapEditor({
         editor.off("selectionUpdate", handleSelectionUpdate)
       }
     }
-  }, [editor, showBubble])
+  }, [editor, showBubble, readOnly])
 
   useEffect(() => {
-    if (isReviewMode) {
+    if (isReviewMode || readOnly) {
       setShowBubble(false)
     }
-  }, [isReviewMode])
+  }, [isReviewMode, readOnly])
 
   const isSection26 = sectionNumber?.startsWith("2.6")
 
@@ -261,213 +268,215 @@ export function TiptapEditor({
   return (
     <>
       <div className="border border-border rounded-lg bg-card" ref={editorRef}>
-        <div className="border-b border-border">
-          {/* First row: Action buttons */}
-          <div className="flex items-center justify-between flex-wrap gap-1 p-2 border-b border-border">
-            <div className="flex items-center flex-wrap gap-1">
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white h-8 px-3"
-              >
-                <Sparkles className="h-4 w-4" />
-                Regenerate with AI Draft Assistant
-              </Button>
+        {!hideToolbar && !readOnly && (
+          <div className="border-b border-border">
+            {/* First row: Action buttons */}
+            <div className="flex items-center justify-between flex-wrap gap-1 p-2 border-b border-border">
+              <div className="flex items-center flex-wrap gap-1">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white h-8 px-3"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Regenerate with AI Draft Assistant
+                </Button>
 
-              <Button
-                variant={isReviewMode ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setIsReviewMode(!isReviewMode)}
-                className={cn("h-8 px-3 gap-2", isReviewMode && "bg-amber-500 hover:bg-amber-600 text-white")}
-              >
-                <FilePenLine className="h-4 w-4" />
-                Review {isReviewMode && "On"}
-              </Button>
+                <Button
+                  variant={isReviewMode ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setIsReviewMode(!isReviewMode)}
+                  className={cn("h-8 px-3 gap-2", isReviewMode && "bg-amber-500 hover:bg-amber-600 text-white")}
+                >
+                  <FilePenLine className="h-4 w-4" />
+                  Review {isReviewMode && "On"}
+                </Button>
 
-              {isSection26 && (
-                <Button variant="outline" size="sm" onClick={() => setShowTableDialog(true)} className="h-8 px-3 gap-2">
-                  <TableIcon className="h-4 w-4" />
-                  Select Tables
+                {isSection26 && (
+                  <Button variant="outline" size="sm" onClick={() => setShowTableDialog(true)} className="h-8 px-3 gap-2">
+                    <TableIcon className="h-4 w-4" />
+                    Select Tables
+                  </Button>
+                )}
+              </div>
+
+              {materialsCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenMaterials}
+                  className="h-8 px-3 gap-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/30 dark:hover:bg-blue-950/50 border-blue-200 dark:border-blue-800"
+                >
+                  <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    My Materials ({materialsCount})
+                  </span>
                 </Button>
               )}
             </div>
 
-            {materialsCount > 0 && (
+            {/* Second row: Formatting buttons */}
+            <div className="flex items-center flex-wrap gap-1 p-2">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                onClick={onOpenMaterials}
-                className="h-8 px-3 gap-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/30 dark:hover:bg-blue-950/50 border-blue-200 dark:border-blue-800"
+                onClick={() => editor.chain().focus().undo().run()}
+                disabled={!editor.can().undo()}
+                className="h-8 w-8 p-0"
               >
-                <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                  My Materials ({materialsCount})
-                </span>
+                <Undo className="h-4 w-4" />
               </Button>
-            )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().redo().run()}
+                disabled={!editor.can().redo()}
+                className="h-8 w-8 p-0"
+              >
+                <Redo className="h-4 w-4" />
+              </Button>
+
+              <div className="w-px h-6 bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                className={cn("h-8 w-8 p-0", editor.isActive("heading", { level: 1 }) && "bg-accent")}
+              >
+                <Heading1 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                className={cn("h-8 w-8 p-0", editor.isActive("heading", { level: 2 }) && "bg-accent")}
+              >
+                <Heading2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                className={cn("h-8 w-8 p-0", editor.isActive("heading", { level: 3 }) && "bg-accent")}
+              >
+                <Heading3 className="h-4 w-4" />
+              </Button>
+
+              <div className="w-px h-6 bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                className={cn("h-8 w-8 p-0", editor.isActive("bold") && "bg-accent")}
+              >
+                <Bold className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                className={cn("h-8 w-8 p-0", editor.isActive("italic") && "bg-accent")}
+              >
+                <Italic className="h-4 w-4" />
+              </Button>
+
+              <div className="w-px h-6 bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                className={cn("h-8 w-8 p-0", editor.isActive("bulletList") && "bg-accent")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                className={cn("h-8 w-8 p-0", editor.isActive("orderedList") && "bg-accent")}
+              >
+                <ListOrdered className="h-4 w-4" />
+              </Button>
+
+              <div className="w-px h-6 bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                className={cn("h-8 w-8 p-0", editor.isActive("blockquote") && "bg-accent")}
+              >
+                <Quote className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                className={cn("h-8 w-8 p-0", editor.isActive("codeBlock") && "bg-accent")}
+              >
+                <Code className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+
+              <div className="w-px h-6 bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTableDialog(true)}
+                className="h-8 w-8 p-0"
+                title="Insert Table"
+              >
+                <TableIcon className="h-4 w-4" />
+              </Button>
+
+              <div className="w-px h-6 bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().setTextAlign("left").run()}
+                className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: "left" }) && "bg-accent")}
+              >
+                <AlignLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().setTextAlign("center").run()}
+                className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: "center" }) && "bg-accent")}
+              >
+                <AlignCenter className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().setTextAlign("right").run()}
+                className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: "right" }) && "bg-accent")}
+              >
+                <AlignRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+                className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: "justify" }) && "bg-accent")}
+              >
+                <AlignJustify className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-
-          {/* Second row: Formatting buttons */}
-          <div className="flex items-center flex-wrap gap-1 p-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().undo().run()}
-              disabled={!editor.can().undo()}
-              className="h-8 w-8 p-0"
-            >
-              <Undo className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().redo().run()}
-              disabled={!editor.can().redo()}
-              className="h-8 w-8 p-0"
-            >
-              <Redo className="h-4 w-4" />
-            </Button>
-
-            <div className="w-px h-6 bg-border mx-1" />
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("heading", { level: 1 }) && "bg-accent")}
-            >
-              <Heading1 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("heading", { level: 2 }) && "bg-accent")}
-            >
-              <Heading2 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("heading", { level: 3 }) && "bg-accent")}
-            >
-              <Heading3 className="h-4 w-4" />
-            </Button>
-
-            <div className="w-px h-6 bg-border mx-1" />
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("bold") && "bg-accent")}
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("italic") && "bg-accent")}
-            >
-              <Italic className="h-4 w-4" />
-            </Button>
-
-            <div className="w-px h-6 bg-border mx-1" />
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("bulletList") && "bg-accent")}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("orderedList") && "bg-accent")}
-            >
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-
-            <div className="w-px h-6 bg-border mx-1" />
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleBlockquote().run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("blockquote") && "bg-accent")}
-            >
-              <Quote className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-              className={cn("h-8 w-8 p-0", editor.isActive("codeBlock") && "bg-accent")}
-            >
-              <Code className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setHorizontalRule().run()}
-              className="h-8 w-8 p-0"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-
-            <div className="w-px h-6 bg-border mx-1" />
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowTableDialog(true)}
-              className="h-8 w-8 p-0"
-              title="Insert Table"
-            >
-              <TableIcon className="h-4 w-4" />
-            </Button>
-
-            <div className="w-px h-6 bg-border mx-1" />
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setTextAlign("left").run()}
-              className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: "left" }) && "bg-accent")}
-            >
-              <AlignLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setTextAlign("center").run()}
-              className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: "center" }) && "bg-accent")}
-            >
-              <AlignCenter className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setTextAlign("right").run()}
-              className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: "right" }) && "bg-accent")}
-            >
-              <AlignRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-              className={cn("h-8 w-8 p-0", editor.isActive({ textAlign: "justify" }) && "bg-accent")}
-            >
-              <AlignJustify className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        )}
 
         <div className={cn(isReviewMode && "cursor-pointer")}>
           <EditorContent editor={editor} />

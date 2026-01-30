@@ -139,7 +139,8 @@ export function Sidebar({
           }
           className={cn(
             'w-full justify-start text-left h-auto py-2 px-3 transition-colors group',
-            selectedSubsection?.id === subsection.id && 'bg-secondary',
+            selectedSubsection?.id === subsection.id &&
+              'bg-secondary text-secondary-foreground',
             dragOverItem === subsection.id && 'border-t-2 border-blue-500',
             draggedItem?.id === subsection.id && 'opacity-50'
           )}
@@ -170,7 +171,10 @@ export function Sidebar({
             }
           }}
         >
-          <div className='flex items-start gap-2 w-full'>
+          <div
+            className='flex items-start gap-2 w-full'
+            title={(subsection as { fullPath?: string }).fullPath ?? subsection.title}
+          >
             {!subsection.isCategory && (
               <GripVertical className='h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab' />
             )}

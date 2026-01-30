@@ -6,8 +6,10 @@
 import { OnboardingTour } from '@/components/section-editor/onboarding-tour';
 import { PdfUploadDialog } from '@/components/section-editor/pdf-upload-dialog';
 import { SectionEditor } from '@/components/section-editor/section-editor';
+import { TiptapEditor } from '@/components/section-editor/tiptap-editor';
 import { Sidebar } from '@/components/section-editor/sidebar';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
   TooltipContent,
@@ -35,10 +37,34 @@ export function SmartEditorView() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [isLoadingTree, setIsLoadingTree] = useState(false);
   const [treeError, setTreeError] = useState<string | null>(null);
+  const [fileMode, setFileMode] = useState<"md" | "pdf" | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [fileText, setFileText] = useState<string | null>(null);
+  const [fileLoading, setFileLoading] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [hasSeenTour, setHasSeenTour] = useLocalStorage<boolean>(
     'hasSeenOnboardingTour',
     false
   );
+
+  const markdownToHtml = (md: string) => {
+    const escapeHtml = (str: string) =>
+      str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    const escaped = escapeHtml(md);
+    const blocks = escaped
+      .replace(/\r\n/g, '\n')
+      .split(/\n{2,}/)
+      .map((block) => `<p>${block.replace(/\n/g, '<br />')}</p>`)
+      .join('');
+
+    return blocks || '<p></p>';
+  };
 
   useEffect(() => {
     if (!hasSeenTour) {
@@ -95,6 +121,9 @@ export function SmartEditorView() {
         if (s3Key) {
           url.searchParams.set('s3Key', s3Key);
         }
+        let companyValue: string | undefined;
+        let projectNameValue: string | undefined;
+
         if (
           currentProject?.metadata &&
           typeof currentProject.metadata === 'object' &&
@@ -102,23 +131,29 @@ export function SmartEditorView() {
         ) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const m = currentProject.metadata as any;
-          if (m.company) url.searchParams.set('company', String(m.company));
-          if (m.ind_title) {
-            url.searchParams.set('projectName', String(m.ind_title));
-          }
+          if (m.company) companyValue = String(m.company);
+          if (m.ind_title) projectNameValue = String(m.ind_title);
         }
 
-        const tenantName =
-          tenants.find((t) => t.id === selectedTenantId)?.name ||
-          currentProject?.tenantId ||
-          undefined;
-        if (tenantName) {
-          url.searchParams.set('company', String(tenantName));
+        const tenantEntry = tenants.find((t) => t.id === selectedTenantId);
+        if (!companyValue) {
+          companyValue =
+            tenantEntry?.name ||
+            currentProject?.tenantId ||
+            selectedTenantId ||
+            "unknown-company";
         }
 
-        if (!url.searchParams.has('projectName') && currentProject?.title) {
-          url.searchParams.set('projectName', currentProject.title);
+        if (!projectNameValue) {
+          projectNameValue =
+            currentProject?.title ||
+            currentProject?.code ||
+            currentProject?.id ||
+            "unknown-project";
         }
+
+        url.searchParams.set('company', companyValue);
+        url.searchParams.set('projectName', projectNameValue);
 
         const res = await fetch(url.toString());
         if (!res.ok) {
@@ -148,7 +183,89 @@ export function SmartEditorView() {
     };
 
     loadTree();
-  }, [selectedProjectId, currentProject]);
+  }, [selectedProjectId, currentProject, selectedTenantId, tenants]);
+
+  // Load file content (md or pdf) when a file subsection is selected
+  useEffect(() => {
+    const loadFile = async () => {
+      if (!selectedSubsection || selectedSubsection.isCategory) {
+        setFileMode(null);
+        setFileUrl(null);
+        setFileText(null);
+        setFileError(null);
+        setFileLoading(false);
+        return;
+      }
+
+      const fullPath =
+        (selectedSubsection as { fullPath?: string }).fullPath ||
+        selectedSubsection.title;
+
+      console.info("[SmartEditor] file selection", {
+        id: selectedSubsection.id,
+        title: selectedSubsection.title,
+        fullPath,
+      });
+
+      setFileLoading(true);
+      setFileError(null);
+      setFileMode(null);
+      setFileUrl(null);
+      setFileText(null);
+
+      const mdKey = `${fullPath}.extracted.md`;
+
+      const fetchSigned = async (key: string, format: "url" | "text" = "url") => {
+        console.info("[SmartEditor] signing url for key", key, "format", format);
+        const url = new URL(
+          `/api/projects/${selectedProjectId}/asset`,
+          window.location.origin
+        );
+        url.searchParams.set("key", key);
+        url.searchParams.set("format", format);
+        const res = await fetch(url.toString());
+        if (!res.ok) throw new Error(`asset api failed ${res.status}`);
+        const payload = await res.json();
+        return payload;
+      };
+
+      try {
+        // Try markdown sidecar first
+        const mdPayload = await fetchSigned(mdKey, "text");
+        const mdText = (mdPayload as { text?: string }).text;
+        if (!mdText) {
+          throw new Error("md sidecar empty");
+        }
+        console.info("[SmartEditor] loaded markdown sidecar", {
+          mdKey,
+          bytes: mdText.length,
+        });
+        setFileText(mdText);
+        setFileMode("md");
+      } catch (mdError) {
+        console.warn("[SmartEditor] markdown sidecar missing", mdKey, mdError);
+        try {
+          const pdfPayload = await fetchSigned(fullPath, "url");
+          setFileUrl((pdfPayload as { url: string }).url);
+          setFileMode("pdf");
+        } catch (pdfError) {
+          setFileError(
+            pdfError instanceof Error
+              ? pdfError.message
+              : "Unable to load file"
+          );
+          console.error("[SmartEditor] failed loading file", {
+            fullPath,
+            pdfError,
+          });
+        }
+      } finally {
+        setFileLoading(false);
+      }
+    };
+
+    loadFile();
+  }, [selectedSubsection, selectedProjectId]);
 
   const handleSelectSection = (section: Section) => {
     setSelectedSection(section);
@@ -444,6 +561,64 @@ export function SmartEditorView() {
             <div className='h-7 w-64 rounded bg-muted animate-pulse' />
             <div className='h-4 w-80 rounded bg-muted animate-pulse' />
             <div className='h-[520px] w-full rounded bg-muted animate-pulse' />
+          </div>
+        ) : selectedSubsection && !selectedSubsection.isCategory ? (
+          <div className='p-6 space-y-4'>
+            {fileLoading && (
+              <div className='space-y-2'>
+                <div className='h-6 w-64 rounded bg-muted animate-pulse' />
+                <div className='h-4 w-48 rounded bg-muted animate-pulse' />
+              </div>
+            )}
+            {fileError && (
+              <div className='rounded border border-amber-300 bg-amber-50 text-amber-900 px-4 py-2 text-sm'>
+                {fileError}
+              </div>
+            )}
+            {fileMode === 'md' && fileText && (
+              <div className='h-[80vh] overflow-y-auto rounded-md border border-border bg-card p-4 space-y-4'>
+                <div className='border-b border-border pb-3'>
+                  <div className='flex items-center justify-between gap-3'>
+                    <div className='flex items-center gap-3 flex-wrap'>
+                      <Badge variant='outline' className='font-mono text-xs px-2 py-1'>
+                        1 of 1
+                      </Badge>
+                      <span className='text-base font-semibold text-foreground'>
+                        {selectedSubsection?.title}
+                      </span>
+                      <Badge className='bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400'>
+                        Draft
+                      </Badge>
+                    </div>
+                    <div className='flex items-center gap-2 flex-wrap'>
+                      <Button variant='outline' size='sm' className='text-xs'>
+                        View &amp; Edit Template
+                      </Button>
+                      <Button variant='outline' size='sm' className='text-xs'>
+                        Materials (0)
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <TiptapEditor
+                  key={selectedSubsection?.id}
+                  content={markdownToHtml(fileText)}
+                  onChange={() => {}}
+                  readOnly={false}
+                  hideToolbar={false}
+                  sectionNumber={selectedSubsection?.subsectionNumber}
+                />
+              </div>
+            )}
+            {fileMode === 'pdf' && fileUrl && (
+              <div className='rounded-md border border-border overflow-hidden'>
+                <iframe
+                  src={fileUrl}
+                  className='w-full h-[80vh] border-0'
+                  title='PDF Preview'
+                />
+              </div>
+            )}
           </div>
         ) : (
           selectedSection && (

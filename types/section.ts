@@ -12,6 +12,7 @@ export interface SubsectionContent {
   isCategory?: boolean;
   subsections?: SubsectionContent[];
   isUserAdded?: boolean;
+  fullPath?: string;
 }
 
 export interface Section {
