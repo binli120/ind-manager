@@ -54,11 +54,12 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   isEditing = false,
 }) => {
   const { currentTenant, selectedTenantId } = useTenant();
-  const defaultTeamId = selectedTenantId ?? currentTenant?.id ?? "demo-team";
+  const defaultTenantId = selectedTenantId ?? currentTenant?.id ?? "demo-tenant";
   const [currentStep, setCurrentStep] = useState(1);
   const [projectData, setProjectData] = useState<ProjectCreation>(() => {
     const base = initialData || getDefaultProjectData();
-    return { ...base, team_id: base.team_id || defaultTeamId };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { ...base, tenantid: (base as any).tenantid || defaultTenantId };
   });
 
   const progress = (currentStep / PROJECT_CREATION_STEPS.length) * 100;

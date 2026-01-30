@@ -77,14 +77,12 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     const userData = updateUserSchema.parse(await request.json())
 
     // Update user profile
-    const { data, error } = await supabase
-      .from("users")
-      .update({
-        ...userData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .select()
+      const { data, error } = await supabase
+        .from("users")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .update({ ...(userData as any), updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select()
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })

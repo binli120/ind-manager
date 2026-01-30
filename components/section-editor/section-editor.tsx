@@ -273,8 +273,8 @@ export function SectionEditor({
     : section.number
 
   return (
-    <div className="flex-1 overflow-y-auto p-8 bg-background">
-      <div className="max-w-5xl mx-auto">
+    <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-background">
+      <div className="w-full max-w-[calc(100%-20px)] mx-auto">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>

@@ -70,6 +70,7 @@ export interface Project {
   sponsorContactEmail: string;
   additionalNotes: string | null;
   productType: string;
+  userRole?: Database["public"]["Enums"]["user_roles"] | null;
 }
 
 export type ProjectCreation =
@@ -145,30 +146,26 @@ export const fetchProjects = createAsyncThunk(
       const isAdmin = isAdminEmail(userData?.email);
       if (!isAdmin && !userData?.tenantid) return [];
 
-      // MOCK: update if you keep mock mode
-      /*
-      if (useMockProjects && userRow.tenantid === MOCK_TENANT_ID) {
-        const response = await fetch(
-          `/api/mock/projects${userRow.tenantid ? `?tenantId=${userRow.tenantid}` : ""}`,
-          { cache: "no-store" },
-        );
-        if (!response.ok) throw new Error("Failed to load mock projects");
-        const { data } = await response.json();
-        return data as Project[];
-      }
-      */
+      // fetch assignments & roles from user_project
+      const { data: assignments, error: assignError } = await supabase
+        .from("user_project")
+        .select("project_id, role")
+        .eq("user_id", userId);
+      if (assignError) throw assignError;
+      const assignmentRows =
+        (assignments ?? []) as {
+          project_id: string;
+          role?: Database["public"]["Enums"]["user_roles"] | null;
+        }[];
+      const assignedIds = assignmentRows.map((a) => a.project_id);
 
       let query = supabase
         .from("projects")
         .select("*")
         .order("updated_at", { ascending: false });
 
-      if (!isAdmin) {
-        if (userData?.tenantid) {
-          query = query.eq("tenantid", userData.tenantid);
-        } else {
-          return [];
-        }
+      if (!isAdmin && assignedIds.length > 0) {
+        query = query.in("id", assignedIds);
       }
 
       const { data: projects, error } = await query;
@@ -189,7 +186,7 @@ export const fetchProjects = createAsyncThunk(
           sponsor: project.sponsor_name || "",
           drug: project.drug_name || "",
           targetDate: project.target_ind_submission_date || "",
-          tenantId: userData?.tenantid ?? "",
+          tenantId: project.tenantid ?? userData?.tenantid ?? "",
           ownerId: project.project_creator_id ?? "",
           teamSize: 0,
           teamMembers: [],
@@ -199,14 +196,16 @@ export const fetchProjects = createAsyncThunk(
             isPublic: false,
             allowCollaboration: true,
           },
-          metadata: {},
-          targetIndSubmissionDate: project.target_ind_submission_date,
+          metadata: project.metadata as Project["metadata"],
+          targetIndSubmissionDate: project.target_ind_submission_date ?? "",
           preIndMeetingDate: project.pre_ind_meeting_date,
-          projectStartDate: project.project_start_date,
+          projectStartDate: project.project_start_date ?? "",
           fdaContactEmail: project.fda_contact_email,
           sponsorContactEmail: project.sponsor_contact_email,
           additionalNotes: project.additional_notes,
           productType: project.product_type,
+          userRole: assignmentRows.find((a) => a.project_id === project.id)
+            ?.role ?? null,
         })) || [];
 
       return transformedProjects;
@@ -242,13 +241,24 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
       const isAdmin = isAdminEmail(userData?.email);
       if (!isAdmin && !userData?.tenantid) return [];
 
+      const { data: assignments, error: assignError } = await supabase
+        .from("user_project")
+        .select("project_id, role")
+        .eq("user_id", user.id);
+      if (assignError) throw assignError;
+      const assignmentRows =
+        (assignments ?? []) as { project_id: string; role?: string | null }[];
+      const assignedIds = assignmentRows.map((a) => a.project_id);
+
+      if (!isAdmin && assignedIds.length === 0) return [];
+
       let query = supabase
         .from("projects")
         .select("*")
         .order("updated_at", { ascending: false });
 
-      if (!isAdmin && userData?.tenantid) {
-        query = query.eq("tenantid", userData.tenantid);
+      if (!isAdmin) {
+        query = query.in("id", assignedIds);
       }
 
       const { data: projects, error } = await query;
@@ -267,7 +277,7 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
           sponsor: project.sponsor_name || "",
           drug: project.drug_name || "",
           targetDate: project.target_ind_submission_date || "",
-          tenantId: userData?.tenantid ?? "",
+          tenantId: project.tenantid ?? userData?.tenantid ?? "",
           ownerId: project.project_creator_id ?? "",
           teamSize: 0,
           teamMembers: [],
@@ -278,13 +288,15 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
             allowCollaboration: true,
           },
           metadata: {},
-          targetIndSubmissionDate: project.target_ind_submission_date,
+          targetIndSubmissionDate: project.target_ind_submission_date ?? "",
           preIndMeetingDate: project.pre_ind_meeting_date,
-          projectStartDate: project.project_start_date,
+          projectStartDate: project.project_start_date ?? "",
           fdaContactEmail: project.fda_contact_email,
           sponsorContactEmail: project.sponsor_contact_email,
           additionalNotes: project.additional_notes,
           productType: project.product_type,
+          userRole: assignmentRows.find((a) => a.project_id === project.id)
+            ?.role as Project["userRole"],
         })) || [];
 
       return transformedProjects;
@@ -305,15 +317,7 @@ export const fetchProjectDetails = createAsyncThunk(
 
       const { data: project, error } = await supabase
         .from("projects")
-        .select(
-          `
-          *,
-          settings:project_settings (
-            allowCollaboration:allow_collaboration,
-            isPublic:is_public
-          )
-        `,
-        )
+        .select("*")
         .eq("id", projectId)
         .single();
 
@@ -337,14 +341,18 @@ export const fetchProjectDetails = createAsyncThunk(
         teamMembers: [],
         createdAt: project.created_at,
         updatedAt: project.updated_at,
-        settings: project.settings || {
-          isPublic: false,
-          allowCollaboration: true,
+        settings: {
+          isPublic:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (project as any).settings?.isPublic ?? false,
+          allowCollaboration:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (project as any).settings?.allowCollaboration ?? true,
         },
         metadata: (project.metadata as Project["metadata"]) ?? {},
-        targetIndSubmissionDate: project.target_ind_submission_date,
+        targetIndSubmissionDate: project.target_ind_submission_date ?? "",
         preIndMeetingDate: project.pre_ind_meeting_date,
-        projectStartDate: project.project_start_date,
+        projectStartDate: project.project_start_date ?? "",
         fdaContactEmail: project.fda_contact_email,
         sponsorContactEmail: project.sponsor_contact_email,
         additionalNotes: project.additional_notes,
@@ -777,7 +785,6 @@ const projectsSlice = createSlice({
 
 const dbToClientProject = (
   project: ProjectCreation & { id: string },
-  settings?: Database["public"]["Tables"]["project_settings"]["Row"],
 ): Project => {
   return {
     ...project,
@@ -797,10 +804,10 @@ const dbToClientProject = (
     priority: (project.priority ?? "low") as Project["priority"],
     progress: project.progress ?? 0,
     metadata: (project.metadata as Project["metadata"]) ?? {},
-    settings: {
-      allowCollaboration: settings?.allow_collaboration ?? false,
-      isPublic: settings?.is_public ?? false,
-    },
+        settings: {
+          allowCollaboration: false,
+          isPublic: false,
+        },
     projectStartDate: project.project_start_date ?? "",
     fdaContactEmail: project.fda_contact_email ?? null,
     additionalNotes: project.additional_notes ?? null,

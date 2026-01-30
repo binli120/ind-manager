@@ -206,7 +206,7 @@ export function ProjectsView() {
     setShowEditDialog(true);
     setEditProject({
       id: proj.id,
-      team_id: proj.tenantId ?? "",
+      tenantid: proj.tenantId ?? "",
       drug_name: proj.drug,
       ind_title: proj.title,
       ind_number: proj.code,

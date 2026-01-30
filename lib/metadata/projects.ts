@@ -130,7 +130,7 @@ export const getDefaultProjectData = () =>
     ind_title: "",
     ind_number: "",
     drug_name: "",
-    team_id: "",
+    tenantid: "",
     product_type: "",
     description: "",
     priority: "medium",

@@ -71,11 +71,8 @@ export async function POST(request: NextRequest) {
     // Create or update user profile
     const { data, error } = await supabase
       .from("users")
-      .upsert({
-        id: user.id,
-        email: user.email,
-        ...userData,
-      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .upsert({ id: user.id, email: user.email, ...(userData as any) })
       .select()
 
     if (error) {
