@@ -249,7 +249,7 @@ export function Sidebar({
           onClick={onUploadPdf}
         >
           <Upload className='h-4 w-4' />
-          Upload PDF
+          Upload
         </Button>
       </div>
 

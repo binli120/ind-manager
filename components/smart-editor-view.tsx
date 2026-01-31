@@ -47,6 +47,52 @@ export function SmartEditorView() {
     false
   );
 
+  const deriveCompany = () => {
+    let companyValue: string | undefined;
+    if (
+      currentProject?.metadata &&
+      typeof currentProject.metadata === 'object' &&
+      currentProject.metadata !== null
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const m = currentProject.metadata as any;
+      if (m.company) companyValue = String(m.company);
+    }
+    const tenantEntry = tenants.find((t) => t.id === selectedTenantId);
+    if (!companyValue) {
+      companyValue =
+        tenantEntry?.name ||
+        currentProject?.tenantId ||
+        selectedTenantId ||
+        "unknown-company";
+    }
+    return companyValue;
+  };
+
+  const deriveProjectName = () => {
+    let projectNameValue: string | undefined;
+    if (
+      currentProject?.metadata &&
+      typeof currentProject.metadata === 'object' &&
+      currentProject.metadata !== null
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const m = currentProject.metadata as any;
+      if (m.ind_title) projectNameValue = String(m.ind_title);
+    }
+    if (!projectNameValue) {
+      projectNameValue =
+        currentProject?.title ||
+        currentProject?.code ||
+        currentProject?.id ||
+        "unknown-project";
+    }
+    return projectNameValue;
+  };
+
+  const companyValue = deriveCompany();
+  const projectNameValue = deriveProjectName();
+
   const markdownToHtml = (md: string) => {
     const escapeHtml = (str: string) =>
       str
@@ -636,6 +682,8 @@ export function SmartEditorView() {
         open={showUploadDialog}
         onOpenChange={setShowUploadDialog}
         onUploadComplete={handleUploadComplete}
+        company={companyValue}
+        projectName={projectNameValue}
       />
     </div>
   );
