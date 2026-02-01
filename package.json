@@ -11,7 +11,8 @@
     "test:watch": "jest --watch",
     "start": "next start",
     "storybook": "storybook dev -p 6006",
-    "storybook:build": "storybook build"
+    "storybook:build": "storybook build",
+    "stack": "bash scripts/run-stack.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.705.0",

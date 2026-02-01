@@ -8,10 +8,14 @@ import type { Template, TemplateRow } from "@/types/section"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Pencil, Save, X, Table, RotateCcw } from "lucide-react"
 import { TableEditorDialog } from "./table-editor-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
+import { useAppSelector } from "@/lib/store"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface TemplateDialogProps {
   section: {
@@ -22,67 +26,137 @@ interface TemplateDialogProps {
   }
   open: boolean
   onOpenChange: (open: boolean) => void
+  onUnavailable?: () => void
+  onAvailable?: () => void
 }
 
-const mockTemplates: Template[] = [
-  {
-    id: "proj-1",
-    name: "Project Template",
-    type: "project",
-    isDefault: true,
-    canEdit: true,
-    lastUpdated: "2024-12-10",
-    rows: [
-      {
-        id: "row-1",
-        section: "2.4.1",
-        sectionHeader: "Overview of the Nonclinical Testing Strategy",
-        subsection: "2.4.1",
-        subsectionHeader: "Overview of the Nonclinical Testing Strategy",
-        subSectionNumbering: "2.4.1 - a",
-        indRequirement: "Required",
-        content:
-          "Introduce the investigational product, including its chemical/biologic nature, pharmacological class, mechanism of action, and intended therapeutic indication(s). Provide context for the nonclinical program within the overall drug development plan.",
-        modalities: {
-          sm: "Describe the small molecule drug candidate including chemical class, molecular weight, physicochemical properties relevant to nonclinical testing, and pharmacological target.",
-          bio: "Describe the biologic product type (e.g., monoclonal antibody, fusion protein, enzyme), target antigen/receptor, and key structural features. Address species specificity of target binding that influenced nonclinical program design.",
-          adc: "Describe the ADC construct including the antibody component (target, isotype), linker chemistry (cleavable vs. non-cleavable), and payload (mechanism, drug class). Explain the rationale for evaluating the intact conjugate and any component testing.",
-          ont: "Describe the oligonucleotide class (ASO, siRNA, aptamer), target gene/mRNA, mechanism of action (e.g., RNase H, RISC-mediated), and chemical modifications (e.g., phosphorothioate backbone, 2'-modifications) that influence nonclinical behavior.",
-          other:
-            "For cell/gene therapies: describe the product type, vector (if applicable), genetic payload or cell source, and mechanism of therapeutic effect. For vaccines: describe antigen(s), adjuvant(s), and intended immune response.",
-        },
-      },
-    ],
-  },
-  {
-    id: "comp-1",
-    name: "Company Template",
-    type: "company",
-    isDefault: false,
-    canEdit: false,
-    lastUpdated: "2024-11-15",
-    rows: [
-      {
-        id: "row-2",
-        section: "2.4.1",
-        sectionHeader: "Overview of the Nonclinical Testing Strategy",
-        subsection: "2.4.1",
-        subsectionHeader: "Overview of the Nonclinical Testing Strategy",
-        subSectionNumbering: "2.4.1 - a",
-        indRequirement: "Required",
-        content:
-          "Introduce the investigational product, including its chemical/biologic nature, pharmacological class, mechanism of action, and intended therapeutic indication(s). Provide context for the nonclinical program within the overall drug development plan.",
-        modalities: {
-          sm: "[Company standard SM template content]",
-          bio: "[Company standard BIO template content]",
-          adc: "[Company standard ADC template content]",
-          ont: "[Company standard ONT template content]",
-          other: "[Company standard Other Modality template content]",
-        },
-      },
-    ],
-  },
-]
+type ApiTemplateEntry = Record<string, unknown>
+
+export const normalizeRow = (entry: ApiTemplateEntry): TemplateRow => {
+  const modalities = (entry.modalities as Partial<TemplateRow["modalities"]>) || {}
+  const requiredFlag =
+    (entry.indRequirement as TemplateRow["indRequirement"]) ??
+    (entry.ind_requirement as TemplateRow["indRequirement"]) ??
+    ((entry.required as boolean | undefined) ? "Required" : undefined) ??
+    "Required"
+
+  const rawValue = entry.raw ?? entry
+  const rawString =
+    typeof rawValue === "string"
+      ? rawValue
+      : (() => {
+          try {
+            return JSON.stringify(rawValue, null, 2)
+          } catch {
+            return ""
+          }
+        })()
+
+  const elementNumber =
+    (entry.element_number as string | undefined) ??
+    (entry.subSectionNumbering as string | undefined) ??
+    (entry.sub_section_numbering as string | undefined) ??
+    (entry.subSectionNumbering as string | undefined)
+
+  return {
+    id:
+      (entry.id as string | undefined) ??
+      elementNumber ??
+      `${entry.section ?? entry.section_number ?? "row"}-${entry.subsection ?? entry.subsection_number ?? "0"}`,
+    section: (entry.section as string | undefined) ?? (entry.section_number as string | undefined) ?? "",
+    sectionHeader:
+      (entry.sectionHeader as string | undefined) ??
+      (entry.section_header as string | undefined) ??
+      (entry.header as string | undefined) ??
+      "",
+    subsection: (entry.subsection as string | undefined) ?? (entry.subsection_number as string | undefined) ?? "",
+    subsectionHeader:
+      (entry.subsectionHeader as string | undefined) ??
+      (entry.subsection_header as string | undefined) ??
+      (entry.title as string | undefined) ??
+      "",
+    subSectionNumbering:
+      (entry.subSectionNumbering as string | undefined) ??
+      (entry.sub_section_numbering as string | undefined) ??
+      (entry.element as string | undefined) ??
+      (entry.subsection as string | undefined) ??
+      (entry.section as string | undefined) ??
+      "",
+    indRequirement: requiredFlag,
+    content:
+      (entry.content as string | undefined) ??
+      (entry.text as string | undefined) ??
+      (entry.body as string | undefined) ??
+      "",
+    modalities: {
+      sm: modalities.sm ?? (entry.sm as string | undefined) ?? "",
+      bio: modalities.bio ?? (entry.bio as string | undefined) ?? "",
+      adc: modalities.adc ?? (entry.adc as string | undefined) ?? "",
+      ont: modalities.ont ?? (entry.ont as string | undefined) ?? "",
+      other: modalities.other ?? (entry.other as string | undefined) ?? "",
+    },
+    raw: rawString,
+  }
+}
+
+export const flattenRows = (data: unknown): TemplateRow[] => {
+  const result: TemplateRow[] = []
+  const seen = new Set<string>()
+
+  const ensureId = (base: string, idx: number) => {
+    if (!base) {
+      base = `row-${idx}`
+    }
+    let candidate = base
+    let counter = 1
+    while (seen.has(candidate)) {
+      candidate = `${base}__${counter++}`
+    }
+    seen.add(candidate)
+    return candidate
+  }
+
+  const pushNormalized = (rows: unknown[]) => {
+    rows.forEach((row, idx) => {
+      const normalized = normalizeRow(row as ApiTemplateEntry)
+      const id = ensureId(normalized.id || "", idx)
+      result.push({ ...normalized, id })
+    })
+  }
+
+  if (!data) return result
+
+  if (Array.isArray(data)) {
+    pushNormalized(data)
+    return result
+  }
+
+  if (typeof data === "object") {
+    if (Array.isArray((data as { entries?: unknown }).entries)) {
+      pushNormalized((data as { entries: unknown[] }).entries)
+      return result
+    }
+    const maybeRows = (data as { rows?: unknown }).rows
+    if (Array.isArray(maybeRows)) {
+      pushNormalized(maybeRows)
+      return result
+    }
+
+    const values = Object.values(data as Record<string, unknown>)
+    if (values.length && values.every((v) => typeof v === "object")) {
+      values.forEach((v) => {
+        const nested = flattenRows(v)
+        nested.forEach((row, idx) => {
+          const id = ensureId(row.id || "", idx)
+          result.push({ ...row, id })
+        })
+      })
+      return result
+    }
+  }
+
+  return result
+}
 
 const default_table = `
   <table style="width: 100%; border-collapse: collapse;">
@@ -132,20 +206,97 @@ type EditingField = {
   field: string
 }
 
-export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<Template>(mockTemplates[0])
+const toSectionNumber = (value?: string | null) => {
+  if (!value) return null
+  const match = value.match(/^(\d+(?:\.\d+)*)(?:\s|$)/)
+  return match ? match[1] : null
+}
+
+export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onAvailable }: TemplateDialogProps) {
+  const userId = useAppSelector((s) => s.auth.user?.id)
+
   const [editingField, setEditingField] = useState<EditingField | null>(null)
-  const [editedRows, setEditedRows] = useState<TemplateRow[]>(selectedTemplate.rows)
+  const [editedRows, setEditedRows] = useState<TemplateRow[]>([])
+  const [baseRows, setBaseRows] = useState<TemplateRow[]>([])
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastFetchKey, setLastFetchKey] = useState<string | null>(null)
+
   const [tableEditorOpen, setTableEditorOpen] = useState(false)
   const [showRevertConfirm, setShowRevertConfirm] = useState(false)
   const [showTableRevertConfirm, setShowTableRevertConfirm] = useState(false)
   const [tableContent, setTableContent] = useState(default_table)
 
-  const handleTemplateChange = (template: Template) => {
-    setSelectedTemplate(template)
-    setEditedRows(template.rows)
-    setEditingField(null)
-  }
+  useEffect(() => {
+    if (!open) return
+    const loadTemplate = async () => {
+      if (!userId || !userId.trim()) {
+        setError("Login required to load template")
+        setBaseRows([])
+        setEditedRows([])
+        setLoading(false)
+        onUnavailable?.()
+        return
+      }
+      const sectionParam = toSectionNumber(section.number) || section.number
+      const fetchKey = `${sectionParam}-${userId}`
+      if (fetchKey === lastFetchKey) return
+      setLastFetchKey(fetchKey)
+      setLoading(true)
+      setError(null)
+      try {
+        console.info("[TemplateDialog] Fetch template", {
+          sectionParam,
+          userId,
+        })
+        const response = await requestPdfAnalysisApi<
+          Record<string, unknown>,
+          undefined,
+          { section: string }
+        >({
+          path: "/ncd/template",
+          method: "GET",
+          query: { section: sectionParam },
+          userIdHeader: userId ?? null,
+          headers: { "user-id": userId },
+          suppressErrorLog: true,
+          allowRedirects: false,
+        })
+
+        const rows = flattenRows(response)
+        setBaseRows(rows)
+        setEditedRows(rows)
+        setLastUpdated(new Date().toISOString().slice(0, 10))
+        if (!rows.length) {
+          onUnavailable?.()
+        } else {
+          onAvailable?.()
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load template")
+        onUnavailable?.()
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadTemplate()
+  }, [open, section.number, userId, onAvailable, onUnavailable, lastFetchKey])
+
+  const selectedTemplate: Template = useMemo(
+    () => ({
+      id: "remote",
+      name: "Template",
+      type: "project",
+      isDefault: true,
+      canEdit: true,
+      lastUpdated: lastUpdated ?? "",
+      rows: editedRows,
+    }),
+    [editedRows, lastUpdated],
+  )
 
   const handleModalityEdit = (rowId: string, modality: keyof TemplateRow["modalities"], value: string) => {
     setEditedRows((prev) =>
@@ -153,13 +304,52 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
     )
   }
 
-  const handleSaveField = () => {
-    console.log("[v0] Saving field:", editingField)
-    setEditingField(null)
+  const handleSaveField = async () => {
+    if (!editingField) return
+    if (!userId) {
+      setError("User not authenticated")
+      toast.error("Please log in to save template changes.")
+      return
+    }
+
+    const row = editedRows.find((r) => r.id === editingField.rowId)
+    if (!row) return
+
+    setIsSaving(true)
+    setError(null)
+    try {
+      await requestPdfAnalysisApi({
+        path: "/ncd/template/override",
+        method: "POST",
+        body: {
+          user_id: userId,
+          section: row.section,
+          subsection: row.subsection,
+          payload: {
+            ...row,
+            indRequirement: rowRequirements[row.id] ?? row.indRequirement,
+            modalities: row.modalities,
+          },
+        },
+        userIdHeader: userId,
+        headers: { "user-id": userId },
+        suppressErrorLog: true,
+        allowRedirects: false,
+      })
+      setBaseRows(editedRows)
+      setLastUpdated(new Date().toISOString().slice(0, 10))
+      setEditingField(null)
+      toast.success("Template override saved")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save override")
+      toast.error(err instanceof Error ? err.message : "Failed to save template")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleCancelField = () => {
-    setEditedRows(selectedTemplate.rows)
+    setEditedRows(baseRows)
     setEditingField(null)
   }
 
@@ -170,22 +360,32 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
   const isPharmacologyTableSection =
     ["2.6.3", "2.6.5", "2.6.7"].some((id) => section.number.includes(id)) || section.subsections?.some((sub) => ["2.6.3", "2.6.5", "2.6.7"].some((id) => sub.subsectionNumber.includes(id)))
 
-  const [rowRequirements, setRowRequirements] = useState<Record<string, string>>(
-    Object.fromEntries(selectedTemplate.rows.map((row) => [row.id, row.indRequirement || "Mandatory"])),
-  )
+  const [rowRequirements, setRowRequirements] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (!editedRows.length) return
+    const defaults: Record<string, string> = {}
+    editedRows.forEach((row) => {
+      defaults[row.id] = row.indRequirement || "Required"
+      defaults[`${row.id}-sm`] = "Required"
+      defaults[`${row.id}-bio`] = "Required"
+      defaults[`${row.id}-adc`] = "Required"
+      defaults[`${row.id}-ont`] = "Required"
+      defaults[`${row.id}-other`] = "Required"
+    })
+    setRowRequirements(defaults)
+  }, [editedRows])
 
   const handleRequirementChange = (rowId: string, value: string) => {
     setRowRequirements((prev) => ({ ...prev, [rowId]: value }))
   }
 
   const handleRevert = () => {
-    const defaultTemplate = mockTemplates.find((t) => t.isDefault)
-    if (defaultTemplate) {
-      setEditedRows(defaultTemplate.rows)
-      setRowRequirements(
-        Object.fromEntries(defaultTemplate.rows.map((row) => [row.id, row.indRequirement || "Mandatory"])),
-      )
-    }
+    setEditedRows(baseRows)
+    setRowRequirements(
+      Object.fromEntries(baseRows.map((row) => [row.id, row.indRequirement || "Required"])),
+    )
+    setEditingField(null)
     setShowRevertConfirm(false)
   }
 
@@ -196,7 +396,7 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
 
   const getRequirementColor = (requirement: string) => {
     switch (requirement) {
-      case "Mandatory":
+      case "Required":
         return "text-red-600"
       case "Optional":
         return "text-yellow-700"
@@ -218,27 +418,20 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
           </DialogHeader>
 
           <div className="flex items-center gap-4 pb-4 border-b">
-            {mockTemplates.map((template) => (
-              <Button
-                key={template.id}
-                variant={selectedTemplate.id === template.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleTemplateChange(template)}
-                className="gap-2"
-              >
-                {template.name}
-                {template.isDefault && (
-                  <Badge variant="secondary" className="ml-1">
-                    Default
-                  </Badge>
-                )}
-              </Button>
-            ))}
+            <Badge variant="secondary">{lastUpdated ? `Updated ${lastUpdated}` : "Loaded"}</Badge>
+            {loading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading template…
+              </div>
+            )}
+            {error && <div className="text-sm text-destructive">{error}</div>}
             <Button
               variant="ghost"
               size="sm"
               className="ml-auto gap-2 text-muted-foreground hover:text-foreground"
               onClick={() => setShowRevertConfirm(true)}
+              disabled={loading || !baseRows.length}
             >
               <RotateCcw className="h-4 w-4" />
               Revert to Default
@@ -247,9 +440,25 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
 
           <ScrollArea className="h-[calc(90vh-200px)]">
             <div className="space-y-6 pr-4">
+              {!loading && !editedRows.length && (
+                <div className="text-sm text-muted-foreground border rounded-lg p-4">
+                  No template content found for section {section.number}.
+                </div>
+              )}
               {!isPharmacologyTableSection &&
                 editedRows.map((row) => (
                   <div key={row.id} className="border rounded-lg p-6 bg-card space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">{row.content || row.sectionHeader || "Template Block"}</h3>
+                        <div className="text-sm text-muted-foreground">{row.section}</div>
+                      </div>
+                      {row.subsection && (
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {row.subsection}
+                        </Badge>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <label className="text-muted-foreground font-medium">Section</label>
@@ -277,20 +486,22 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
 
                     <div>
                       <div className="flex items-center justify-between">
-                        <label className="text-muted-foreground font-medium text-sm">Content</label>
+                        <label className="text-muted-foreground font-medium text-sm">
+                          Block Header (content)
+                        </label>
                         <div className="flex items-center gap-2">
                           <Select
-                            value={rowRequirements[row.id] || "Mandatory"}
+                            value={rowRequirements[row.id] || "Required"}
                             onValueChange={(value) => handleRequirementChange(row.id, value)}
                           >
                             <SelectTrigger
-                              className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[row.id] || "Mandatory")}`}
+                              className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[row.id] || "Required")}`}
                             >
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Mandatory" className="text-red-600">
-                                Mandatory
+                              <SelectItem value="Required" className="text-red-600">
+                                Required
                               </SelectItem>
                               <SelectItem value="Optional" className="text-yellow-700">
                                 Optional
@@ -312,7 +523,13 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                           )}
                           {isFieldEditing(row.id, "content") && (
                             <div className="flex items-center gap-2">
-                              <Button variant="default" size="sm" onClick={handleSaveField} className="h-7 gap-1">
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={handleSaveField}
+                                disabled={isSaving}
+                                className="h-7 gap-1"
+                              >
                                 <Save className="h-3 w-3" />
                                 Save
                               </Button>
@@ -330,18 +547,26 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                         </div>
                       </div>
                       {isFieldEditing(row.id, "content") ? (
-                        <textarea
+                        <input
                           value={row.content}
                           onChange={(e) =>
                             setEditedRows((prev) =>
                               prev.map((r) => (r.id === row.id ? { ...r, content: e.target.value } : r)),
                             )
                           }
-                          className="w-full mt-2 min-h-[100px] p-3 border border-border rounded-md bg-background resize-y"
+                          className="w-full mt-2 h-10 px-3 border border-border rounded-md bg-background"
                         />
                       ) : (
                         <div className="mt-1 p-3 bg-muted/30 rounded text-sm">{row.content}</div>
                       )}
+                      <div className="mt-3">
+                        <label className="text-muted-foreground font-medium text-sm">Raw</label>
+                        <textarea
+                          value={row.raw || ""}
+                          readOnly
+                          className="w-full mt-2 min-h-[140px] p-3 border border-border rounded-md bg-muted/20 font-mono text-xs resize-y"
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-4 pt-2">
@@ -357,18 +582,18 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                           </label>
                           <div className="flex items-center gap-2">
                             <Select
-                              value={rowRequirements[`${row.id}-sm`] || "Mandatory"}
-                              onValueChange={(value) => handleRequirementChange(`${row.id}-sm`, value)}
+                            value={rowRequirements[`${row.id}-sm`] || "Required"}
+                            onValueChange={(value) => handleRequirementChange(`${row.id}-sm`, value)}
+                          >
+                            <SelectTrigger
+                              className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-sm`] || "Required")}`}
                             >
-                              <SelectTrigger
-                                className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-sm`] || "Mandatory")}`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Mandatory" className="text-red-600">
-                                  Mandatory
-                                </SelectItem>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Required" className="text-red-600">
+                                Required
+                              </SelectItem>
                                 <SelectItem value="Optional" className="text-yellow-700">
                                   Optional
                                 </SelectItem>
@@ -389,7 +614,13 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                             )}
                             {isFieldEditing(row.id, "sm") && (
                               <div className="flex items-center gap-2">
-                                <Button variant="default" size="sm" onClick={handleSaveField} className="h-7 gap-1">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={handleSaveField}
+                                  disabled={isSaving}
+                                  className="h-7 gap-1"
+                                >
                                   <Save className="h-3 w-3" />
                                   Save
                                 </Button>
@@ -428,18 +659,18 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                           </label>
                           <div className="flex items-center gap-2">
                             <Select
-                              value={rowRequirements[`${row.id}-bio`] || "Mandatory"}
-                              onValueChange={(value) => handleRequirementChange(`${row.id}-bio`, value)}
+                            value={rowRequirements[`${row.id}-bio`] || "Required"}
+                            onValueChange={(value) => handleRequirementChange(`${row.id}-bio`, value)}
+                          >
+                            <SelectTrigger
+                              className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-bio`] || "Required")}`}
                             >
-                              <SelectTrigger
-                                className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-bio`] || "Mandatory")}`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Mandatory" className="text-red-600">
-                                  Mandatory
-                                </SelectItem>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Required" className="text-red-600">
+                                Required
+                              </SelectItem>
                                 <SelectItem value="Optional" className="text-yellow-700">
                                   Optional
                                 </SelectItem>
@@ -460,7 +691,13 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                             )}
                             {isFieldEditing(row.id, "bio") && (
                               <div className="flex items-center gap-2">
-                                <Button variant="default" size="sm" onClick={handleSaveField} className="h-7 gap-1">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={handleSaveField}
+                                  disabled={isSaving}
+                                  className="h-7 gap-1"
+                                >
                                   <Save className="h-3 w-3" />
                                   Save
                                 </Button>
@@ -499,18 +736,18 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                           </label>
                           <div className="flex items-center gap-2">
                             <Select
-                              value={rowRequirements[`${row.id}-adc`] || "Mandatory"}
-                              onValueChange={(value) => handleRequirementChange(`${row.id}-adc`, value)}
+                            value={rowRequirements[`${row.id}-adc`] || "Required"}
+                            onValueChange={(value) => handleRequirementChange(`${row.id}-adc`, value)}
+                          >
+                            <SelectTrigger
+                              className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-adc`] || "Required")}`}
                             >
-                              <SelectTrigger
-                                className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-adc`] || "Mandatory")}`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Mandatory" className="text-red-600">
-                                  Mandatory
-                                </SelectItem>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Required" className="text-red-600">
+                                Required
+                              </SelectItem>
                                 <SelectItem value="Optional" className="text-yellow-700">
                                   Optional
                                 </SelectItem>
@@ -531,7 +768,13 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                             )}
                             {isFieldEditing(row.id, "adc") && (
                               <div className="flex items-center gap-2">
-                                <Button variant="default" size="sm" onClick={handleSaveField} className="h-7 gap-1">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={handleSaveField}
+                                  disabled={isSaving}
+                                  className="h-7 gap-1"
+                                >
                                   <Save className="h-3 w-3" />
                                   Save
                                 </Button>
@@ -570,18 +813,18 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                           </label>
                           <div className="flex items-center gap-2">
                             <Select
-                              value={rowRequirements[`${row.id}-ont`] || "Mandatory"}
-                              onValueChange={(value) => handleRequirementChange(`${row.id}-ont`, value)}
+                            value={rowRequirements[`${row.id}-ont`] || "Required"}
+                            onValueChange={(value) => handleRequirementChange(`${row.id}-ont`, value)}
+                          >
+                            <SelectTrigger
+                              className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-ont`] || "Required")}`}
                             >
-                              <SelectTrigger
-                                className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-ont`] || "Mandatory")}`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Mandatory" className="text-red-600">
-                                  Mandatory
-                                </SelectItem>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Required" className="text-red-600">
+                                Required
+                              </SelectItem>
                                 <SelectItem value="Optional" className="text-yellow-700">
                                   Optional
                                 </SelectItem>
@@ -602,7 +845,13 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                             )}
                             {isFieldEditing(row.id, "ont") && (
                               <div className="flex items-center gap-2">
-                                <Button variant="default" size="sm" onClick={handleSaveField} className="h-7 gap-1">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={handleSaveField}
+                                  disabled={isSaving}
+                                  className="h-7 gap-1"
+                                >
                                   <Save className="h-3 w-3" />
                                   Save
                                 </Button>
@@ -641,18 +890,18 @@ export function TemplateDialog({ section, open, onOpenChange }: TemplateDialogPr
                           </label>
                           <div className="flex items-center gap-2">
                             <Select
-                              value={rowRequirements[`${row.id}-other`] || "Mandatory"}
-                              onValueChange={(value) => handleRequirementChange(`${row.id}-other`, value)}
+                            value={rowRequirements[`${row.id}-other`] || "Required"}
+                            onValueChange={(value) => handleRequirementChange(`${row.id}-other`, value)}
+                          >
+                            <SelectTrigger
+                              className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-other`] || "Required")}`}
                             >
-                              <SelectTrigger
-                                className={`w-[160px] h-7 text-xs ${getRequirementColor(rowRequirements[`${row.id}-other`] || "Mandatory")}`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Mandatory" className="text-red-600">
-                                  Mandatory
-                                </SelectItem>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Required" className="text-red-600">
+                                Required
+                              </SelectItem>
                                 <SelectItem value="Optional" className="text-yellow-700">
                                   Optional
                                 </SelectItem>

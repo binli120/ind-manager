@@ -551,7 +551,7 @@
           "ncd"
         ],
         "summary": "Get Template Sections",
-        "description": "Return template entries for a given section or subsection from ind_24_26_template.json.\n- If section is omitted, returns the full template JSON payload.\n- If you pass a subsection (e.g., 2.4.1-A), returns the matching entry.\n- If you pass a parent section (e.g., 2.4.1), returns all subsection entries under it.\n- If user_id is provided and overrides exist, they are merged (override wins).",
+        "description": "Return template entries for a given section or subsection from ind_24_26_template.json.\n- If section is omitted, returns the full template JSON payload.\n- If you pass a subsection (e.g., 2.4.1-A), returns the matching entry.\n- If you pass a parent section (e.g., 2.4.1), returns all subsection entries under it.\n- The caller must provide a valid user-id header; overrides are merged when present for that user.",
         "operationId": "get_template_sections_ncd_template_get",
         "parameters": [
           {
@@ -571,20 +571,14 @@
             }
           },
           {
-            "name": "user_id",
-            "in": "query",
-            "required": false,
+            "name": "user-id",
+            "in": "header",
+            "required": true,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
+              "type": "string",
               "title": "User Id"
-            }
+            },
+            "description": "User ID (UUID) required in header"
           }
         ],
         "responses": {
@@ -622,15 +616,6 @@
         "description": "Return downloadable DOCX template URLs for the configured templates bucket.",
         "operationId": "list_template_downloads_ncd_templates_get",
         "parameters": [
-          {
-            "name": "user_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "User Id"
-            }
-          },
           {
             "name": "bucket",
             "in": "query",
@@ -672,6 +657,16 @@
               "default": 3600,
               "title": "Expires In"
             }
+          },
+          {
+            "name": "user-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            },
+            "description": "User ID (UUID) required in header"
           },
           {
             "name": "aws_region",

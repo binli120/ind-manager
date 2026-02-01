@@ -16,6 +16,14 @@ import { DeleteSubsectionDialog } from "@/components/section-editor/delete-subse
 import { FileText, Save, CheckCircle2, Trash2 } from "lucide-react"
 import type { Section, SubsectionContent } from "@/types/section"
 import { AddSectionDialog } from "@/components/section-editor/add-section-dialog"
+import { useAppSelector } from "@/lib/store"
+import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
+
+const toSectionNumber = (value?: string | null) => {
+  if (!value) return null
+  const match = value.match(/^(\d+(?:\.\d+)*)(?:\s|$)/)
+  return match ? match[1] : null
+}
 
 interface SectionEditorProps {
   section: Section
@@ -45,6 +53,38 @@ function SubsectionEditor({
   const [showTemplate, setShowTemplate] = useState(false)
   const [showTableInsert, setShowTableInsert] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [templateDisabled, setTemplateDisabled] = useState(false)
+  const userId = useAppSelector((s) => s.auth.user?.id)
+
+  useEffect(() => {
+    // Re-enable when user logs in so we can retry
+    if (userId) setTemplateDisabled(false)
+  }, [userId])
+
+  useEffect(() => {
+    const retryTemplate = async () => {
+      if (!templateDisabled || !userId) return
+      try {
+        const response = await requestPdfAnalysisApi<
+          Record<string, unknown>,
+          undefined,
+          { section: string }
+        >({
+          path: "/ncd/template",
+          method: "GET",
+          query: { section: toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber },
+          userIdHeader: userId,
+        })
+        const rows = Array.isArray(response)
+          ? response
+          : Object.values(response || {}).flatMap((v) => (Array.isArray(v) ? v : []))
+        if (rows.length > 0) setTemplateDisabled(false)
+      } catch {
+        // keep disabled
+      }
+    }
+    void retryTemplate()
+  }, [templateDisabled, userId, subsection.subsectionNumber])
 
   const [isAnimating, setIsAnimating] = useState(subsection.isUserAdded)
 
@@ -124,6 +164,8 @@ function SubsectionEditor({
             size="sm"
             onClick={() => setShowTemplate(true)}
             className="text-xs"
+            disabled={!userId || templateDisabled}
+            title={!userId ? "Login required to view template" : templateDisabled ? "Template unavailable" : undefined}
             data-tour="detailed-template"
           >
             <FileText className="h-3.5 w-3.5 mr-1.5" />
@@ -174,9 +216,11 @@ function SubsectionEditor({
         onOpenChange={setShowTemplate}
         section={{
           id: subsection.id,
-          number: subsection.subsectionNumber,
+          number: toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber,
           title: subsection.title,
         }}
+        onUnavailable={() => setTemplateDisabled(true)}
+        onAvailable={() => setTemplateDisabled(false)}
       />
 
       <MaterialsDialog

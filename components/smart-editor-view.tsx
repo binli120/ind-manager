@@ -46,6 +46,8 @@ export function SmartEditorView() {
     'hasSeenOnboardingTour',
     false
   );
+  const [treeRetryKey, setTreeRetryKey] = useState(0);
+  const [usedCachedTree, setUsedCachedTree] = useState(false);
 
   const deriveCompany = () => {
     let companyValue: string | undefined;
@@ -139,6 +141,46 @@ export function SmartEditorView() {
   }, [sectionData, selectedSection]);
 
   // Load section tree from S3 based on the selected project
+  const buildTreeCacheKey = (
+    projectId: string,
+    s3Key?: string,
+    company?: string,
+    projectName?: string
+  ) =>
+    [
+      'sectionTree',
+      projectId || 'no-project',
+      s3Key || 'no-s3key',
+      company || 'no-company',
+      projectName || 'no-projectName',
+    ].join(':');
+
+  const loadCachedTree = (key: string) => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { ts: number; sections: Section[] };
+      const tenMinutes = 10 * 60 * 1000;
+      if (Date.now() - parsed.ts > tenMinutes) return null;
+      return parsed.sections;
+    } catch {
+      return null;
+    }
+  };
+
+  const saveTreeCache = (key: string, sections: Section[]) => {
+    if (typeof window === 'undefined') return;
+    try {
+      sessionStorage.setItem(
+        key,
+        JSON.stringify({ ts: Date.now(), sections })
+      );
+    } catch {
+      // ignore quota errors
+    }
+  };
+
   useEffect(() => {
     const loadTree = async () => {
       if (!selectedProjectId) {
@@ -148,6 +190,8 @@ export function SmartEditorView() {
         return;
       }
 
+      let cacheHit = false;
+      setUsedCachedTree(false);
       setIsLoadingTree(true);
       setTreeError(null);
 
@@ -201,7 +245,26 @@ export function SmartEditorView() {
         url.searchParams.set('company', companyValue);
         url.searchParams.set('projectName', projectNameValue);
 
-        const res = await fetch(url.toString());
+        const abort = new AbortController();
+        const timeout = setTimeout(() => abort.abort(), 10000);
+        const cacheKey = buildTreeCacheKey(
+          selectedProjectId,
+          s3Key || undefined,
+          companyValue,
+          projectNameValue
+        );
+        const cached = loadCachedTree(cacheKey);
+        if (cached && cached.length) {
+          cacheHit = true;
+          setUsedCachedTree(true);
+          setSectionData(cached);
+          setSelectedSection(cached[0] ?? null);
+          setSelectedSubsection(null);
+          setIsLoadingTree(false);
+        }
+
+        const res = await fetch(url.toString(), { signal: abort.signal });
+        clearTimeout(timeout);
         if (!res.ok) {
           const errPayload = await res.json().catch(() => null);
           throw new Error(
@@ -215,21 +278,29 @@ export function SmartEditorView() {
         setSectionData(fetchedSections);
         setSelectedSection(fetchedSections[0] ?? null);
         setSelectedSubsection(null);
+        saveTreeCache(cacheKey, fetchedSections);
+        setUsedCachedTree(false);
       } catch (error) {
         console.error('[SmartEditor] failed to load section tree', error);
         setTreeError(
-          error instanceof Error ? error.message : 'Unable to load section tree'
+          error instanceof DOMException && error.name === 'AbortError'
+            ? 'Section tree request timed out. Please retry.'
+            : error instanceof Error
+              ? error.message
+              : 'Unable to load section tree'
         );
-        setSectionData([]);
-        setSelectedSection(null);
-        setSelectedSubsection(null);
+        if (!cacheHit) {
+          setSectionData([]);
+          setSelectedSection(null);
+          setSelectedSubsection(null);
+        }
       } finally {
         setIsLoadingTree(false);
       }
     };
 
     loadTree();
-  }, [selectedProjectId, currentProject, selectedTenantId, tenants]);
+  }, [selectedProjectId, currentProject, selectedTenantId, tenants, treeRetryKey]);
 
   // Load file content (md or pdf) when a file subsection is selected
   useEffect(() => {
@@ -571,7 +642,7 @@ export function SmartEditorView() {
         onReorderSubsections={handleReorderSubsections}
       />
       <div className='flex-1 flex flex-col relative'>
-        {isLoadingTree && (
+        {isLoadingTree && !usedCachedTree && (
           <div className='absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/70 backdrop-blur-sm'>
             <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
             <p className='mt-3 text-sm text-muted-foreground'>
@@ -598,8 +669,13 @@ export function SmartEditorView() {
           </Tooltip>
         </TooltipProvider>
         {treeError && (
-          <div className='mx-6 mt-6 rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-4 py-2 text-sm'>
-            {treeError}. Showing default IND template instead.
+          <div className='mx-6 mt-6 rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-4 py-2 text-sm flex items-center justify-between gap-4'>
+            <span>{treeError}</span>
+            <div className='flex items-center gap-2'>
+              <Button variant='outline' size='sm' onClick={() => setTreeRetryKey((k) => k + 1)}>
+                Retry
+              </Button>
+            </div>
           </div>
         )}
         {isLoadingTree ? (

@@ -89,11 +89,11 @@ export interface TemplateOverrideRequest {
 
 export interface NCDTemplateQuery {
   section?: string | null;
-  user_id?: string | null;
+  userId?: string | null;
 }
 
 export interface NCDTemplatesQuery {
-  user_id: string;
+  userId: string;
   bucket?: string | null;
   prefixes?: string | null;
   expires_in?: number;
@@ -232,6 +232,7 @@ export const fetchTemplateSections = createPdfAnalysisThunk<
     path: "/ncd/template",
     method: "GET",
     query: query ?? undefined,
+    userIdHeader: query?.userId ?? null,
   }));
 
 export const fetchS3AnalysisStatus = createPdfAnalysisThunk<
@@ -268,6 +269,7 @@ export const fetchTemplateDownloads = createPdfAnalysisThunk<
     path: "/ncd/templates",
     method: "GET",
     query,
+    userIdHeader: query.userId,
   }));
 
 export const fetchTemplateDocx = createPdfAnalysisThunk<

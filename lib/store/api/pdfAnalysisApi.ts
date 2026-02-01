@@ -21,6 +21,9 @@ export interface PdfAnalysisApiRequestOptions<
   query?: TQuery;
   body?: BodyInit | TBody | null;
   headers?: HeadersInit;
+  userIdHeader?: string | null;
+  suppressErrorLog?: boolean;
+  allowRedirects?: boolean;
 }
 
 export class PdfAnalysisApiError extends Error {
@@ -38,6 +41,8 @@ export class PdfAnalysisApiError extends Error {
 const API_BASE_URL = (process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL ?? "")
   .trim()
   .replace(/\/+$/, "");
+
+const DEBUG_API = process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_DEBUG === "true";
 
 const buildApiUrl = (path: string, query?: object) => {
   const baseUrl = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
@@ -151,11 +156,24 @@ export const requestPdfAnalysisApi = async <
 >(
   options: PdfAnalysisApiRequestOptions<TBody, TQuery>,
 ): Promise<TResponse> => {
-  const { path, method = "GET", query, body, headers } = options;
+  const {
+    path,
+    method = "GET",
+    query,
+    body,
+    headers,
+    userIdHeader,
+    suppressErrorLog,
+    allowRedirects = false,
+  } = options;
   const url = buildApiUrl(path, query);
   const requestHeaders: Record<string, string> = {
     ...(headers as Record<string, string> | undefined),
   };
+
+  if (userIdHeader) {
+    requestHeaders["user-id"] = userIdHeader;
+  }
 
   let requestBody: BodyInit | undefined;
   if (body !== undefined && body !== null) {
@@ -167,25 +185,61 @@ export const requestPdfAnalysisApi = async <
     }
   }
 
+  if (DEBUG_API) {
+    console.info("[pdf-analysis-api] Request", {
+      method,
+      url,
+      query,
+      headers: requestHeaders,
+    });
+  }
+
   const response = await fetch(url, {
     method,
     headers: requestHeaders,
     body: requestBody,
+    redirect: allowRedirects ? "follow" : "manual",
   });
 
   const payload = await parseResponsePayload(response);
 
   if (!response.ok) {
+    if (!allowRedirects && response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      const message =
+        location
+          ? `Request redirected to ${location} (possible auth redirect or wrong API base URL)`
+          : "Request was redirected (possible auth redirect or wrong API base URL)";
+      if (!suppressErrorLog) {
+        console.error("[pdf-analysis-api] Redirect blocked", {
+          method,
+          url,
+          status: response.status,
+          location,
+        });
+      }
+      throw new PdfAnalysisApiError(message, response.status, payload);
+    }
     const message =
       extractErrorMessage(payload) || response.statusText || "Request failed";
-    console.error("[pdf-analysis-api] Request failed", {
+    if (!suppressErrorLog) {
+      console.error("[pdf-analysis-api] Request failed", {
+        method,
+        url,
+        status: response.status,
+        message,
+        payload,
+      });
+    }
+    throw new PdfAnalysisApiError(message, response.status, payload);
+  }
+
+  if (DEBUG_API) {
+    console.info("[pdf-analysis-api] Response", {
       method,
       url,
       status: response.status,
-      message,
-      payload,
     });
-    throw new PdfAnalysisApiError(message, response.status, payload);
   }
 
   return payload as TResponse;

@@ -26,6 +26,20 @@ const mockState = {
     viewMode: 'grid' as const,
   },
   documents: { selectedDocumentId: null as string | null },
+  tenants: {
+    tenants: [] as Array<{ id: string; name: string }>,
+    currentTenant: null,
+    selectedTenantId: null as string | null,
+    isLoading: false,
+    error: null as string | null,
+  },
+  notifications: {
+    items: [] as unknown[],
+    unread: 0,
+    loading: false,
+    error: null as string | null,
+    isOpen: false,
+  },
 };
 
 jest.mock('@/lib/store', () => ({
@@ -58,6 +72,11 @@ jest.mock('@/lib/supabase', () => ({
       })),
     },
   }),
+}));
+
+jest.mock('react-redux', () => ({
+  useDispatch: () => dispatchMock,
+  useSelector: (fn: (state: typeof mockState) => unknown) => fn(mockState),
 }));
 
 jest.mock('@/components/ui/select', () => {
@@ -132,12 +151,13 @@ describe('Header project dropdown', () => {
       await Promise.resolve();
     });
 
-    expect(screen.getByText('Project')).toBeInTheDocument();
+    expect(screen.getByText(/Select project/i)).toBeInTheDocument();
 
-    const trigger = screen.getByRole('combobox');
-    fireEvent.click(trigger);
+    const trigger = screen.getByText(/Select project/i).closest('button');
+    expect(trigger).toBeTruthy();
+    fireEvent.click(trigger!);
 
-    const option = screen.getByRole('option', { name: 'Alpha Project' });
+    const option = screen.getByText('Alpha Project');
     fireEvent.click(option);
     await act(async () => Promise.resolve());
 

@@ -17,6 +17,17 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async rewrites() {
+    const apiBase = process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL;
+    if (!apiBase) return [];
+    const normalized = apiBase.replace(/\/+$/, "");
+    return [
+      {
+        source: "/ncd/:path*",
+        destination: `${normalized}/ncd/:path*`,
+      },
+    ];
+  },
   webpack: (config) => {
     config.infrastructureLogging = {
       ...config.infrastructureLogging,

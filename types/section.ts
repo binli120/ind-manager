@@ -45,6 +45,7 @@ export interface TemplateRow {
   indRequirement: "Required" | "Optional" | "Not Applicable";
   content: string;
   modalities: ModalityContent;
+  raw?: string;
 }
 
 export interface Template {
