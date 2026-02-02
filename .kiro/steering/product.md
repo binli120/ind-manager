@@ -6,7 +6,7 @@ A collaborative document authoring and management platform designed for pharmace
 
 ## Core Features
 
-- **Project Management**: Multi-project workspace for managing drug submissions with sponsor and team assignment
+- **Project Management**: Multi project workspace for managing drug submissions with sponsor and team assignment
 - **Document Authoring**: Rich text editor (Tiptap) with real-time collaboration, section locking, and version control
 - **Team Collaboration**: Role-based access control, team management, and multi-user document editing
 - **Gap Analysis**: AI-powered compliance checking and readiness assessment for regulatory submissions
