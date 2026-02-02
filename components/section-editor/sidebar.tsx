@@ -8,13 +8,7 @@ import type React from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Section, SubsectionContent } from '@/types/section';
-import {
-  FileText,
-  Folder,
-  FolderOpen,
-  GripVertical,
-  Upload,
-} from 'lucide-react';
+import { FileText, Folder, FolderOpen, GripVertical, Upload, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface SidebarProps {
@@ -24,6 +18,7 @@ interface SidebarProps {
   onSelectSection: (section: Section) => void;
   onSelectSubsection: (subsection: SubsectionContent) => void;
   onUploadPdf: () => void; // Added prop for PDF upload handler
+  onAddFromTemplate: () => void;
   onReorderSubsections?: (
     draggedId: string,
     targetId: string,
@@ -38,6 +33,7 @@ export function Sidebar({
   onSelectSection,
   onSelectSubsection,
   onUploadPdf,
+  onAddFromTemplate,
   onReorderSubsections,
 }: SidebarProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
@@ -250,6 +246,15 @@ export function Sidebar({
         >
           <Upload className='h-4 w-4' />
           Upload
+        </Button>
+        <Button
+          variant='default'
+          size='sm'
+          className='w-full mt-2 gap-2'
+          onClick={onAddFromTemplate}
+        >
+          <Plus className='h-4 w-4' />
+          Add from Template
         </Button>
       </div>
 

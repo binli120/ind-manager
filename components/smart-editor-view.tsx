@@ -8,6 +8,7 @@ import { PdfUploadDialog } from '@/components/section-editor/pdf-upload-dialog';
 import { SectionEditor } from '@/components/section-editor/section-editor';
 import { TiptapEditor } from '@/components/section-editor/tiptap-editor';
 import { Sidebar } from '@/components/section-editor/sidebar';
+import { AddFromTemplateDialog } from '@/components/section-editor/add-from-template-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -22,6 +23,7 @@ import { useTenant } from '@/hooks/useTenant';
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Section, SubsectionContent } from '@/types/section';
+import { upsertSectionPath } from '@/lib/section-tree';
 
 // Default empty template; actual sections are fetched from S3.
 // No hardcoded template; always load from S3
@@ -35,6 +37,7 @@ export function SmartEditorView() {
     useState<SubsectionContent | null>(null);
   const [showTour, setShowTour] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showAddFromTemplate, setShowAddFromTemplate] = useState(false);
   const [isLoadingTree, setIsLoadingTree] = useState(false);
   const [treeError, setTreeError] = useState<string | null>(null);
   const [fileMode, setFileMode] = useState<"md" | "pdf" | null>(null);
@@ -48,6 +51,7 @@ export function SmartEditorView() {
   );
   const [treeRetryKey, setTreeRetryKey] = useState(0);
   const [usedCachedTree, setUsedCachedTree] = useState(false);
+  const [treeCacheKey, setTreeCacheKey] = useState<string | null>(null);
 
   const deriveCompany = () => {
     let companyValue: string | undefined;
@@ -94,6 +98,20 @@ export function SmartEditorView() {
 
   const companyValue = deriveCompany();
   const projectNameValue = deriveProjectName();
+  const derivePrimaryS3Key = () => {
+    if (
+      currentProject?.metadata &&
+      typeof currentProject.metadata === 'object' &&
+      currentProject.metadata !== null &&
+      'primaryDocumentS3Key' in currentProject.metadata
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const m = currentProject.metadata as any;
+      if (m.primaryDocumentS3Key) return String(m.primaryDocumentS3Key);
+    }
+    return undefined;
+  };
+  const primaryS3Key = derivePrimaryS3Key();
 
   const markdownToHtml = (md: string) => {
     const escapeHtml = (str: string) =>
@@ -253,6 +271,7 @@ export function SmartEditorView() {
           companyValue,
           projectNameValue
         );
+        setTreeCacheKey(cacheKey);
         const cached = loadCachedTree(cacheKey);
         if (cached && cached.length) {
           cacheHit = true;
@@ -513,6 +532,37 @@ export function SmartEditorView() {
     }
   };
 
+  const handleCreateFromTemplate = (templateNumber: string, createdKey?: string) => {
+    const toRelativeKey = (uri: string) => {
+      if (uri.startsWith('s3://')) {
+        const parts = uri.replace('s3://', '').split('/');
+        return parts.slice(1).join('/');
+      }
+      return uri;
+    };
+
+    const result = upsertSectionPath(sectionData, templateNumber);
+
+    if (createdKey) {
+      const relKey = toRelativeKey(createdKey);
+      result.leaf.fullPath = relKey;
+    }
+
+    setSectionData(result.sections);
+    if (treeCacheKey) {
+      saveTreeCache(treeCacheKey, result.sections);
+    }
+    setSelectedSection(result.section);
+    setSelectedSubsection(result.leaf);
+    setTreeRetryKey((k) => k + 1); // refresh from S3 to reflect real file
+    setTimeout(() => {
+      const element = document.getElementById(`section-${result.leaf.subsectionNumber}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
+  };
+
   const handleCloseTour = () => {
     setShowTour(false);
     localStorage.setItem('hasSeenOnboardingTour', 'true');
@@ -639,6 +689,7 @@ export function SmartEditorView() {
         onSelectSection={handleSelectSection}
         onSelectSubsection={handleSelectSubsection}
         onUploadPdf={() => setShowUploadDialog(true)}
+        onAddFromTemplate={() => setShowAddFromTemplate(true)}
         onReorderSubsections={handleReorderSubsections}
       />
       <div className='flex-1 flex flex-col relative'>
@@ -760,6 +811,15 @@ export function SmartEditorView() {
         onUploadComplete={handleUploadComplete}
         company={companyValue}
         projectName={projectNameValue}
+      />
+      <AddFromTemplateDialog
+        open={showAddFromTemplate}
+        onOpenChange={setShowAddFromTemplate}
+        onCreate={handleCreateFromTemplate}
+        projectId={selectedProjectId}
+        company={companyValue}
+        projectName={projectNameValue}
+        s3Key={primaryS3Key}
       />
     </div>
   );
