@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
+import type { MaterialItem, TableData, ImageData } from "./my-materials-dialog"
 
 interface Material {
   id: string
@@ -34,15 +35,8 @@ interface MaterialsDialogProps {
   subsectionId?: string
   subsectionTitle?: string
   onMaterialsCountChange?: (count: number) => void // Added callback for materials count
-}
-
-interface MyMaterial {
-  type: string
-  content?: string
-  originalText?: string
-  id?: string
-  data?: unknown
-  timestamp: Date
+  materials: MaterialItem[]
+  onMaterialsChange: (items: MaterialItem[]) => void
 }
 
 export function MaterialsDialog({
@@ -52,16 +46,23 @@ export function MaterialsDialog({
   subsectionId = "2.6.1",
   subsectionTitle = "Nonclinical Overview",
   onMaterialsCountChange, // Accept the callback prop
+  materials,
+  onMaterialsChange,
 }: MaterialsDialogProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; text: string } | null>(null)
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set())
-  const [myMaterials, setMyMaterials] = useState<MyMaterial[]>([])
   const contentRef = useRef<HTMLDivElement>(null)
   const selectableTextRef = useRef<HTMLDivElement>(null)
   const [isMounted, setIsMounted] = useState(false)
+
+  const appendMaterial = (item: MaterialItem) => {
+    const next = [...materials, item]
+    onMaterialsChange(next)
+    onMaterialsCountChange?.(next.length)
+  }
 
   useEffect(() => {
     setIsMounted(true)
@@ -133,44 +134,48 @@ export function MaterialsDialog({
     }
   }, [contextMenu, open])
 
-  const handleAddToMaterials = (text: string, type: string) => {
-    setMyMaterials([...myMaterials, { type, content: text, timestamp: new Date() }])
+  const handleAddToMaterials = (text: string, type: MaterialItem["type"]) => {
+    appendMaterial({ type, content: text, timestamp: new Date() })
     setContextMenu(null)
   }
 
   const handleSummarizeText = (text: string) => {
     const summary = `Summary: ${text.substring(0, 100)}...`
-    setMyMaterials([...myMaterials, { type: "summary", content: summary, originalText: text, timestamp: new Date() }])
+    appendMaterial({ type: "summary", content: summary, originalText: text, timestamp: new Date() })
     setContextMenu(null)
   }
 
-  const toggleTableSelection = (tableId: string, tableData: unknown) => {
+  const toggleTableSelection = (tableId: string, tableData: TableData) => {
     const newSelection = new Set(selectedTables)
     if (newSelection.has(tableId)) {
       newSelection.delete(tableId)
-      setMyMaterials(myMaterials.filter((m) => m.id !== tableId))
+      const next = materials.filter((m) => m.id !== tableId)
+      onMaterialsChange(next)
+      onMaterialsCountChange?.(next.length)
     } else {
       newSelection.add(tableId)
-      setMyMaterials([...myMaterials, { type: "table", id: tableId, data: tableData, timestamp: new Date() }])
+      appendMaterial({ type: "table", id: tableId, data: tableData, timestamp: new Date() })
     }
     setSelectedTables(newSelection)
     console.log("[v0] Toggled table selection:", tableId)
   }
 
-  const toggleImageSelection = (imageId: string, imageData: unknown) => {
+  const toggleImageSelection = (imageId: string, imageData: ImageData) => {
     const newSelection = new Set(selectedImages)
     if (newSelection.has(imageId)) {
       newSelection.delete(imageId)
-      setMyMaterials(myMaterials.filter((m) => m.id !== imageId))
+      const next = materials.filter((m) => m.id !== imageId)
+      onMaterialsChange(next)
+      onMaterialsCountChange?.(next.length)
     } else {
       newSelection.add(imageId)
-      setMyMaterials([...myMaterials, { type: "image", id: imageId, data: imageData, timestamp: new Date() }])
+      appendMaterial({ type: "image", id: imageId, data: imageData, timestamp: new Date() })
     }
     setSelectedImages(newSelection)
     console.log("[v0] Toggled image selection:", imageId)
   }
 
-  const materials: Material[] = [
+  const availableMaterials: Material[] = [
     {
       id: "1",
       title: "Nonclinical Study Design Guidelines",
@@ -297,7 +302,7 @@ This guideline applies to biotechnology-derived pharmaceuticals including:
     },
   ]
 
-  const filteredMaterials = materials.filter((material) => {
+  const filteredMaterials = availableMaterials.filter((material) => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -308,9 +313,9 @@ This guideline applies to biotechnology-derived pharmaceuticals including:
     )
   })
 
-  const selectedFile = selectedFileId ? materials.find((m) => m.id === selectedFileId) : filteredMaterials[0]
+  const selectedFile = selectedFileId ? availableMaterials.find((m) => m.id === selectedFileId) : filteredMaterials[0]
 
-  const mockTables = [
+  const mockTables: TableData[] = [
     {
       id: "table1",
       title: "Table 1: Pharmacodynamic Parameters",
@@ -343,7 +348,7 @@ This guideline applies to biotechnology-derived pharmaceuticals including:
     },
   ]
 
-  const mockImages = [
+  const mockImages: ImageData[] = [
     {
       id: "img1",
       title: "Figure 1: Dose-Response Curve",
@@ -372,9 +377,9 @@ This guideline applies to biotechnology-derived pharmaceuticals including:
 
   useEffect(() => {
     if (onMaterialsCountChange) {
-      onMaterialsCountChange(myMaterials.length)
+      onMaterialsCountChange(materials.length)
     }
-  }, [myMaterials, onMaterialsCountChange])
+  }, [materials, onMaterialsCountChange])
 
   return (
     <>
@@ -390,10 +395,10 @@ This guideline applies to biotechnology-derived pharmaceuticals including:
                 <FileText className="h-5 w-5" />
                 {subsectionId} {subsectionTitle} - Materials
               </DialogTitle>
-              <Button variant="outline" size="sm" className="bg-transparent mr-12">
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                My Materials ({myMaterials.length})
-              </Button>
+            <Button variant="outline" size="sm" className="bg-transparent mr-12">
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              My Materials ({materials.length})
+            </Button>
             </div>
           </DialogHeader>
 
@@ -512,47 +517,50 @@ This guideline applies to biotechnology-derived pharmaceuticals including:
                   <TabsContent value="tables" className="flex-1 overflow-hidden mt-0">
                     <ScrollArea className="h-full">
                       <div className="space-y-6 pr-2">
-                        {mockTables.map((table) => (
-                          <div key={table.id} className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <h3 className="font-semibold">{table.title}</h3>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  checked={selectedTables.has(table.id)}
-                                  onCheckedChange={() => toggleTableSelection(table.id, table)}
-                                  id={`table-${table.id}`}
-                                />
-                                <label htmlFor={`table-${table.id}`} className="text-sm font-medium cursor-pointer">
-                                  Add to materials
-                                </label>
+                        {mockTables.map((table, idx) => {
+                          const tableId = table.id ?? `table-${idx}`
+                          return (
+                            <div key={tableId} className="border rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h3 className="font-semibold">{table.title}</h3>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    checked={selectedTables.has(tableId)}
+                                    onCheckedChange={() => toggleTableSelection(tableId, table)}
+                                    id={`table-${tableId}`}
+                                  />
+                                  <label htmlFor={`table-${tableId}`} className="text-sm font-medium cursor-pointer">
+                                    Add to materials
+                                  </label>
+                                </div>
                               </div>
-                            </div>
-                            <div className="overflow-x-auto">
-                              <table className="w-full border-collapse">
-                                <thead>
-                                  <tr className="border-b bg-muted/50">
-                                    {table.headers.map((header, idx) => (
-                                      <th key={idx} className="px-4 py-2 text-left text-sm font-semibold">
-                                        {header}
-                                      </th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {table.rows.map((row, rowIdx) => (
-                                    <tr key={rowIdx} className="border-b last:border-0 hover:bg-muted/30">
-                                      {row.map((cell, cellIdx) => (
-                                        <td key={cellIdx} className="px-4 py-2 text-sm">
-                                          {cell}
-                                        </td>
+                              <div className="overflow-x-auto">
+                                <table className="w-full border-collapse">
+                                  <thead>
+                                    <tr className="border-b bg-muted/50">
+                                      {(table.headers ?? []).map((header, idxHeader) => (
+                                        <th key={idxHeader} className="px-4 py-2 text-left text-sm font-semibold">
+                                          {header}
+                                        </th>
                                       ))}
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                                  </thead>
+                                  <tbody>
+                                    {(table.rows ?? []).map((row, rowIdx) => (
+                                      <tr key={rowIdx} className="border-b last:border-0 hover:bg-muted/30">
+                                        {row.map((cell, cellIdx) => (
+                                          <td key={cellIdx} className="px-4 py-2 text-sm">
+                                            {cell}
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </ScrollArea>
                   </TabsContent>
@@ -560,31 +568,34 @@ This guideline applies to biotechnology-derived pharmaceuticals including:
                   <TabsContent value="images" className="flex-1 overflow-hidden mt-0">
                     <ScrollArea className="h-full">
                       <div className="grid grid-cols-2 gap-4 pr-2">
-                        {mockImages.map((image) => (
-                          <div key={image.id} className="border rounded-lg p-4 space-y-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <h3 className="font-semibold text-sm flex-1">{image.title}</h3>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={image.id}
-                                  checked={selectedImages.has(image.id)}
-                                  onCheckedChange={() => toggleImageSelection(image.id, image)}
-                                />
-                                <label htmlFor={image.id} className="text-xs text-muted-foreground cursor-pointer">
-                                  Add
-                                </label>
+                        {mockImages.map((image, idx) => {
+                          const imageId = image.id ?? `img-${idx}`
+                          return (
+                            <div key={imageId} className="border rounded-lg p-4 space-y-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="font-semibold text-sm flex-1">{image.title}</h3>
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={imageId}
+                                    checked={selectedImages.has(imageId)}
+                                    onCheckedChange={() => toggleImageSelection(imageId, image)}
+                                  />
+                                  <label htmlFor={imageId} className="text-xs text-muted-foreground cursor-pointer">
+                                    Add
+                                  </label>
+                                </div>
                               </div>
+                              <Image
+                                src={image.url || "/placeholder.svg"}
+                                alt={image.title || "Selected image"}
+                                width={480}
+                                height={320}
+                                className="w-full h-auto rounded border bg-muted"
+                              />
+                              <p className="text-xs text-muted-foreground">{image.caption}</p>
                             </div>
-                            <Image
-                              src={image.url || "/placeholder.svg"}
-                              alt={image.title}
-                              width={480}
-                              height={320}
-                              className="w-full h-auto rounded border bg-muted"
-                            />
-                            <p className="text-xs text-muted-foreground">{image.caption}</p>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </ScrollArea>
                   </TabsContent>

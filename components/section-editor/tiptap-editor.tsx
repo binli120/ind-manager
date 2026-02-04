@@ -11,12 +11,14 @@ import { Table } from "@tiptap/extension-table"
 import { TableRow } from "@tiptap/extension-table-row"
 import { TableCell } from "@tiptap/extension-table-cell"
 import { TableHeader } from "@tiptap/extension-table-header"
+import TipTapImage from "@tiptap/extension-image"
 import {
   Bold,
   Italic,
   List,
   ListOrdered,
   Sparkles,
+  Loader2,
   Heading1,
   Heading2,
   Heading3,
@@ -53,6 +55,8 @@ interface TiptapEditorProps {
   onChange: (content: string) => void
   materialsCount?: number
   onOpenMaterials?: () => void
+  onAiGenerate?: () => void
+  aiGenerating?: boolean
   sectionNumber?: string
   readOnly?: boolean
   hideToolbar?: boolean
@@ -63,6 +67,8 @@ export function TiptapEditor({
   onChange,
   materialsCount = 0,
   onOpenMaterials,
+  onAiGenerate,
+  aiGenerating = false,
   sectionNumber,
   readOnly = false,
   hideToolbar = false,
@@ -86,6 +92,11 @@ export function TiptapEditor({
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
+      TipTapImage.configure({
+        HTMLAttributes: {
+          class: "rounded border border-border max-w-full h-auto",
+        },
+      }),
       Table.configure({
         resizable: true,
       }),
@@ -100,6 +111,7 @@ export function TiptapEditor({
       if (readOnly) return
       const newContent = editor.getHTML()
       onChange(newContent)
+      console.info("[materials] editor onUpdate", { length: newContent.length })
 
       if (!isReviewMode) {
         const text = editor.getText().toLowerCase()
@@ -199,6 +211,15 @@ export function TiptapEditor({
     },
   })
 
+  useEffect(() => {
+    if (!editor) return
+    const currentHtml = editor.getHTML()
+    if (content !== currentHtml) {
+      console.info("[materials] syncing editor content from prop", { newLength: content.length, oldLength: currentHtml.length })
+      editor.commands.setContent(content)
+    }
+  }, [content, editor])
+
   const handleSaveComment = (commentText: string) => {
     const newComment: Comment = {
       id: `comment-${Date.now()}`,
@@ -277,8 +298,10 @@ export function TiptapEditor({
                   variant="default"
                   size="sm"
                   className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white h-8 px-3"
+                  onClick={onAiGenerate}
+                  disabled={aiGenerating}
                 >
-                  <Sparkles className="h-4 w-4" />
+                  {aiGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   Regenerate with AI Draft Assistant
                 </Button>
 

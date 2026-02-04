@@ -13,8 +13,10 @@ import { TemplateDialog } from "@/components/section-editor/template-dialog"
 import { MaterialsDialog } from "@/components/section-editor/materials-dialog"
 import { TableInsertDialog } from "@/components/section-editor/table-insert-dialog"
 import { DeleteSubsectionDialog } from "@/components/section-editor/delete-subsection-dialog"
-import { FileText, Save, CheckCircle2, Trash2 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { FileText, Save, CheckCircle2, Trash2, Loader2 } from "lucide-react"
 import type { Section, SubsectionContent } from "@/types/section"
+import type { MaterialItem } from "@/components/section-editor/my-materials-dialog"
 import { AddSectionDialog } from "@/components/section-editor/add-section-dialog"
 import { useAppSelector } from "@/lib/store"
 import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
@@ -50,6 +52,11 @@ function SubsectionEditor({
   const [content, setContent] = useState(subsection.content)
   const [showMaterialsDialog, setShowMaterialsDialog] = useState(false)
   const [materialsCount, setMaterialsCount] = useState(0)
+  const [materials, setMaterials] = useState<MaterialItem[]>([])
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiText, setAiText] = useState<string | null>(null)
+  const [showAiDialog, setShowAiDialog] = useState(false)
   const [showTemplate, setShowTemplate] = useState(false)
   const [showTableInsert, setShowTableInsert] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -124,6 +131,67 @@ function SubsectionEditor({
 
   const isSection265 = subsection.subsectionNumber === "2.6.5"
 
+  const handleAiGenerate = async () => {
+    const sectionNumber = "2.4.1"
+    setShowAiDialog(true)
+    setAiLoading(true)
+    setAiError(null)
+    try {
+      const res = await fetch("/api/ncd/assets/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: sectionNumber,
+          tenant_id: "c38daae8-07a8-4da4-9a68-9a9955b09f70",
+          project_id: "2b44ecab-45c8-4105-b4ae-e9b7080bb4d6",
+          bucket: "doc-repository-dev",
+          user_prompt: "",
+          user_comment: "",
+          previous_summary_id: "",
+          refresh_template: true,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data?.error || data?.message || `Request failed (${res.status})`)
+      }
+      const text = typeof data?.summary_text === "string" ? data.summary_text : JSON.stringify(data, null, 2)
+      setAiText(text)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to generate summary"
+      setAiError(msg)
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  const handleAiInsert = () => {
+    if (!aiText) return
+    const insertContent = `<p>${aiText.replace(/\n/g, "<br>")}</p>`
+    const selection = document.getSelection()
+    const editorRoot = document.querySelector(".ProseMirror")
+    const hasFocus =
+      selection &&
+      selection.rangeCount > 0 &&
+      selection.anchorNode &&
+      editorRoot instanceof HTMLElement &&
+      editorRoot.contains(selection.anchorNode as Node)
+
+    const newContent = hasFocus ? content + insertContent : insertContent + content
+
+    console.info("[materials] applying insert (ai)", {
+      hasFocus,
+      insertLength: insertContent.length,
+      originalLength: content.length,
+      newLength: newContent.length,
+      preview: newContent.slice(0, 200),
+    })
+
+    setContent(newContent)
+    setShowAiDialog(false)
+    setAiText(null)
+  }
+
   return (
     <div
       id={`section-${subsection.subsectionNumber}`}
@@ -188,6 +256,8 @@ function SubsectionEditor({
           onChange={setContent}
           materialsCount={materialsCount}
           onOpenMaterials={() => setShowMaterialsDialog(true)}
+          onAiGenerate={handleAiGenerate}
+          aiGenerating={aiLoading}
           sectionNumber={subsection.subsectionNumber}
         />
       </div>
@@ -227,6 +297,11 @@ function SubsectionEditor({
         open={showMaterialsDialog}
         onOpenChange={setShowMaterialsDialog}
         keyword=""
+        materials={materials}
+        onMaterialsChange={(items) => {
+          setMaterials(items)
+          setMaterialsCount(items.length)
+        }}
         onMaterialsCountChange={setMaterialsCount}
       />
 
@@ -244,6 +319,36 @@ function SubsectionEditor({
         subsectionNumber={subsection.subsectionNumber}
         onConfirm={() => onDelete(subsection.id)}
       />
+
+      <Dialog open={showAiDialog} onOpenChange={setShowAiDialog}>
+        <DialogContent className="sm:max-w-[720px]">
+          <DialogHeader>
+            <DialogTitle>AI Draft Assistant</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {aiLoading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generating summary…
+              </div>
+            )}
+            {aiError && <div className="text-sm text-destructive">{aiError}</div>}
+            {aiText && (
+              <div className="border rounded-md p-3 bg-muted/40 max-h-96 overflow-auto text-sm whitespace-pre-wrap">
+                {aiText}
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={() => setShowAiDialog(false)} disabled={aiLoading}>
+              Cancel
+            </Button>
+            <Button onClick={handleAiInsert} disabled={aiLoading || !aiText}>
+              Insert into editor
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
