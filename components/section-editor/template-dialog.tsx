@@ -52,6 +52,18 @@ export const normalizeRow = (entry: ApiTemplateEntry): TemplateRow => {
           }
         })()
 
+  const pickModality = (patterns: string[]): string | undefined => {
+    const lowerPatterns = patterns.map((p) => p.toLowerCase())
+    for (const [key, value] of Object.entries(entry)) {
+      if (typeof value !== "string") continue
+      const lowerKey = key.toLowerCase()
+      if (lowerPatterns.some((p) => lowerKey.includes(p))) {
+        return value
+      }
+    }
+    return undefined
+  }
+
   const elementNumber =
     (entry.element_number as string | undefined) ??
     (entry.subSectionNumbering as string | undefined) ??
@@ -89,11 +101,31 @@ export const normalizeRow = (entry: ApiTemplateEntry): TemplateRow => {
       (entry.body as string | undefined) ??
       "",
     modalities: {
-      sm: modalities.sm ?? (entry.sm as string | undefined) ?? "",
-      bio: modalities.bio ?? (entry.bio as string | undefined) ?? "",
-      adc: modalities.adc ?? (entry.adc as string | undefined) ?? "",
-      ont: modalities.ont ?? (entry.ont as string | undefined) ?? "",
-      other: modalities.other ?? (entry.other as string | undefined) ?? "",
+      sm:
+        modalities.sm ??
+        (entry.sm as string | undefined) ??
+        pickModality(["sm", "small molecule", "small-molecule"]) ??
+        "",
+      bio:
+        modalities.bio ??
+        (entry.bio as string | undefined) ??
+        pickModality(["bio", "biologic", "biological"]) ??
+        "",
+      adc:
+        modalities.adc ??
+        (entry.adc as string | undefined) ??
+        pickModality(["adc", "antibody-drug", "antibody drug"]) ??
+        "",
+      ont:
+        modalities.ont ??
+        (entry.ont as string | undefined) ??
+        pickModality(["ont", "oligo", "oligonucleotide"]) ??
+        "",
+      other:
+        modalities.other ??
+        (entry.other as string | undefined) ??
+        pickModality(["other", "misc"]) ??
+        "",
     },
     raw: rawString,
   }
@@ -451,22 +483,36 @@ export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onA
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h3 className="text-lg font-semibold">{row.content || row.sectionHeader || "Template Block"}</h3>
-                        <div className="text-sm text-muted-foreground">{row.section}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {row.sectionHeader || row.section}
+                        </div>
                       </div>
-                      {row.subsection && (
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {row.subsection}
-                        </Badge>
-                      )}
+                      <div className="flex flex-col items-end gap-1">
+                        {row.section && (
+                          <Badge variant="secondary" className="font-mono text-[11px]">
+                            Section {row.section}
+                          </Badge>
+                        )}
+                        {row.subsection && (
+                          <Badge variant="outline" className="font-mono text-[11px]">
+                            Subsection {row.subsection}
+                          </Badge>
+                        )}
+                        {row.subSectionNumbering && (
+                          <Badge variant="outline" className="font-mono text-[11px] bg-muted/60">
+                            Element {row.subSectionNumbering}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <label className="text-muted-foreground font-medium">Section</label>
-                        <div className="mt-1">{row.section}</div>
+                        <div className="mt-1">{row.section || "—"}</div>
                       </div>
                       <div>
                         <label className="text-muted-foreground font-medium">Subsection</label>
-                        <div className="mt-1">{row.subsection}</div>
+                        <div className="mt-1">{row.subsection || "—"}</div>
                       </div>
                       <div className="col-span-2">
                         <label className="text-muted-foreground font-medium">Section Header</label>
@@ -477,10 +523,8 @@ export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onA
                         <div className="mt-1">{row.subsectionHeader}</div>
                       </div>
                       <div>
-                        <label className="text-muted-foreground font-medium">Section Element</label>
-                        <div className="mt-1">
-                          <div>{row.subSectionNumbering}</div>
-                        </div>
+                        <label className="text-muted-foreground font-medium">Subsection Element Numbering</label>
+                        <div className="mt-1">{row.subSectionNumbering || "—"}</div>
                       </div>
                     </div>
 
@@ -637,16 +681,13 @@ export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onA
                             )}
                           </div>
                         </div>
-                        {isFieldEditing(row.id, "sm") ? (
-                          <textarea
-                            value={row.modalities.sm}
-                            onChange={(e) => handleModalityEdit(row.id, "sm", e.target.value)}
-                            className="w-full mt-2 min-h-[120px] p-3 border border-border rounded-md bg-background resize-y"
-                            placeholder="Enter small molecule specific content..."
-                          />
-                        ) : (
-                          <div className="mt-2 p-3 bg-blue-50/50 rounded-md text-sm">{row.modalities.sm}</div>
-                        )}
+                        <textarea
+                          value={row.modalities.sm}
+                          onChange={(e) => handleModalityEdit(row.id, "sm", e.target.value)}
+                          readOnly={!isFieldEditing(row.id, "sm")}
+                          className={`w-full mt-2 ${row.modalities.sm?.trim() ? "min-h-[120px]" : "h-10"} p-3 border border-border rounded-md bg-background text-sm resize-y whitespace-pre-wrap`}
+                          placeholder="Enter small molecule specific content..."
+                        />
                       </div>
 
                       <div>
@@ -714,16 +755,13 @@ export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onA
                             )}
                           </div>
                         </div>
-                        {isFieldEditing(row.id, "bio") ? (
-                          <textarea
-                            value={row.modalities.bio}
-                            onChange={(e) => handleModalityEdit(row.id, "bio", e.target.value)}
-                            className="w-full mt-2 min-h-[120px] p-3 border border-border rounded-md bg-background resize-y"
-                            placeholder="Enter biologics specific content..."
-                          />
-                        ) : (
-                          <div className="mt-2 p-3 bg-green-50/50 rounded-md text-sm">{row.modalities.bio}</div>
-                        )}
+                        <textarea
+                          value={row.modalities.bio}
+                          onChange={(e) => handleModalityEdit(row.id, "bio", e.target.value)}
+                          readOnly={!isFieldEditing(row.id, "bio")}
+                          className={`w-full mt-2 ${row.modalities.bio?.trim() ? "min-h-[120px]" : "h-10"} p-3 border border-border rounded-md bg-background text-sm resize-y whitespace-pre-wrap`}
+                          placeholder="Enter biologics specific content..."
+                        />
                       </div>
 
                       <div>
@@ -791,16 +829,13 @@ export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onA
                             )}
                           </div>
                         </div>
-                        {isFieldEditing(row.id, "adc") ? (
-                          <textarea
-                            value={row.modalities.adc}
-                            onChange={(e) => handleModalityEdit(row.id, "adc", e.target.value)}
-                            className="w-full mt-2 min-h-[120px] p-3 border border-border rounded-md bg-background resize-y"
-                            placeholder="Enter ADC specific content..."
-                          />
-                        ) : (
-                          <div className="mt-2 p-3 bg-purple-50/50 rounded-md text-sm">{row.modalities.adc}</div>
-                        )}
+                        <textarea
+                          value={row.modalities.adc}
+                          onChange={(e) => handleModalityEdit(row.id, "adc", e.target.value)}
+                          readOnly={!isFieldEditing(row.id, "adc")}
+                          className={`w-full mt-2 ${row.modalities.adc?.trim() ? "min-h-[120px]" : "h-10"} p-3 border border-border rounded-md bg-background text-sm resize-y whitespace-pre-wrap`}
+                          placeholder="Enter ADC specific content..."
+                        />
                       </div>
 
                       <div>
@@ -868,16 +903,13 @@ export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onA
                             )}
                           </div>
                         </div>
-                        {isFieldEditing(row.id, "ont") ? (
-                          <textarea
-                            value={row.modalities.ont}
-                            onChange={(e) => handleModalityEdit(row.id, "ont", e.target.value)}
-                            className="w-full mt-2 min-h-[120px] p-3 border border-border rounded-md bg-background resize-y"
-                            placeholder="Enter oligonucleotide specific content..."
-                          />
-                        ) : (
-                          <div className="mt-2 p-3 bg-orange-50/50 rounded-md text-sm">{row.modalities.ont}</div>
-                        )}
+                        <textarea
+                          value={row.modalities.ont}
+                          onChange={(e) => handleModalityEdit(row.id, "ont", e.target.value)}
+                          readOnly={!isFieldEditing(row.id, "ont")}
+                          className={`w-full mt-2 ${row.modalities.ont?.trim() ? "min-h-[120px]" : "h-10"} p-3 border border-border rounded-md bg-background text-sm resize-y whitespace-pre-wrap`}
+                          placeholder="Enter oligonucleotide specific content..."
+                        />
                       </div>
 
                       <div>
@@ -939,16 +971,13 @@ export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onA
                             )}
                           </div>
                         </div>
-                        {isFieldEditing(row.id, "other") ? (
-                          <textarea
-                            value={row.modalities.other}
-                            onChange={(e) => handleModalityEdit(row.id, "other", e.target.value)}
-                            className="w-full mt-2 min-h-[120px] p-3 border border-border rounded-md bg-background resize-y"
-                            placeholder="Enter other modality specific content..."
-                          />
-                        ) : (
-                          <div className="mt-2 p-3 bg-pink-50/50 rounded-md text-sm">{row.modalities.other}</div>
-                        )}
+                        <textarea
+                          value={row.modalities.other}
+                          onChange={(e) => handleModalityEdit(row.id, "other", e.target.value)}
+                          readOnly={!isFieldEditing(row.id, "other")}
+                          className={`w-full mt-2 ${row.modalities.other?.trim() ? "min-h-[120px]" : "h-10"} p-3 border border-border rounded-md bg-background text-sm resize-y whitespace-pre-wrap`}
+                          placeholder="Enter other modality specific content..."
+                        />
                       </div>
                     </div>
                   </div>

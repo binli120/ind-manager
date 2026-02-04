@@ -9,6 +9,7 @@ import documentsSlice, { hydrateSelectedDocumentFromStorage } from "./slices/doc
 import uiSlice, { hydrateCurrentViewFromStorage } from "./slices/uiSlice"
 import notificationsSlice from "./slices/notificationsSlice"
 import tenantsSlice from "./slices/tenantsSlice";
+import sectionListSlice from "./slices/sectionListSlice"
 
 
 
@@ -21,6 +22,7 @@ export const store = configureStore({
     documents: documentsSlice,
     ui: uiSlice,
     notifications: notificationsSlice,
+    sectionList: sectionListSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

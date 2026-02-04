@@ -18,8 +18,9 @@ import { FileText, Save, CheckCircle2, Trash2, Loader2 } from "lucide-react"
 import type { Section, SubsectionContent } from "@/types/section"
 import type { MaterialItem } from "@/components/section-editor/my-materials-dialog"
 import { AddSectionDialog } from "@/components/section-editor/add-section-dialog"
-import { useAppSelector } from "@/lib/store"
+import { useAppDispatch, useAppSelector } from "@/lib/store"
 import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
+import { fetchSectionList } from "@/lib/store/slices/sectionListSlice"
 
 const toSectionNumber = (value?: string | null) => {
   if (!value) return null
@@ -58,10 +59,16 @@ function SubsectionEditor({
   const [aiText, setAiText] = useState<string | null>(null)
   const [showAiDialog, setShowAiDialog] = useState(false)
   const [showTemplate, setShowTemplate] = useState(false)
+  const [templateResolving, setTemplateResolving] = useState(false)
+  const [templateResolveError, setTemplateResolveError] = useState<string | null>(null)
+  const [resolvedSection, setResolvedSection] = useState(
+    toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber,
+  )
   const [showTableInsert, setShowTableInsert] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [templateDisabled, setTemplateDisabled] = useState(false)
   const userId = useAppSelector((s) => s.auth.user?.id)
+  const sectionList = useAppSelector((s) => s.sectionList.data)
 
   useEffect(() => {
     // Re-enable when user logs in so we can retry
@@ -192,6 +199,69 @@ function SubsectionEditor({
     setAiText(null)
   }
 
+  const resolveSectionFromList = (payload: unknown): string | null => {
+    if (!payload || typeof payload !== "object") return null
+    const sections = Array.isArray((payload as Record<string, unknown>).sections)
+      ? ((payload as Record<string, unknown>).sections as unknown[])
+      : []
+    const title = subsection.title?.trim().toLowerCase()
+
+    for (const entry of sections) {
+      if (!entry || typeof entry !== "object") continue
+      const obj = entry as Record<string, unknown>
+      const text = typeof obj.text === "string" ? obj.text.trim() : ""
+      const value = typeof obj.value === "string" ? obj.value.trim() : ""
+      const label = text.includes("—") ? text.split("—").pop()?.trim() : text
+      if (!title || !label) continue
+      if (label.toLowerCase() === title || text.toLowerCase() === title || text.endsWith(subsection.title || "")) {
+        return value || toSectionNumber(text) || null
+      }
+    }
+    return null
+  }
+
+  const handleOpenTemplate = async () => {
+    setTemplateResolveError(null)
+    const direct = toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber
+    if (direct) {
+      setResolvedSection(direct)
+      setShowTemplate(true)
+      return
+    }
+
+    // Try cached section list first
+    const cached = sectionList ? resolveSectionFromList(sectionList) : null
+    if (cached) {
+      setResolvedSection(cached)
+      setShowTemplate(true)
+      return
+    }
+
+    setTemplateResolving(true)
+    try {
+      const response = await requestPdfAnalysisApi<unknown>({
+        path: "/ncd/sectionList",
+        method: "GET",
+        headers: userId ? { "user-id": userId } : undefined,
+        userIdHeader: userId,
+        allowRedirects: false,
+        suppressErrorLog: true,
+      })
+      const resolved = resolveSectionFromList(response)
+      if (resolved) {
+        setResolvedSection(resolved)
+        setShowTemplate(true)
+      } else {
+        setTemplateResolveError("Could not resolve section number from section list.")
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to resolve section number."
+      setTemplateResolveError(msg)
+    } finally {
+      setTemplateResolving(false)
+    }
+  }
+
   return (
     <div
       id={`section-${subsection.subsectionNumber}`}
@@ -230,13 +300,25 @@ function SubsectionEditor({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowTemplate(true)}
+            onClick={handleOpenTemplate}
             className="text-xs"
-            disabled={!userId || templateDisabled}
-            title={!userId ? "Login required to view template" : templateDisabled ? "Template unavailable" : undefined}
+            disabled={!userId || templateDisabled || templateResolving}
+            title={
+              !userId
+                ? "Login required to view template"
+                : templateDisabled
+                  ? "Template unavailable"
+                  : templateResolving
+                    ? "Resolving section…"
+                    : undefined
+            }
             data-tour="detailed-template"
           >
-            <FileText className="h-3.5 w-3.5 mr-1.5" />
+            {templateResolving ? (
+              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+            ) : (
+              <FileText className="h-3.5 w-3.5 mr-1.5" />
+            )}
             View & Edit Template
           </Button>
           <Button variant="outline" size="sm" onClick={() => setShowMaterialsDialog(true)} className="text-xs">
@@ -248,6 +330,9 @@ function SubsectionEditor({
             </Button>
           )}
         </div>
+        {templateResolveError && (
+          <p className="text-xs text-destructive mt-2">{templateResolveError}</p>
+        )}
       </div>
 
       <div className="px-6 py-4" data-tour="editor-toolbar">
@@ -286,7 +371,7 @@ function SubsectionEditor({
         onOpenChange={setShowTemplate}
         section={{
           id: subsection.id,
-          number: toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber,
+          number: resolvedSection || toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber,
           title: subsection.title,
         }}
         onUnavailable={() => setTemplateDisabled(true)}
@@ -359,7 +444,17 @@ export function SectionEditor({
   onAddSubsection,
   onDeleteSubsection,
 }: SectionEditorProps) {
+  const dispatch = useAppDispatch()
+  const userId = useAppSelector((s) => s.auth.user?.id)
+  const sectionList = useAppSelector((s) => s.sectionList.data)
+  const sectionListLoading = useAppSelector((s) => s.sectionList.loading)
   const [showAddDialog, setShowAddDialog] = useState(false)
+
+  useEffect(() => {
+    if (!userId) return
+    if (sectionList || sectionListLoading) return
+    void dispatch(fetchSectionList({ userId }))
+  }, [dispatch, userId, sectionList, sectionListLoading])
 
   const scrollToSubsection = (subsectionNumber: string) => {
     const element = document.getElementById(`section-${subsectionNumber}`)

@@ -112,3 +112,6 @@ export {
   clearError as clearTenantsError,
   updateTenantLocally,
 } from "./tenantsSlice";
+
+export { default as sectionListReducer, fetchSectionList, clearSectionList } from "./sectionListSlice";
+export type { SectionListPayload } from "./sectionListSlice";
