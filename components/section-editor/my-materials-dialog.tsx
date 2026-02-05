@@ -11,8 +11,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FileText, ImageIcon, Sparkles, Table, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { FileText, ImageIcon, Table, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 
 export type TableData = {
@@ -20,6 +20,7 @@ export type TableData = {
   title?: string;
   headers?: string[];
   rows?: string[][];
+  html?: string;
 };
 
 export type ImageData = {
@@ -29,12 +30,25 @@ export type ImageData = {
   url?: string;
 };
 
+export type TopicData = {
+  id?: string;
+  title?: string;
+  content?: string;
+  images?: ImageData[];
+  tables?: TableData[];
+  document?: {
+    id?: string;
+    name?: string;
+    section?: string;
+  };
+};
+
 export interface MaterialItem {
   id?: string;
-  type: 'text' | 'table' | 'image' | 'summary';
+  type: 'text' | 'table' | 'image' | 'summary' | 'topic';
   content?: string;
   originalText?: string;
-  data?: TableData | ImageData;
+  data?: TableData | ImageData | TopicData;
   timestamp: Date;
 }
 
@@ -46,9 +60,14 @@ const isTableData = (data: unknown): data is TableData =>
 const isImageData = (data: unknown): data is ImageData =>
   !!data &&
   typeof data === 'object' &&
-  ('title' in (data as object) ||
-    'caption' in (data as object) ||
-    'url' in (data as object));
+  'url' in (data as object);
+
+const isTopicData = (data: unknown): data is TopicData =>
+  !!data &&
+  typeof data === 'object' &&
+  ('content' in (data as object) ||
+    'images' in (data as object) ||
+    'tables' in (data as object));
 
 interface MyMaterialsDialogProps {
   open: boolean;
@@ -69,12 +88,23 @@ export function MyMaterialsDialog({
     new Set(),
   );
 
+  const topicEntries = useMemo(
+    () =>
+      materials
+        .map((material, index) => ({ material, index }))
+        .filter(
+          (entry) =>
+            entry.material.type === 'topic' && isTopicData(entry.material.data),
+        ),
+    [materials],
+  );
+
   // Auto-select all items when dialog opens so insert works without extra clicks
   useEffect(() => {
-    if (open && materials.length) {
-      setSelectedIndices(new Set(materials.map((_, idx) => idx)));
+    if (open && topicEntries.length) {
+      setSelectedIndices(new Set(topicEntries.map((_, idx) => idx)));
     }
-  }, [open, materials]);
+  }, [open, topicEntries]);
 
   const toggleSelection = (index: number) => {
     const newSelection = new Set(selectedIndices);
@@ -89,12 +119,12 @@ export function MyMaterialsDialog({
   const handleInsert = () => {
     console.info("[materials] insert clicked", {
       selectedCount: selectedIndices.size,
-      total: materials.length,
+      total: topicEntries.length,
       selectedIndices: Array.from(selectedIndices),
     });
-    const selectedMaterials = materials.filter((_, index) =>
-      selectedIndices.has(index),
-    );
+    const selectedMaterials = topicEntries
+      .filter((_, index) => selectedIndices.has(index))
+      .map((entry) => entry.material);
     console.info("[materials] inserting materials", {
       ids: selectedMaterials.map((m, idx) => m.id ?? `idx-${idx}`),
       types: selectedMaterials.map((m) => m.type),
@@ -104,46 +134,53 @@ export function MyMaterialsDialog({
     onOpenChange(false);
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'table':
-        return <Table className='h-4 w-4 text-blue-600' />;
-      case 'image':
-        return <ImageIcon className='h-4 w-4 text-green-600' />;
-      case 'summary':
-        return <Sparkles className='h-4 w-4 text-purple-600' />;
-      default:
-        return <FileText className='h-4 w-4 text-gray-600' />;
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'table':
-        return 'Table';
-      case 'image':
-        return 'Image';
-      case 'summary':
-        return 'AI Summary';
-      default:
-        return 'Text';
-    }
-  };
-
-  const getTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case 'table':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
-      case 'image':
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
-      case 'summary':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300';
-    }
-  };
+  const stripHtml = (value: string) =>
+    value
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
   const renderMaterialPreview = (material: MaterialItem) => {
+    if (material.type === 'topic' && isTopicData(material.data)) {
+      const topic = material.data;
+      const topicTitle = topic.title?.trim();
+      const textPreview = topic.content ? stripHtml(topic.content).slice(0, 220) : '';
+      const imageCount = topic.images?.length ?? 0;
+      const tableCount = topic.tables?.length ?? 0;
+      return (
+        <div className='mt-2 space-y-2'>
+          {topicTitle && (
+            <p className='text-sm font-semibold text-foreground'>
+              {topicTitle}
+            </p>
+          )}
+          {textPreview ? (
+            <p className='text-sm text-muted-foreground line-clamp-3'>
+              {textPreview}
+            </p>
+          ) : (
+            <p className='text-xs text-muted-foreground'>No text content.</p>
+          )}
+          <div className='flex items-center gap-4 text-xs text-muted-foreground'>
+            <span className='inline-flex items-center gap-1'>
+              <ImageIcon className='h-3.5 w-3.5' />
+              {imageCount} images
+            </span>
+            <span className='inline-flex items-center gap-1'>
+              <Table className='h-3.5 w-3.5' />
+              {tableCount} tables
+            </span>
+          </div>
+          {topic.document?.name && (
+            <div className='text-[11px] text-muted-foreground'>
+              {topic.document.name} • Section {topic.document.section ?? '—'}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     if (material.type === 'table' && isTableData(material.data)) {
       return (
         <div className='overflow-x-auto mt-2'>
@@ -185,24 +222,24 @@ export function MyMaterialsDialog({
       );
     }
 
-  if (material.type === 'image' && isImageData(material.data)) {
-    const imageData = material.data;
-    return (
-      <div className='mt-2'>
-        {imageData.url && (
-          <Image
-            src={imageData.url}
-            alt={imageData.title || 'Selected image'}
-            width={640}
-            height={360}
-            className='w-full h-auto max-h-48 object-contain rounded border border-border bg-muted'
-          />
-        )}
-        {imageData.title && (
-          <div className='text-sm font-medium'>{imageData.title}</div>
-        )}
-        {imageData.caption && (
-          <div className='text-xs text-muted-foreground'>
+    if (material.type === 'image' && isImageData(material.data)) {
+      const imageData = material.data;
+      return (
+        <div className='mt-2'>
+          {imageData.url && (
+            <Image
+              src={imageData.url}
+              alt={imageData.title || 'Selected image'}
+              width={640}
+              height={360}
+              className='w-full h-auto max-h-48 object-contain rounded border border-border bg-muted'
+            />
+          )}
+          {imageData.title && (
+            <div className='text-sm font-medium'>{imageData.title}</div>
+          )}
+          {imageData.caption && (
+            <div className='text-xs text-muted-foreground'>
               {imageData.caption}
             </div>
           )}
@@ -223,44 +260,43 @@ export function MyMaterialsDialog({
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <FileText className='h-5 w-5' />
-            My Materials ({materials.length})
+            My Materials ({topicEntries.length})
           </DialogTitle>
         </DialogHeader>
 
-        {materials.length === 0 ? (
+        {topicEntries.length === 0 ? (
           <div className='flex flex-col items-center justify-center py-12 text-center'>
             <FileText className='h-12 w-12 text-muted-foreground/50 mb-4' />
-            <p className='text-muted-foreground'>No materials collected yet.</p>
+            <p className='text-muted-foreground'>No topics selected yet.</p>
             <p className='text-sm text-muted-foreground mt-1'>
-              Select text, tables, or images from the materials dialog to add
-              them here.
+              Select topics from the materials dialog to add them here.
             </p>
           </div>
         ) : (
           <>
             <ScrollArea className='h-[400px] pr-4'>
               <div className='space-y-3'>
-                {materials.map((material, index) => (
+                {topicEntries.map(({ material, index }, entryIndex) => (
                   <div
-                    key={index}
+                    key={material.id ?? index}
                     className={`border rounded-lg p-4 transition-colors ${
-                      selectedIndices.has(index)
+                      selectedIndices.has(entryIndex)
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:bg-accent/30'
                     }`}
                   >
                     <div className='flex items-start gap-3'>
                       <Checkbox
-                        checked={selectedIndices.has(index)}
-                        onCheckedChange={() => toggleSelection(index)}
+                        checked={selectedIndices.has(entryIndex)}
+                        onCheckedChange={() => toggleSelection(entryIndex)}
                         className='mt-1'
                       />
                       <div className='flex-1 min-w-0'>
                         <div className='flex items-center justify-between gap-2'>
                           <div className='flex items-center gap-2'>
-                            {getTypeIcon(material.type)}
-                            <Badge className={getTypeBadgeColor(material.type)}>
-                              {getTypeLabel(material.type)}
+                            <FileText className='h-4 w-4 text-gray-600' />
+                            <Badge className='bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300'>
+                              Topic
                             </Badge>
                             <span className='text-xs text-muted-foreground'>
                               {new Date(
@@ -289,7 +325,7 @@ export function MyMaterialsDialog({
 
             <DialogFooter className='flex items-center justify-between sm:justify-between'>
               <div className='text-sm text-muted-foreground'>
-                {selectedIndices.size} of {materials.length} selected
+                {selectedIndices.size} of {topicEntries.length} selected
               </div>
               <div className='flex gap-2'>
                 <Button variant='outline' onClick={() => onOpenChange(false)}>

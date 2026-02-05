@@ -3,14 +3,14 @@
 // Email: blee@filynai.com
 'use client';
 
+import { AddFromTemplateDialog } from '@/components/section-editor/add-from-template-dialog';
 import { OnboardingTour } from '@/components/section-editor/onboarding-tour';
 import { PdfUploadDialog } from '@/components/section-editor/pdf-upload-dialog';
 import { SectionEditor } from '@/components/section-editor/section-editor';
-import { TiptapEditor } from '@/components/section-editor/tiptap-editor';
 import { Sidebar } from '@/components/section-editor/sidebar';
-import { AddFromTemplateDialog } from '@/components/section-editor/add-from-template-dialog';
-import { Button } from '@/components/ui/button';
+import { TiptapEditor } from '@/components/section-editor/tiptap-editor';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
@@ -20,10 +20,10 @@ import {
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useProject } from '@/hooks/useProject';
 import { useTenant } from '@/hooks/useTenant';
+import { upsertSectionPath } from '@/lib/section-tree';
+import type { Section, SubsectionContent } from '@/types/section';
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { Section, SubsectionContent } from '@/types/section';
-import { upsertSectionPath } from '@/lib/section-tree';
 
 // Default empty template; actual sections are fetched from S3.
 // No hardcoded template; always load from S3
@@ -40,14 +40,14 @@ export function SmartEditorView() {
   const [showAddFromTemplate, setShowAddFromTemplate] = useState(false);
   const [isLoadingTree, setIsLoadingTree] = useState(false);
   const [treeError, setTreeError] = useState<string | null>(null);
-  const [fileMode, setFileMode] = useState<"md" | "pdf" | null>(null);
+  const [fileMode, setFileMode] = useState<'md' | 'pdf' | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [fileText, setFileText] = useState<string | null>(null);
   const [fileLoading, setFileLoading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [hasSeenTour, setHasSeenTour] = useLocalStorage<boolean>(
     'hasSeenOnboardingTour',
-    false
+    false,
   );
   const [treeRetryKey, setTreeRetryKey] = useState(0);
   const [usedCachedTree, setUsedCachedTree] = useState(false);
@@ -70,7 +70,7 @@ export function SmartEditorView() {
         tenantEntry?.name ||
         currentProject?.tenantId ||
         selectedTenantId ||
-        "unknown-company";
+        'unknown-company';
     }
     return companyValue;
   };
@@ -91,7 +91,7 @@ export function SmartEditorView() {
         currentProject?.title ||
         currentProject?.code ||
         currentProject?.id ||
-        "unknown-project";
+        'unknown-project';
     }
     return projectNameValue;
   };
@@ -163,7 +163,7 @@ export function SmartEditorView() {
     projectId: string,
     s3Key?: string,
     company?: string,
-    projectName?: string
+    projectName?: string,
   ) =>
     [
       'sectionTree',
@@ -190,10 +190,7 @@ export function SmartEditorView() {
   const saveTreeCache = (key: string, sections: Section[]) => {
     if (typeof window === 'undefined') return;
     try {
-      sessionStorage.setItem(
-        key,
-        JSON.stringify({ ts: Date.now(), sections })
-      );
+      sessionStorage.setItem(key, JSON.stringify({ ts: Date.now(), sections }));
     } catch {
       // ignore quota errors
     }
@@ -209,6 +206,7 @@ export function SmartEditorView() {
       }
 
       let cacheHit = false;
+      let abortTimer: ReturnType<typeof setTimeout> | null = null;
       setUsedCachedTree(false);
       setIsLoadingTree(true);
       setTreeError(null);
@@ -224,7 +222,7 @@ export function SmartEditorView() {
 
         const url = new URL(
           `/api/projects/${selectedProjectId}/sections`,
-          window.location.origin
+          window.location.origin,
         );
         if (s3Key) {
           url.searchParams.set('s3Key', s3Key);
@@ -249,7 +247,7 @@ export function SmartEditorView() {
             tenantEntry?.name ||
             currentProject?.tenantId ||
             selectedTenantId ||
-            "unknown-company";
+            'unknown-company';
         }
 
         if (!projectNameValue) {
@@ -257,19 +255,19 @@ export function SmartEditorView() {
             currentProject?.title ||
             currentProject?.code ||
             currentProject?.id ||
-            "unknown-project";
+            'unknown-project';
         }
 
         url.searchParams.set('company', companyValue);
         url.searchParams.set('projectName', projectNameValue);
 
         const abort = new AbortController();
-        const timeout = setTimeout(() => abort.abort(), 10000);
+        abortTimer = setTimeout(() => abort.abort(), 30000);
         const cacheKey = buildTreeCacheKey(
           selectedProjectId,
           s3Key || undefined,
           companyValue,
-          projectNameValue
+          projectNameValue,
         );
         setTreeCacheKey(cacheKey);
         const cached = loadCachedTree(cacheKey);
@@ -283,11 +281,12 @@ export function SmartEditorView() {
         }
 
         const res = await fetch(url.toString(), { signal: abort.signal });
-        clearTimeout(timeout);
         if (!res.ok) {
           const errPayload = await res.json().catch(() => null);
           throw new Error(
-            errPayload?.message || errPayload?.error || 'Failed to load section tree'
+            errPayload?.message ||
+              errPayload?.error ||
+              'Failed to load section tree',
           );
         }
 
@@ -306,7 +305,7 @@ export function SmartEditorView() {
             ? 'Section tree request timed out. Please retry.'
             : error instanceof Error
               ? error.message
-              : 'Unable to load section tree'
+              : 'Unable to load section tree',
         );
         if (!cacheHit) {
           setSectionData([]);
@@ -314,12 +313,19 @@ export function SmartEditorView() {
           setSelectedSubsection(null);
         }
       } finally {
+        if (abortTimer) clearTimeout(abortTimer);
         setIsLoadingTree(false);
       }
     };
 
     loadTree();
-  }, [selectedProjectId, currentProject, selectedTenantId, tenants, treeRetryKey]);
+  }, [
+    selectedProjectId,
+    currentProject,
+    selectedTenantId,
+    tenants,
+    treeRetryKey,
+  ]);
 
   // Load file content (md or pdf) when a file subsection is selected
   useEffect(() => {
@@ -337,7 +343,7 @@ export function SmartEditorView() {
         (selectedSubsection as { fullPath?: string }).fullPath ||
         selectedSubsection.title;
 
-      console.info("[SmartEditor] file selection", {
+      console.info('[SmartEditor] file selection', {
         id: selectedSubsection.id,
         title: selectedSubsection.title,
         fullPath,
@@ -351,14 +357,22 @@ export function SmartEditorView() {
 
       const mdKey = `${fullPath}.extracted.md`;
 
-      const fetchSigned = async (key: string, format: "url" | "text" = "url") => {
-        console.info("[SmartEditor] signing url for key", key, "format", format);
+      const fetchSigned = async (
+        key: string,
+        format: 'url' | 'text' = 'url',
+      ) => {
+        console.info(
+          '[SmartEditor] signing url for key',
+          key,
+          'format',
+          format,
+        );
         const url = new URL(
           `/api/projects/${selectedProjectId}/asset`,
-          window.location.origin
+          window.location.origin,
         );
-        url.searchParams.set("key", key);
-        url.searchParams.set("format", format);
+        url.searchParams.set('key', key);
+        url.searchParams.set('format', format);
         const res = await fetch(url.toString());
         if (!res.ok) throw new Error(`asset api failed ${res.status}`);
         const payload = await res.json();
@@ -367,30 +381,30 @@ export function SmartEditorView() {
 
       try {
         // Try markdown sidecar first
-        const mdPayload = await fetchSigned(mdKey, "text");
+        const mdPayload = await fetchSigned(mdKey, 'text');
         const mdText = (mdPayload as { text?: string }).text;
         if (!mdText) {
-          throw new Error("md sidecar empty");
+          throw new Error('md sidecar empty');
         }
-        console.info("[SmartEditor] loaded markdown sidecar", {
+        console.info('[SmartEditor] loaded markdown sidecar', {
           mdKey,
           bytes: mdText.length,
         });
         setFileText(mdText);
-        setFileMode("md");
+        setFileMode('md');
       } catch (mdError) {
-        console.warn("[SmartEditor] markdown sidecar missing", mdKey, mdError);
+        console.warn('[SmartEditor] markdown sidecar missing', mdKey, mdError);
         try {
-          const pdfPayload = await fetchSigned(fullPath, "url");
+          const pdfPayload = await fetchSigned(fullPath, 'url');
           setFileUrl((pdfPayload as { url: string }).url);
-          setFileMode("pdf");
+          setFileMode('pdf');
         } catch (pdfError) {
           setFileError(
             pdfError instanceof Error
               ? pdfError.message
-              : "Unable to load file"
+              : 'Unable to load file',
           );
-          console.error("[SmartEditor] failed loading file", {
+          console.error('[SmartEditor] failed loading file', {
             fullPath,
             pdfError,
           });
@@ -421,7 +435,11 @@ export function SmartEditorView() {
       return s.subsections && findInSubsections(s.subsections);
     });
 
-    if (parentSection && selectedSection && parentSection.id !== selectedSection.id) {
+    if (
+      parentSection &&
+      selectedSection &&
+      parentSection.id !== selectedSection.id
+    ) {
       setSelectedSection(parentSection);
     }
   };
@@ -452,7 +470,7 @@ export function SmartEditorView() {
         if (section.id === selectedSection.id) {
           // Helper function to recursively add subsection to the correct parent
           const addSubsectionRecursive = (
-            subs: SubsectionContent[]
+            subs: SubsectionContent[],
           ): SubsectionContent[] => {
             // If we're viewing a category subsection, add to its children
             if (selectedSubsection?.isCategory) {
@@ -507,7 +525,7 @@ export function SmartEditorView() {
           };
         }
         return section;
-      })
+      }),
     );
 
     if (shouldUpdateSelection && newParentSubsection) {
@@ -515,7 +533,7 @@ export function SmartEditorView() {
         setSelectedSubsection(newParentSubsection);
         setTimeout(() => {
           const element = document.getElementById(
-            `section-${subsectionNumber}`
+            `section-${subsectionNumber}`,
           );
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -532,7 +550,10 @@ export function SmartEditorView() {
     }
   };
 
-  const handleCreateFromTemplate = (templateNumber: string, createdKey?: string) => {
+  const handleCreateFromTemplate = (
+    templateNumber: string,
+    createdKey?: string,
+  ) => {
     const toRelativeKey = (uri: string) => {
       if (uri.startsWith('s3://')) {
         const parts = uri.replace('s3://', '').split('/');
@@ -556,7 +577,9 @@ export function SmartEditorView() {
     setSelectedSubsection(result.leaf);
     setTreeRetryKey((k) => k + 1); // refresh from S3 to reflect real file
     setTimeout(() => {
-      const element = document.getElementById(`section-${result.leaf.subsectionNumber}`);
+      const element = document.getElementById(
+        `section-${result.leaf.subsectionNumber}`,
+      );
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
@@ -600,7 +623,7 @@ export function SmartEditorView() {
         if (section.id === selectedSection.id) {
           // Helper function to recursively remove subsection
           const removeSubsectionRecursive = (
-            subs: SubsectionContent[]
+            subs: SubsectionContent[],
           ): SubsectionContent[] => {
             return subs
               .filter((sub) => sub.id !== subsectionId)
@@ -618,7 +641,7 @@ export function SmartEditorView() {
           };
         }
         return section;
-      })
+      }),
     );
 
     // If the deleted subsection was selected, clear the selection
@@ -630,7 +653,7 @@ export function SmartEditorView() {
   const handleReorderSubsections = (
     draggedId: string,
     targetId: string,
-    parentId: string | null
+    parentId: string | null,
   ) => {
     console.log(
       '[v0] Reordering:',
@@ -638,7 +661,7 @@ export function SmartEditorView() {
       'to',
       targetId,
       'parent:',
-      parentId
+      parentId,
     );
 
     if (!selectedSection) return;
@@ -647,7 +670,7 @@ export function SmartEditorView() {
         if (section.id === selectedSection.id) {
           // Helper function to reorder subsections recursively
           const reorderSubsectionsRecursive = (
-            subs: SubsectionContent[]
+            subs: SubsectionContent[],
           ): SubsectionContent[] => {
             // Find the dragged and target items
             const draggedIndex = subs.findIndex((s) => s.id === draggedId);
@@ -676,7 +699,7 @@ export function SmartEditorView() {
           };
         }
         return section;
-      })
+      }),
     );
   };
 
@@ -723,7 +746,11 @@ export function SmartEditorView() {
           <div className='mx-6 mt-6 rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-4 py-2 text-sm flex items-center justify-between gap-4'>
             <span>{treeError}</span>
             <div className='flex items-center gap-2'>
-              <Button variant='outline' size='sm' onClick={() => setTreeRetryKey((k) => k + 1)}>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setTreeRetryKey((k) => k + 1)}
+              >
                 Retry
               </Button>
             </div>
@@ -753,7 +780,10 @@ export function SmartEditorView() {
                 <div className='border-b border-border pb-3'>
                   <div className='flex items-center justify-between gap-3'>
                     <div className='flex items-center gap-3 flex-wrap'>
-                      <Badge variant='outline' className='font-mono text-xs px-2 py-1'>
+                      <Badge
+                        variant='outline'
+                        className='font-mono text-xs px-2 py-1'
+                      >
                         1 of 1
                       </Badge>
                       <span className='text-base font-semibold text-foreground'>

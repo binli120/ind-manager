@@ -196,7 +196,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const isApiPage = pathname?.startsWith('/api/');
 
   useEffect(() => {
-    if (isLoading || !hasCheckedSession) {
+    const readyForRedirect =
+      !isLoading && (hasCheckedSession || isAuthenticated || user);
+
+    if (!readyForRedirect) {
       redirectingRef.current = false;
       return;
     }

@@ -3,30 +3,67 @@
 // Email: blee@filynai.com
 "use client"
 
+import { useEffect, useMemo, useState, useCallback } from "react"
+import Image from "next/image"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { FileText, Search, Calendar, User, Table, ImageIcon, Plus, Sparkles, ShoppingCart } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import Image from "next/image"
-import { useState, useRef, useEffect } from "react"
-import { createPortal } from "react-dom"
-import type { MaterialItem, TableData, ImageData } from "./my-materials-dialog"
+import { Separator } from "@/components/ui/separator"
+import {
+  AlertCircle,
+  FileText,
+  ImageIcon,
+  Loader2,
+  RefreshCcw,
+  Search,
+  Table as TableIcon,
+  Plus,
+  FolderKanban,
+} from "lucide-react"
+import type { MaterialItem, TableData, ImageData, TopicData } from "./my-materials-dialog"
 
-interface Material {
-  id: string
-  title: string
-  type: string
-  description: string
-  content: string
-  date: string
-  author: string
-  tags: string[]
-  section: string
+interface AssetsSectionImage {
+  id?: string
+  title?: string
+  caption?: string
+  url?: string
 }
+
+interface AssetsSectionTable {
+  id?: string
+  title?: string
+  headers?: string[]
+  rows?: string[][]
+  html?: string
+}
+
+interface AssetsSectionTopic {
+  id?: string
+  title?: string
+  content?: string
+  images?: AssetsSectionImage[]
+  tables?: AssetsSectionTable[]
+}
+
+interface AssetsSectionDocument {
+  id?: string
+  name?: string
+  section?: string
+  topics?: AssetsSectionTopic[]
+}
+
+interface AssetsSectionResponse {
+  section?: string
+  documents?: AssetsSectionDocument[]
+  metadata?: Record<string, unknown> | null
+  source?: string
+}
+
+const DEFAULT_TENANT = "c38daae8-07a8-4da4-9a68-9a9955b09f70"
+const DEFAULT_PROJECT = "2b44ecab-45c8-4105-b4ae-e9b7080bb4d6"
+const DEFAULT_SECTION = "4"
 
 interface MaterialsDialogProps {
   open: boolean
@@ -34,10 +71,75 @@ interface MaterialsDialogProps {
   keyword: string
   subsectionId?: string
   subsectionTitle?: string
-  onMaterialsCountChange?: (count: number) => void // Added callback for materials count
+  onMaterialsCountChange?: (count: number) => void
   materials: MaterialItem[]
   onMaterialsChange: (items: MaterialItem[]) => void
+  tenantId?: string
+  projectId?: string
+  sectionNumber?: string
 }
+
+const toPlainText = (html: string) =>
+  html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+
+const parseHtmlTable = (html?: string): TableData | undefined => {
+  if (!html) return undefined
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, "text/html")
+    const headers = Array.from(doc.querySelectorAll("table thead th")).map((th) => th.textContent?.trim() || "")
+    const rows = Array.from(doc.querySelectorAll("table tbody tr")).map((tr) =>
+      Array.from(tr.querySelectorAll("td")).map((td) => td.textContent?.trim() || ""),
+    )
+    if (!headers.length && !rows.length) return undefined
+    return { headers: headers.length ? headers : undefined, rows: rows.length ? rows : undefined }
+  } catch {
+    return undefined
+  }
+}
+
+const normalizeDocuments = (
+  docs: AssetsSectionDocument[],
+  fallbackSection: string,
+): AssetsSectionDocument[] =>
+  docs.map((doc, docIdx) => {
+    const topics = Array.isArray(doc.topics) ? doc.topics : []
+    return {
+      id: doc.id ?? `doc-${docIdx}`,
+      name:
+        doc.name ??
+        (doc as Record<string, string>)?.document_name ??
+        (doc as Record<string, string>)?.title ??
+        `Document ${docIdx + 1}`,
+      section: doc.section ?? fallbackSection,
+      topics: topics.map((topic, topicIdx) => {
+        const images = Array.isArray(topic.images) ? topic.images : []
+        const tables = Array.isArray(topic.tables) ? topic.tables : []
+        return {
+          id: topic.id ?? (topic as Record<string, string>)?.topic_id ?? `topic-${docIdx}-${topicIdx}`,
+          title: topic.title ?? (topic as Record<string, string>)?.topic ?? `Topic ${topicIdx + 1}`,
+          content: topic.content ?? (topic as Record<string, string>)?.text ?? "",
+          images: images.map((img, imgIdx) => ({
+            id: img.id ?? `img-${docIdx}-${topicIdx}-${imgIdx}`,
+            title: img.title ?? img.caption ?? `Image ${imgIdx + 1}`,
+            caption: img.caption,
+            url: img.url ?? "",
+          })),
+          tables: tables.map((tbl, tblIdx) => ({
+            id: tbl.id ?? `table-${docIdx}-${topicIdx}-${tblIdx}`,
+            title: tbl.title ?? `Table ${tblIdx + 1}`,
+            headers: tbl.headers,
+            rows: tbl.rows,
+            html: tbl.html,
+          })),
+        }
+      }),
+    }
+  })
 
 export function MaterialsDialog({
   open,
@@ -45,614 +147,383 @@ export function MaterialsDialog({
   keyword,
   subsectionId = "2.6.1",
   subsectionTitle = "Nonclinical Overview",
-  onMaterialsCountChange, // Accept the callback prop
+  onMaterialsCountChange,
   materials,
   onMaterialsChange,
+  tenantId = DEFAULT_TENANT,
+  projectId = DEFAULT_PROJECT,
+  sectionNumber = DEFAULT_SECTION,
 }: MaterialsDialogProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; text: string } | null>(null)
-  const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
-  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set())
-  const contentRef = useRef<HTMLDivElement>(null)
-  const selectableTextRef = useRef<HTMLDivElement>(null)
-  const [isMounted, setIsMounted] = useState(false)
+  const [documents, setDocuments] = useState<AssetsSectionDocument[]>([])
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [source, setSource] = useState<string | null>(null)
+
+  const selectedDocument = useMemo(
+    () => documents.find((doc) => doc.id === selectedDocumentId) ?? documents[0] ?? null,
+    [documents, selectedDocumentId],
+  )
+
+  useEffect(() => {
+    if (open && keyword) setSearchQuery(keyword)
+  }, [keyword, open])
+
+  const fetchAssets = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams({
+        tenant_id: tenantId,
+        project_id: projectId,
+        section: sectionNumber,
+      })
+      const res = await fetch(`/api/ncd/assets/section?${params.toString()}`)
+      const payload = (await res.json()) as AssetsSectionResponse & { source?: string }
+      if (!res.ok) {
+        throw new Error(
+          (payload as { error?: string })?.error || (payload as { message?: string })?.message || "Request failed",
+        )
+      }
+      const normalized = normalizeDocuments(payload.documents ?? [], payload.section ?? sectionNumber)
+      setDocuments(normalized)
+      setSelectedDocumentId((normalized[0]?.id as string | undefined) ?? null)
+      setSource(payload.source ?? res.headers.get("x-assets-section-source"))
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to load materials"
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }, [projectId, sectionNumber, tenantId])
+
+  useEffect(() => {
+    if (open) {
+      void fetchAssets()
+    }
+  }, [fetchAssets, open])
+
+  useEffect(() => {
+    onMaterialsCountChange?.(materials.length)
+  }, [materials, onMaterialsCountChange])
 
   const appendMaterial = (item: MaterialItem) => {
-    const next = [...materials, item]
+    const exists = item.id ? materials.some((m) => m.id === item.id && m.type === item.type) : false
+    const next = exists ? materials : [...materials, item]
     onMaterialsChange(next)
     onMaterialsCountChange?.(next.length)
   }
 
-  useEffect(() => {
-    setIsMounted(true)
-    return () => setIsMounted(false)
-  }, [])
-
-  useEffect(() => {
-    if (open && keyword) {
-      setSearchQuery(keyword)
+  const buildTableData = (table: AssetsSectionTable): TableData => {
+    const parsed = parseHtmlTable(table.html)
+    return {
+      id: table.id,
+      title: table.title,
+      headers: table.headers ?? parsed?.headers,
+      rows: table.rows ?? parsed?.rows,
+      html: table.html,
     }
-  }, [keyword, open])
-
-  useEffect(() => {
-    const handleMouseUp = (e: MouseEvent) => {
-      console.log("[v0] Mouse up in materials dialog")
-      const selection = window.getSelection()
-      const selectedText = selection?.toString().trim()
-      console.log("[v0] Selected text:", selectedText)
-      console.log("[v0] Target element:", e.target)
-      console.log("[v0] selectableTextRef contains target:", selectableTextRef.current?.contains(e.target as Node))
-
-      if (selectedText && selectedText.length > 0 && selectableTextRef.current?.contains(e.target as Node)) {
-        const range = selection?.getRangeAt(0)
-        const rect = range?.getBoundingClientRect()
-        console.log("[v0] Selection rect:", rect)
-
-        if (rect) {
-          const menuWidth = 200
-          const menuHeight = 100
-
-          let menuX = rect.left + 10
-          let menuY = rect.bottom + 10
-
-          if (menuX + menuWidth > window.innerWidth) {
-            menuX = window.innerWidth - menuWidth - 10
-          }
-
-          if (menuY + menuHeight > window.innerHeight) {
-            menuY = rect.top - menuHeight - 10
-          }
-
-          console.log("[v0] Setting context menu at:", menuX, menuY)
-
-          setContextMenu({
-            x: menuX,
-            y: menuY,
-            text: selectedText,
-          })
-        }
-      } else {
-        setContextMenu(null)
-      }
-    }
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (contextMenu && !(e.target as HTMLElement).closest(".context-menu")) {
-        setContextMenu(null)
-      }
-    }
-
-    if (open) {
-      document.addEventListener("mouseup", handleMouseUp)
-      document.addEventListener("click", handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener("mouseup", handleMouseUp)
-      document.removeEventListener("click", handleClickOutside)
-    }
-  }, [contextMenu, open])
-
-  const handleAddToMaterials = (text: string, type: MaterialItem["type"]) => {
-    appendMaterial({ type, content: text, timestamp: new Date() })
-    setContextMenu(null)
   }
 
-  const handleSummarizeText = (text: string) => {
-    const summary = `Summary: ${text.substring(0, 100)}...`
-    appendMaterial({ type: "summary", content: summary, originalText: text, timestamp: new Date() })
-    setContextMenu(null)
+  const addEntireTopic = (topic: AssetsSectionTopic, doc: AssetsSectionDocument) => {
+    const topicId = topic.id ?? `${doc.id || "doc"}-topic`
+    const images = (topic.images ?? []).map((img, idx) => ({
+      id: img.id ?? `img-${doc.id || "doc"}-${topicId}-${idx}`,
+      title: img.title ?? `Image ${idx + 1}`,
+      caption: img.caption,
+      url: img.url,
+    })) satisfies ImageData[]
+    const tables = (topic.tables ?? []).map((tbl) => buildTableData(tbl))
+    appendMaterial({
+      id: `${doc.id || "doc"}:${topicId}:topic`,
+      type: "topic",
+      data: {
+        id: topicId,
+        title: topic.title ?? "Topic",
+        content: topic.content ?? "",
+        images,
+        tables,
+        document: {
+          id: doc.id,
+          name: doc.name,
+          section: doc.section,
+        },
+      } satisfies TopicData,
+      timestamp: new Date(),
+    })
   }
 
-  const toggleTableSelection = (tableId: string, tableData: TableData) => {
-    const newSelection = new Set(selectedTables)
-    if (newSelection.has(tableId)) {
-      newSelection.delete(tableId)
-      const next = materials.filter((m) => m.id !== tableId)
-      onMaterialsChange(next)
-      onMaterialsCountChange?.(next.length)
-    } else {
-      newSelection.add(tableId)
-      appendMaterial({ type: "table", id: tableId, data: tableData, timestamp: new Date() })
-    }
-    setSelectedTables(newSelection)
-    console.log("[v0] Toggled table selection:", tableId)
-  }
+  const filteredTopics = useMemo(() => {
+    if (!selectedDocument) return []
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return selectedDocument.topics ?? []
+    return (selectedDocument.topics ?? []).filter((topic) => {
+      const plain = toPlainText(topic.content ?? "")
+      return (
+        topic.title?.toLowerCase().includes(q) ||
+        plain.toLowerCase().includes(q) ||
+        topic.tables?.some((t) => t.title?.toLowerCase().includes(q)) ||
+        topic.images?.some((i) => i.title?.toLowerCase().includes(q))
+      )
+    })
+  }, [searchQuery, selectedDocument])
 
-  const toggleImageSelection = (imageId: string, imageData: ImageData) => {
-    const newSelection = new Set(selectedImages)
-    if (newSelection.has(imageId)) {
-      newSelection.delete(imageId)
-      const next = materials.filter((m) => m.id !== imageId)
-      onMaterialsChange(next)
-      onMaterialsCountChange?.(next.length)
-    } else {
-      newSelection.add(imageId)
-      appendMaterial({ type: "image", id: imageId, data: imageData, timestamp: new Date() })
-    }
-    setSelectedImages(newSelection)
-    console.log("[v0] Toggled image selection:", imageId)
-  }
-
-  const availableMaterials: Material[] = [
-    {
-      id: "1",
-      title: "Nonclinical Study Design Guidelines",
-      type: "Guideline",
-      section: "2.6.1.1",
-      description: "Comprehensive guidelines for designing nonclinical studies",
-      content: `# Nonclinical Study Design Guidelines
-
-## Overview
-This document provides comprehensive guidelines for designing nonclinical studies including pharmacology, pharmacokinetics, and toxicology assessments.
-
-## Key Requirements
-1. Primary Pharmacology Studies
-   - In vitro target binding assays
-   - Functional activity assays
-   - Selectivity profiling
-
-2. Secondary Pharmacology
-   - Off-target screening
-   - Safety pharmacology core battery
-   
-3. Pharmacokinetics
-   - Dose-proportional exposure
-   - Bioavailability assessment
-   - Tissue distribution studies
-
-## Study Design Considerations
-When designing nonclinical studies, consider the following factors:
-- Route of administration
-- Dose selection rationale
-- Study duration
-- Species selection
-- Sample size calculations`,
-      date: "2024-01-15",
-      author: "FDA",
-      tags: ["Nonclinical", "Study Design", "FDA Guidelines"],
-    },
-    {
-      id: "2",
-      title: "XYZ-123 Pharmacology Study Report",
-      type: "Study Report",
-      section: "2.6.1.2",
-      description: "Detailed pharmacology study results for XYZ-123",
-      content: `# XYZ-123 Pharmacology Study Report
-
-## Executive Summary
-This report presents the pharmacology study results for XYZ-123, a novel kinase inhibitor.
-
-## Primary Pharmacology
-XYZ-123 demonstrated potent and selective inhibition of the target kinase with an IC50 of 2.3 nM in biochemical assays.
-
-### In Vitro Studies
-- Target binding: Kd = 1.8 nM
-- Functional activity: IC50 = 2.3 nM
-- Selectivity ratio: >100-fold vs off-targets
-
-### In Vivo Studies
-- Tumor growth inhibition at 10 mg/kg
-- Biomarker modulation observed
-- Well-tolerated in efficacy studies
-
-## Secondary Pharmacology
-No significant off-target activity at concentrations up to 100-fold above the primary target IC50.`,
-      date: "2024-02-20",
-      author: "Research Team",
-      tags: ["Pharmacology", "XYZ-123", "Study Report"],
-    },
-    {
-      id: "3",
-      title: "Small Molecule Kinase Inhibitor Template",
-      type: "Template",
-      section: "2.6.1.3",
-      description: "Standard template for kinase inhibitor programs",
-      content: `# Small Molecule Kinase Inhibitor Template
-
-## Section 2.4.1: Nonclinical Overview
-
-### Introduction
-[Provide background on the therapeutic target and disease indication]
-
-### Drug Candidate Profile
-- Chemical name: [Insert]
-- Molecular weight: [Insert]
-- Mechanism of action: [Insert]
-
-### Nonclinical Development Strategy
-The nonclinical program encompasses:
-1. Primary pharmacology studies
-2. Secondary pharmacology assessments
-3. Safety pharmacology studies
-4. PK/ADME characterization
-5. Toxicology evaluation
-
-### Key Findings
-[Summarize major findings from nonclinical studies]`,
-      date: "2024-03-10",
-      author: "Regulatory Team",
-      tags: ["Template", "Small Molecule", "Kinase Inhibitor"],
-    },
-    {
-      id: "4",
-      title: "ICH S6 Guideline: Preclinical Safety Evaluation",
-      type: "Regulatory Guideline",
-      section: "2.6.1.4",
-      description: "ICH guidelines for biologics safety evaluation",
-      content: `# ICH S6(R1) Guideline
-
-## Preclinical Safety Evaluation of Biotechnology-Derived Pharmaceuticals
-
-### Scope
-This guideline applies to biotechnology-derived pharmaceuticals including:
-- Proteins and peptides
-- Oligonucleotides
-- Gene therapy products
-
-### General Principles
-1. Case-by-case approach
-2. Relevant species selection
-3. Tissue cross-reactivity studies
-4. Immunogenicity assessment`,
-      date: "2023-12-01",
-      author: "ICH",
-      tags: ["ICH", "Guidelines", "Biologics"],
-    },
-  ]
-
-  const filteredMaterials = availableMaterials.filter((material) => {
-    if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    return (
-      material.title.toLowerCase().includes(query) ||
-      material.description.toLowerCase().includes(query) ||
-      material.content.toLowerCase().includes(query) ||
-      material.tags.some((tag) => tag.toLowerCase().includes(query))
-    )
-  })
-
-  const selectedFile = selectedFileId ? availableMaterials.find((m) => m.id === selectedFileId) : filteredMaterials[0]
-
-  const mockTables: TableData[] = [
-    {
-      id: "table1",
-      title: "Table 1: Pharmacodynamic Parameters",
-      headers: ["Parameter", "Value", "Units", "Method"],
-      rows: [
-        ["IC50", "2.3", "nM", "Biochemical assay"],
-        ["Kd", "1.8", "nM", "Surface plasmon resonance"],
-        ["Ki", "1.2", "nM", "Competitive binding"],
-      ],
-    },
-    {
-      id: "table2",
-      title: "Table 2: In Vivo Efficacy Results",
-      headers: ["Dose (mg/kg)", "Tumor Growth Inhibition (%)", "P-value"],
-      rows: [
-        ["1", "35", "0.05"],
-        ["5", "68", "0.001"],
-        ["10", "89", "< 0.0001"],
-      ],
-    },
-    {
-      id: "table3",
-      title: "Table 3: Safety Pharmacology Core Battery",
-      headers: ["System", "Test", "Result", "Conclusion"],
-      rows: [
-        ["Cardiovascular", "hERG inhibition", "IC50 > 30 μM", "Low risk"],
-        ["CNS", "Irwin test", "No effects at 100 mg/kg", "Well tolerated"],
-        ["Respiratory", "Plethysmography", "No effects", "Safe"],
-      ],
-    },
-  ]
-
-  const mockImages: ImageData[] = [
-    {
-      id: "img1",
-      title: "Figure 1: Dose-Response Curve",
-      url: "/dose-response-curve-graph.jpg",
-      caption: "Dose-response curve showing IC50 determination",
-    },
-    {
-      id: "img2",
-      title: "Figure 2: Tumor Growth Inhibition",
-      url: "/tumor-growth-inhibition-chart.jpg",
-      caption: "Tumor volume over time in treatment vs control groups",
-    },
-    {
-      id: "img3",
-      title: "Figure 3: Pharmacokinetic Profile",
-      url: "/pharmacokinetic-profile-line-graph.jpg",
-      caption: "Plasma concentration-time profile following single dose",
-    },
-    {
-      id: "img4",
-      title: "Figure 4: Target Engagement",
-      url: "/target-engagement-biomarker-graph.jpg",
-      caption: "Biomarker modulation demonstrating target engagement",
-    },
-  ]
-
-  useEffect(() => {
-    if (onMaterialsCountChange) {
-      onMaterialsCountChange(materials.length)
-    }
-  }, [materials, onMaterialsCountChange])
+  const topicCountForDoc = (doc: AssetsSectionDocument) => doc.topics?.length ?? 0
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          className="p-6"
-          style={{ width: "95vw", maxWidth: "95vw", height: "90vh", maxHeight: "90vh" }}
-          ref={contentRef}
-        >
-          <DialogHeader>
-            <div className="flex items-center justify-between">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="p-6"
+        style={{ width: "96vw", maxWidth: "96vw", height: "90vh", maxHeight: "90vh" }}
+      >
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <div>
               <DialogTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                {subsectionId} {subsectionTitle} - Materials
+                Materials from Module 4
               </DialogTitle>
-            <Button variant="outline" size="sm" className="bg-transparent mr-12">
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              My Materials ({materials.length})
-            </Button>
+              <p className="text-sm text-muted-foreground">
+                Section {sectionNumber || subsectionId}: {subsectionTitle} • Tenant {tenantId.slice(0, 8)} · Project{" "}
+                {projectId.slice(0, 8)} {source ? `• Source: ${source}` : ""}
+              </p>
             </div>
-          </DialogHeader>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={fetchAssets} disabled={loading} className="gap-2">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+                Refresh
+              </Button>
+              <Badge variant="secondary" className="text-xs">
+                {materials.length} in My Materials
+              </Badge>
+            </div>
+          </div>
+        </DialogHeader>
 
-          <div className="relative flex items-center">
-            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search materials..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+        <div className="flex gap-5 h-[calc(90vh-150px)]">
+          <div className="w-[320px] min-w-[320px] border border-border/60 rounded-lg bg-card/60 flex flex-col">
+            <div className="p-3 border-b border-border/60">
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search topics or documents"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+            <ScrollArea className="flex-1">
+              <div className="divide-y divide-border/60">
+                {documents.length === 0 && !loading && (
+                  <div className="p-4 text-sm text-muted-foreground flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    No documents available.
+                  </div>
+                )}
+                {documents.map((doc) => (
+                  <button
+                    key={doc.id}
+                    onClick={() => setSelectedDocumentId(doc.id ?? null)}
+                    className={`w-full text-left p-3 transition-colors ${
+                      selectedDocument?.id === doc.id ? "bg-accent/60" : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{doc.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          Section {doc.section ?? sectionNumber} • {topicCountForDoc(doc)} topics
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
 
-          <div className="flex gap-6" style={{ height: "calc(90vh - 180px)" }}>
-            <div className="w-[450px] min-w-[450px] flex-shrink-0 border-r border-border pr-4">
-              <ScrollArea className="h-full">
-                <div className="space-y-2">
-                  {filteredMaterials.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">No materials found</p>
-                  ) : (
-                    filteredMaterials.map((material) => (
-                      <button
-                        key={material.id}
-                        onClick={() => setSelectedFileId(material.id)}
-                        className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                          selectedFile?.id === material.id
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:bg-accent/50"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div className="flex-1">
-                            <h3 className="font-medium text-sm leading-snug">{material.title}</h3>
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{material.description}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {material.type}
-                          </Badge>
-                          <span>{material.section}</span>
-                        </div>
-
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(material.date).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {material.author}
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  )}
+          <div className="flex-1 min-w-0 border border-border/60 rounded-lg bg-card/60 overflow-hidden">
+            {loading ? (
+              <div className="h-full flex items-center justify-center text-muted-foreground gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Loading materials…
+              </div>
+            ) : error ? (
+              <div className="h-full flex items-center justify-center text-destructive gap-2 px-6 text-sm">
+                <AlertCircle className="h-5 w-5" />
+                {error}
+              </div>
+            ) : !selectedDocument ? (
+              <div className="h-full flex items-center justify-center text-muted-foreground">
+                Select a document to view topics.
+              </div>
+            ) : (
+              <div className="h-full flex flex-col min-h-0">
+                <div className="px-5 py-3 border-b border-border/60 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Document</p>
+                    <p className="text-base font-semibold">{selectedDocument.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Section {selectedDocument.section ?? sectionNumber} • {selectedDocument.topics?.length ?? 0} topics
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant="outline">{selectedDocument.topics?.length ?? 0} topics</Badge>
+                    <Badge variant="secondary">Module 4</Badge>
+                  </div>
                 </div>
-              </ScrollArea>
-            </div>
 
-            <div className="flex-1 min-w-0 overflow-hidden">
-              {selectedFile ? (
-                <Tabs defaultValue="text" className="h-full flex flex-col">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="text" className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Text
-                    </TabsTrigger>
-                    <TabsTrigger value="tables" className="flex items-center gap-2">
-                      <Table className="h-4 w-4" />
-                      Tables
-                    </TabsTrigger>
-                    <TabsTrigger value="images" className="flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4" />
-                      Images
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="text" className="mt-4 space-y-4">
-                    {selectedFile && (
-                      <>
-                        <div className="space-y-2">
-                          <h3 className="text-lg font-semibold">{selectedFile.title}</h3>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {selectedFile.date}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              {selectedFile.author}
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {selectedFile.tags.map((tag) => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-
-                        <ScrollArea className="h-[calc(90vh-280px)]">
-                          <div
-                            ref={selectableTextRef}
-                            className="whitespace-pre-wrap text-sm leading-relaxed select-text"
-                          >
-                            {selectedFile.content}
-                          </div>
-                        </ScrollArea>
-                      </>
+                <ScrollArea className="flex-1 min-h-0">
+                  <div className="space-y-4 p-4">
+                    {filteredTopics.length === 0 && (
+                      <div className="text-sm text-muted-foreground px-2 py-8 text-center">
+                        No topics match “{searchQuery}”.
+                      </div>
                     )}
-                  </TabsContent>
+                    {filteredTopics.map((topic) => (
+                      <div key={topic.id} className="border border-border/60 rounded-lg bg-background/60 shadow-sm">
+                        <div className="flex items-start justify-between gap-3 p-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Topic</p>
+                            <h3 className="text-lg font-semibold leading-tight">{topic.title}</h3>
+                            <p className="text-xs text-muted-foreground">
+                              {topic.images?.length ?? 0} images • {topic.tables?.length ?? 0} tables
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => addEntireTopic(topic, selectedDocument)}>
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add Topic
+                            </Button>
+                          </div>
+                        </div>
 
-                  <TabsContent value="tables" className="flex-1 overflow-hidden mt-0">
-                    <ScrollArea className="h-full">
-                      <div className="space-y-6 pr-2">
-                        {mockTables.map((table, idx) => {
-                          const tableId = table.id ?? `table-${idx}`
-                          return (
-                            <div key={tableId} className="border rounded-lg p-4">
-                              <div className="flex items-center justify-between mb-3">
-                                <h3 className="font-semibold">{table.title}</h3>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={selectedTables.has(tableId)}
-                                    onCheckedChange={() => toggleTableSelection(tableId, table)}
-                                    id={`table-${tableId}`}
-                                  />
-                                  <label htmlFor={`table-${tableId}`} className="text-sm font-medium cursor-pointer">
-                                    Add to materials
-                                  </label>
-                                </div>
-                              </div>
-                              <div className="overflow-x-auto">
-                                <table className="w-full border-collapse">
-                                  <thead>
-                                    <tr className="border-b bg-muted/50">
-                                      {(table.headers ?? []).map((header, idxHeader) => (
-                                        <th key={idxHeader} className="px-4 py-2 text-left text-sm font-semibold">
-                                          {header}
-                                        </th>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {(table.rows ?? []).map((row, rowIdx) => (
-                                      <tr key={rowIdx} className="border-b last:border-0 hover:bg-muted/30">
-                                        {row.map((cell, cellIdx) => (
-                                          <td key={cellIdx} className="px-4 py-2 text-sm">
-                                            {cell}
-                                          </td>
-                                        ))}
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
+                        <Separator />
 
-                  <TabsContent value="images" className="flex-1 overflow-hidden mt-0">
-                    <ScrollArea className="h-full">
-                      <div className="grid grid-cols-2 gap-4 pr-2">
-                        {mockImages.map((image, idx) => {
-                          const imageId = image.id ?? `img-${idx}`
-                          return (
-                            <div key={imageId} className="border rounded-lg p-4 space-y-3">
-                              <div className="flex items-start justify-between gap-2">
-                                <h3 className="font-semibold text-sm flex-1">{image.title}</h3>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={imageId}
-                                    checked={selectedImages.has(imageId)}
-                                    onCheckedChange={() => toggleImageSelection(imageId, image)}
-                                  />
-                                  <label htmlFor={imageId} className="text-xs text-muted-foreground cursor-pointer">
-                                    Add
-                                  </label>
-                                </div>
-                              </div>
-                              <Image
-                                src={image.url || "/placeholder.svg"}
-                                alt={image.title || "Selected image"}
-                                width={480}
-                                height={320}
-                                className="w-full h-auto rounded border bg-muted"
-                              />
-                              <p className="text-xs text-muted-foreground">{image.caption}</p>
+                        <div className="grid md:grid-cols-3 gap-4 p-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                              <FileText className="h-4 w-4" />
+                              Text
                             </div>
-                          )
-                        })}
+                            {topic.content ? (
+                              <div className="text-sm text-muted-foreground leading-relaxed line-clamp-8">
+                                <div dangerouslySetInnerHTML={{ __html: topic.content }} />
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">No text content</p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                              <ImageIcon className="h-4 w-4" />
+                              Images
+                            </div>
+                            {topic.images && topic.images.length > 0 ? (
+                              <div className="space-y-2">
+                                {topic.images.map((img, imgIdx) => (
+                                  <div key={img.id} className="rounded-md border border-border/60 overflow-hidden">
+                                    {img.url ? (
+                                      <Image
+                                        src={img.url}
+                                        alt={img.title || "Selected image"}
+                                        width={600}
+                                        height={340}
+                                        className="w-full h-36 object-cover bg-muted"
+                                      />
+                                    ) : (
+                                      <div className="h-36 flex items-center justify-center bg-muted text-muted-foreground text-xs">
+                                        Image unavailable
+                                      </div>
+                                    )}
+                                      <div className="p-2 space-y-1">
+                                        <p className="text-xs font-medium line-clamp-1">{img.title}</p>
+                                        {img.caption && <p className="text-[11px] text-muted-foreground line-clamp-2">{img.caption}</p>}
+                                      </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">No images in this topic.</p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                              <TableIcon className="h-4 w-4" />
+                              Tables
+                            </div>
+                            {topic.tables && topic.tables.length > 0 ? (
+                              <div className="space-y-3">
+                                {topic.tables.map((tbl, tblIdx) => {
+                                  const tableData = buildTableData(tbl)
+                                  return (
+                                    <div key={tbl.id} className="rounded-md border border-border/60 p-2 bg-muted/40 space-y-2">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <p className="text-sm font-semibold line-clamp-1">{tbl.title}</p>
+                                      </div>
+                                      {tableData?.headers && tableData?.rows ? (
+                                        <div className="overflow-x-auto">
+                                          <table className="w-full border-collapse text-xs">
+                                            <thead>
+                                              <tr className="border-b border-border/60 bg-muted/70">
+                                                {(tableData.headers ?? []).map((h, idx) => (
+                                                  <th key={idx} className="text-left px-2 py-1">
+                                                    {h}
+                                                  </th>
+                                                ))}
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              {(tableData.rows ?? []).slice(0, 3).map((row, rowIdx) => (
+                                                <tr key={rowIdx} className="border-b last:border-0 border-border/40">
+                                                  {row.map((cell, cellIdx) => (
+                                                    <td key={cellIdx} className="px-2 py-1">
+                                                      {cell}
+                                                    </td>
+                                                  ))}
+                                                </tr>
+                                              ))}
+                                              {tableData.rows && tableData.rows.length > 3 && (
+                                                <tr>
+                                                  <td colSpan={tableData.headers?.length ?? 1} className="px-2 py-1 text-[11px] text-muted-foreground">
+                                                    ...and {tableData.rows.length - 3} more rows
+                                                  </td>
+                                                </tr>
+                                              )}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      ) : tbl.html ? (
+                                        <div
+                                          className="text-[11px] text-muted-foreground leading-relaxed"
+                                          dangerouslySetInnerHTML={{ __html: tbl.html }}
+                                        />
+                                      ) : (
+                                        <p className="text-[11px] text-muted-foreground">Table preview unavailable.</p>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">No tables provided.</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </ScrollArea>
-                  </TabsContent>
-                </Tabs>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  Select a file to preview
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {isMounted &&
-        contextMenu &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            className="context-menu fixed bg-white dark:bg-gray-800 border-4 border-red-500 rounded-lg shadow-2xl p-2 min-w-[200px]"
-            style={{
-              left: `${contextMenu.x}px`,
-              top: `${contextMenu.y}px`,
-              zIndex: 999999,
-              pointerEvents: "auto",
-            }}
-            onClick={(e) => {
-              console.log("[v0] Context menu clicked")
-              e.stopPropagation()
-            }}
-          >
-            <div className="text-xs text-gray-500 mb-2 p-1 bg-yellow-100">
-              Debug: Menu at ({Math.round(contextMenu.x)}, {Math.round(contextMenu.y)})
-            </div>
-            <button
-              onClick={() => {
-                console.log("[v0] Add to materials clicked")
-                handleAddToMaterials(contextMenu.text, "text")
-              }}
-              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add to my materials
-            </button>
-            <button
-              onClick={() => {
-                console.log("[v0] Generate summary clicked")
-                handleSummarizeText(contextMenu.text)
-              }}
-              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center gap-2"
-            >
-              <Sparkles className="h-4 w-4" />
-              Generate summary
-            </button>
-          </div>,
-          document.body,
-        )}
-    </>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

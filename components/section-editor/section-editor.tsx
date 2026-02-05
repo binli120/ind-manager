@@ -11,12 +11,13 @@ import { Badge } from "@/components/ui/badge"
 import { TiptapEditor } from "@/components/section-editor/tiptap-editor"
 import { TemplateDialog } from "@/components/section-editor/template-dialog"
 import { MaterialsDialog } from "@/components/section-editor/materials-dialog"
+import { MyMaterialsDialog } from "@/components/section-editor/my-materials-dialog"
 import { TableInsertDialog } from "@/components/section-editor/table-insert-dialog"
 import { DeleteSubsectionDialog } from "@/components/section-editor/delete-subsection-dialog"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FileText, Save, CheckCircle2, Trash2, Loader2 } from "lucide-react"
 import type { Section, SubsectionContent } from "@/types/section"
-import type { MaterialItem } from "@/components/section-editor/my-materials-dialog"
+import type { ImageData, MaterialItem, TableData, TopicData } from "@/components/section-editor/my-materials-dialog"
 import { AddSectionDialog } from "@/components/section-editor/add-section-dialog"
 import { useAppDispatch, useAppSelector } from "@/lib/store"
 import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
@@ -27,6 +28,67 @@ const toSectionNumber = (value?: string | null) => {
   const match = value.match(/^(\d+(?:\.\d+)*)(?:\s|$)/)
   return match ? match[1] : null
 }
+
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+
+const wrapHtmlContent = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ""
+  const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(trimmed)
+  return looksLikeHtml ? trimmed : `<p>${escapeHtml(trimmed)}</p>`
+}
+
+const buildTableHtml = (table: TableData) => {
+  const title = table.title ? `<p><strong>${escapeHtml(table.title)}</strong></p>` : ""
+  if (table.html) return `${title}${table.html}`
+  const headers = table.headers ?? []
+  const rows = table.rows ?? []
+  if (!headers.length && !rows.length) return title
+  const thead = headers.length
+    ? `<thead><tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("")}</tr></thead>`
+    : ""
+  const tbody = rows.length
+    ? `<tbody>${rows
+        .map(
+          (row) =>
+            `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`,
+        )
+        .join("")}</tbody>`
+    : ""
+  return `${title}<table>${thead}${tbody}</table>`
+}
+
+const buildImageHtml = (image: ImageData) => {
+  if (!image.url) return ""
+  const captionParts = [image.title, image.caption].filter(Boolean) as string[]
+  const caption = captionParts.length ? `<p><em>${escapeHtml(captionParts.join(" — "))}</em></p>` : ""
+  const alt = escapeHtml(image.title || "Image")
+  return `<p><img src="${escapeHtml(image.url)}" alt="${alt}" /></p>${caption}`
+}
+
+const buildTopicHtml = (topic: TopicData) => {
+  const title = topic.title ? `<h3>${escapeHtml(topic.title)}</h3>` : ""
+  const text = topic.content ? wrapHtmlContent(topic.content) : ""
+  const images =
+    topic.images && topic.images.length
+      ? `<div><h4>Images</h4>${topic.images.map(buildImageHtml).join("")}</div>`
+      : ""
+  const tables =
+    topic.tables && topic.tables.length
+      ? `<div><h4>Tables</h4>${topic.tables.map(buildTableHtml).join("")}</div>`
+      : ""
+  const blocks = [title, text, images, tables].filter(Boolean).join("")
+  return blocks ? `<section>${blocks}</section>` : ""
+}
+
+const isTopicMaterial = (material: MaterialItem): material is MaterialItem & { data: TopicData } =>
+  material.type === "topic" && !!material.data && typeof material.data === "object"
 
 interface SectionEditorProps {
   section: Section
@@ -52,6 +114,7 @@ function SubsectionEditor({
 }) {
   const [content, setContent] = useState(subsection.content)
   const [showMaterialsDialog, setShowMaterialsDialog] = useState(false)
+  const [showMyMaterialsDialog, setShowMyMaterialsDialog] = useState(false)
   const [materialsCount, setMaterialsCount] = useState(0)
   const [materials, setMaterials] = useState<MaterialItem[]>([])
   const [aiLoading, setAiLoading] = useState(false)
@@ -199,6 +262,37 @@ function SubsectionEditor({
     setAiText(null)
   }
 
+  const handleInsertMaterials = (selected: MaterialItem[]) => {
+    const topicsHtml = selected
+      .filter(isTopicMaterial)
+      .map((item) => buildTopicHtml(item.data))
+      .filter((html) => html.length > 0)
+
+    if (!topicsHtml.length) return
+
+    const insertContent = topicsHtml.join("<hr />")
+    const selection = document.getSelection()
+    const editorRoot = document.querySelector(".ProseMirror")
+    const hasFocus =
+      selection &&
+      selection.rangeCount > 0 &&
+      selection.anchorNode &&
+      editorRoot instanceof HTMLElement &&
+      editorRoot.contains(selection.anchorNode as Node)
+
+    const newContent = hasFocus ? content + insertContent : insertContent + content
+
+    console.info("[materials] applying insert (topics)", {
+      hasFocus,
+      insertLength: insertContent.length,
+      originalLength: content.length,
+      newLength: newContent.length,
+      topics: topicsHtml.length,
+    })
+
+    setContent(newContent)
+  }
+
   const resolveSectionFromList = (payload: unknown): string | null => {
     if (!payload || typeof payload !== "object") return null
     const sections = Array.isArray((payload as Record<string, unknown>).sections)
@@ -340,7 +434,7 @@ function SubsectionEditor({
           content={content}
           onChange={setContent}
           materialsCount={materialsCount}
-          onOpenMaterials={() => setShowMaterialsDialog(true)}
+          onOpenMaterials={() => setShowMyMaterialsDialog(true)}
           onAiGenerate={handleAiGenerate}
           aiGenerating={aiLoading}
           sectionNumber={subsection.subsectionNumber}
@@ -382,12 +476,22 @@ function SubsectionEditor({
         open={showMaterialsDialog}
         onOpenChange={setShowMaterialsDialog}
         keyword=""
+        subsectionId={subsection.subsectionNumber}
+        subsectionTitle={subsection.title}
+        sectionNumber="4"
         materials={materials}
         onMaterialsChange={(items) => {
           setMaterials(items)
           setMaterialsCount(items.length)
         }}
         onMaterialsCountChange={setMaterialsCount}
+      />
+
+      <MyMaterialsDialog
+        open={showMyMaterialsDialog}
+        onOpenChange={setShowMyMaterialsDialog}
+        materials={materials}
+        onInsertMaterials={handleInsertMaterials}
       />
 
       {isSection265 && (
