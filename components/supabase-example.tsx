@@ -1,20 +1,23 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createBrowserClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export function SupabaseExample() {
   const [data, setData] = useState<unknown[]>([])
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
+  const supabase = createBrowserClient()
 
   const fetchData = async () => {
     setLoading(true)
     try {
-      // Example query - replace 'your_table' with your actual table name
-      const { data: result, error } = await supabase.from("your_table").select("*").limit(10)
+      // Example query using the existing "users" table
+      const { data: result, error } = await supabase.from("users").select("*").limit(10)
 
       if (error) throw error
       setData(result || [])

@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 'use client';
 
 import { Badge } from '@/components/ui/badge';
@@ -15,16 +18,26 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, SearchIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AddTenantDialog } from './add_tenant-dialog';
-import { fetchTenants, updateTenantStatus, createTenant } from "@/lib/supabase/tenants";
+import { fetchTenants, updateTenantStatus, createTenant } from "@/lib/supabase";
 
 export type Tenant = {
   id: string;
   name: string;
-  companyAddress: string;
+  companyAddress: string | null;
+  contactPerson: string | null;
+  contactEmail: string | null;
+  contactPhone: string | number | null;
+  status: 'active' | 'inactive' | 'pending';
+};
+
+type TenantInput = {
+  id?: string;
+  name: string;
+  companyAddress?: string;
   contactPerson: string;
   contactEmail: string;
   contactPhone: string;
-  status: 'active' | 'inactive' | 'pending';
+  status?: string;
 };
 
 export default function TenantsPage() {
@@ -42,8 +55,8 @@ export default function TenantsPage() {
   const filteredTenants = tenants.filter((tenant) => {
     const matchesSearch =
       tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tenant.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tenant.contactEmail.toLowerCase().includes(searchQuery.toLowerCase());
+      (tenant.contactPerson ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (tenant.contactEmail ?? "").toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter === 'all' || tenant.status === statusFilter;
@@ -58,17 +71,47 @@ export default function TenantsPage() {
       prevTenants.map((tenant) =>
         tenant.id === tenantId
           ? {
-            ...tenant,
-            ...updated 
+              ...tenant,
+              ...updated,
+              companyAddress: updated?.companyAddress ?? tenant.companyAddress ?? "",
+              contactPerson: updated?.contactPerson ?? tenant.contactPerson ?? "",
+              contactEmail: updated?.contactEmail ?? tenant.contactEmail ?? "",
+              contactPhone: updated?.contactPhone?.toString() ?? tenant.contactPhone ?? "",
+              status: (updated?.status ?? tenant.status) as Tenant["status"],
             }
           : tenant
       )
     );
   };
 
-  const handleAddTenant = async (newTenant: Tenant) => {
-    const tenant = await createTenant(newTenant);
-    setTenants(prev => [...prev, tenant]);
+  const handleAddTenant = async (newTenant: Omit<Tenant, "id" | "status">) => {
+    const payload: TenantInput = {
+      id: "",
+      name: newTenant.name,
+      companyAddress: newTenant.companyAddress ?? "",
+      contactPerson: newTenant.contactPerson ?? "",
+      contactEmail: newTenant.contactEmail ?? "",
+      contactPhone: (newTenant.contactPhone ?? "").toString(),
+      status: "pending",
+    };
+    const tenant = await createTenant(payload);
+    const t = tenant as Partial<Tenant> & {
+      companyAddress?: string | null;
+      contactPerson?: string | null;
+      contactEmail?: string | null;
+      contactPhone?: string | number | null;
+      status?: Tenant["status"];
+    };
+    const normalized: Tenant = {
+      id: t.id ?? "",
+      name: t.name ?? "",
+      companyAddress: t.companyAddress ?? "",
+      contactPerson: t.contactPerson ?? "",
+      contactEmail: t.contactEmail ?? "",
+      contactPhone: t.contactPhone?.toString() ?? "",
+      status: t.status ?? "pending",
+    };
+    setTenants(prev => [...prev, normalized]);
   };
 
   return (

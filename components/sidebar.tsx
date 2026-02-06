@@ -1,7 +1,12 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 'use client';
 
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ROUTES } from '@/lib/common/routes';
 import { cn } from '@/lib/utils';
 import {
   AlertTriangle,
@@ -24,29 +29,38 @@ import type { UserPrivilege } from '@/components/ui/users/users-page';
 
 interface SidebarProps {
   isOpen: boolean;
+  view: string;
   onToggle: () => void;
   currentUserPrivilege: UserPrivilege | string;
+}
+
+interface MenuItem {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  path: string;
+  title?: string;
+  allowedRoles?: string[];
 }
 
 export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const navigationItems = [
+  const navigationItems: MenuItem[] = [
     {
       icon: FileText,
       label: 'Document Authoring',
-      path: '/workspace/ind_editor',
+      path: ROUTES.workspace.indEditorPage,
     },
     {
       icon: MessageSquare,
       label: 'Review Center',
-      path: '/workspace/document_review',
+      path: ROUTES.workspace.documentReviewPage,
     },
     {
       icon: AlertTriangle,
       label: 'Gap Analysis',
-      path: '/workspace/gap_analysis',
+      path: ROUTES.workspace.GapAnalysisPage,
     },
   ];
 
@@ -54,12 +68,12 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
     {
       icon: FileText,
       label: 'Projects',
-      path: '/projects',
+      path: ROUTES.project,
     },
     {
       icon: Calendar,
       label: 'Calendar',
-      path: '/calendar',
+      path: ROUTES.Calendar,
     },
   ];
 
@@ -67,17 +81,17 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
     {
       icon: Upload,
       label: 'IND Submission',
-      path: '/submission/IND',
+      path: ROUTES.Submission.IND,
     },
     {
       icon: CheckSquare,
       label: 'Acknowledge',
-      path: '/submission/acknowledge',
+      path: ROUTES.Submission.IND,
     },
     {
       icon: FileText,
       label: 'Post Submission',
-      path: '/submission/post',
+      path: ROUTES.Submission.post,
     },
   ];
 
@@ -114,7 +128,7 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
     {
       icon: Palette,
       label: 'Design System',
-      path: '/design/system',
+      path: ROUTES.design.designPage,
     },
   ];
 
@@ -186,7 +200,7 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
               <Button
                 key={item.label}
                 variant={item.path === pathname ? 'secondary' : 'ghost'}
-                onClick={() => router.push(item.path)}
+                onClick={() => router.push(item.path.toString())}
                 className={cn(
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',

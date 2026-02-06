@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 "use client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -24,7 +27,7 @@ const getNextSubsectionLetter = (existingSubsections: ExistingSubsection[]): str
       const parts = sub.subsectionNumber?.split("-")
       return parts && parts.length > 1 ? parts[parts.length - 1] : null
     })
-    .filter(Boolean)
+    .filter((v): v is string => Boolean(v))
 
   if (letters.length === 0) return "a"
 

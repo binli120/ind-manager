@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import type { Meta, StoryObj } from "@storybook/react-webpack5"
 import {
   DropdownMenu,

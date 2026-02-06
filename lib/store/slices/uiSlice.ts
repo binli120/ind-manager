@@ -1,37 +1,79 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+//recommand import { v4 as uuidv4 } from 'uuid'
 
 export type ViewType =
-  | 'workspace'
-  | 'projects'
-  | 'teams'
-  | 'calendar'
-  | 'submission'
-  | 'post-submission'
-  | 'gap-scoring'
-  | 'review-center'
-  | 'gap-analysis'
-  | 'ind-submission'
-  | 'design-system'
-  | 'tenants'
-  | 'users';
+  | "workspace"
+  | "projects"
+  | "calendar"
+  | "submission"
+  | "post-submission"
+  | "gap-scoring"
+  | "review-center"
+  | "gap-analysis"
+  | "ind-submission"
+  | "design-system"
+  | "tenants"
+  | "users";
+/** recommended.
+export const ViewTypes = [
+  'Ind_editor',
+  'document_review',
+  'gap-analysis',
+  'project',
+  'calendar' ] as const;
+
+export type ViewTypesType = typeof ViewTypes[number];
+ */
 
 export interface Modal {
   id: string;
   type:
-    | 'create-project'
-    | 'create-team'
-    | 'invite-member'
-    | 'delete-confirm'
-    | 'settings'
-    | 'custom';
+    | "create-project"
+    | "create-team"
+    | "invite-member"
+    | "delete-confirm"
+    | "settings"
+    | "custom";
   title?: string;
   data?: unknown;
   isOpen: boolean;
 }
 
+const initialState: UIState = {
+  sidebarOpen: true,
+  commentsPanelOpen: true,
+  currentView: "workspace",
+
+  modals: [],
+  notifications: [],
+
+  globalLoading: false,
+  loadingStates: {},
+
+  breadcrumbs: [],
+
+  theme: "system",
+  compactMode: false,
+
+  globalSearch: "",
+
+  errors: {},
+
+  features: {
+    realTimeCollaboration: true,
+    advancedSearch: true,
+    aiAssistant: false,
+    exportToPdf: true,
+  },
+};
+
 export interface Notification {
   id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: "success" | "error" | "warning" | "info";
   title: string;
   message?: string;
   duration?: number;
@@ -65,7 +107,7 @@ interface UIState {
   breadcrumbs: Breadcrumb[];
 
   // Theme and preferences
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
   compactMode: boolean;
 
   // Search and filters
@@ -78,29 +120,29 @@ interface UIState {
   features: Record<string, boolean>;
 }
 
-const initialState: UIState = {
-  sidebarOpen: true,
-  commentsPanelOpen: true,
-  currentView: 'workspace',
-  modals: [],
-  notifications: [],
-  globalLoading: false,
-  loadingStates: {},
-  breadcrumbs: [],
-  theme: 'system',
-  compactMode: false,
-  globalSearch: '',
-  errors: {},
-  features: {
-    realTimeCollaboration: true,
-    advancedSearch: true,
-    aiAssistant: false,
-    exportToPdf: true,
-  },
-};
+// const initialState: UIState = {
+//   sidebarOpen: true,
+//   commentsPanelOpen: true,
+//   currentView: "workspace",
+//   modals: [],
+//   notifications: [],
+//   globalLoading: false,
+//   loadingStates: {},
+//   breadcrumbs: [],
+//   theme: "system",
+//   compactMode: false,
+//   globalSearch: "",
+//   errors: {},
+//   features: {
+//     realTimeCollaboration: true,
+//     advancedSearch: true,
+//     aiAssistant: false,
+//     exportToPdf: true,
+//   },
+// };
 
 const uiSlice = createSlice({
-  name: 'ui',
+  name: "ui",
   initialState,
   reducers: {
     // Layout actions
@@ -119,11 +161,40 @@ const uiSlice = createSlice({
     setCurrentView: (state, action: PayloadAction<ViewType>) => {
       state.currentView = action.payload;
     },
+    hydrateCurrentViewFromStorage: (state) => {
+      const saved = typeof window !== "undefined"
+        ? localStorage.getItem("currentView")
+        : null;
+      const allowed: ViewType[] = [
+        "workspace",
+        "projects",
+        "calendar",
+        "submission",
+        "post-submission",
+        "gap-scoring",
+        "review-center",
+        "gap-analysis",
+        "ind-submission",
+        "design-system",
+        "tenants",
+        "users",
+      ];
+      /**recommended
+       * export const hydrateCurrentView = 
+       * createAsyncThunk('ui/hydrate', async (_, {dispatch}) => {
+       *  const view = localStorage.getItem('currentView');
+       *  if (view) dispatch(setCurrentView(view as ViewType));
+       * });
+       */
+      if (saved && (allowed as string[]).includes(saved)) {
+        state.currentView = saved as ViewType;
+      }
+    },
 
     // Modal actions
-    openModal: (state, action: PayloadAction<Omit<Modal, 'isOpen'>>) => {
+    openModal: (state, action: PayloadAction<Omit<Modal, "isOpen">>) => {
       const existingModal = state.modals.find(
-        (modal) => modal.id === action.payload.id
+        (modal) => modal.id === action.payload.id,
       );
       if (existingModal) {
         existingModal.isOpen = true;
@@ -145,7 +216,7 @@ const uiSlice = createSlice({
     },
     removeModal: (state, action: PayloadAction<string>) => {
       state.modals = state.modals.filter(
-        (modal) => modal.id !== action.payload
+        (modal) => modal.id !== action.payload,
       );
     },
 
@@ -153,14 +224,17 @@ const uiSlice = createSlice({
     addNotification: (
       state,
       action: PayloadAction<
-        Omit<Notification, 'id' | 'isVisible' | 'createdAt'>
-      >
+        Omit<Notification, "id" | "isVisible" | "createdAt">
+      >,
     ) => {
+      // recommend: Date.now() to uuid()
       const notification: Notification = {
         ...action.payload,
-        id: `notification-${Date.now()}-${Math.random()
-          .toString(36)
-          .substr(2, 9)}`,
+        id: `notification-${Date.now()}-${
+          Math.random()
+            .toString(36)
+            .substr(2, 9)
+        }`,
         isVisible: true,
         createdAt: new Date().toISOString(),
       };
@@ -168,7 +242,7 @@ const uiSlice = createSlice({
     },
     hideNotification: (state, action: PayloadAction<string>) => {
       const notification = state.notifications.find(
-        (n) => n.id === action.payload
+        (n) => n.id === action.payload,
       );
       if (notification) {
         notification.isVisible = false;
@@ -176,20 +250,22 @@ const uiSlice = createSlice({
     },
     removeNotification: (state, action: PayloadAction<string>) => {
       state.notifications = state.notifications.filter(
-        (n) => n.id !== action.payload
+        (n) => n.id !== action.payload,
       );
     },
     clearNotifications: (state) => {
       state.notifications = [];
     },
-
+    /** recommended
+     * setLoading: (state, {payload}) => { state.loadingStates[payload.key] = payload.loading; },
+     */
     // Loading actions
     setGlobalLoading: (state, action: PayloadAction<boolean>) => {
       state.globalLoading = action.payload;
     },
     setLoading: (
       state,
-      action: PayloadAction<{ key: string; loading: boolean }>
+      action: PayloadAction<{ key: string; loading: boolean }>,
     ) => {
       state.loadingStates[action.payload.key] = action.payload.loading;
     },
@@ -209,7 +285,7 @@ const uiSlice = createSlice({
     },
 
     // Theme and preferences
-    setTheme: (state, action: PayloadAction<'light' | 'dark' | 'system'>) => {
+    setTheme: (state, action: PayloadAction<"light" | "dark" | "system">) => {
       state.theme = action.payload;
     },
     setCompactMode: (state, action: PayloadAction<boolean>) => {
@@ -221,13 +297,13 @@ const uiSlice = createSlice({
       state.globalSearch = action.payload;
     },
     clearGlobalSearch: (state) => {
-      state.globalSearch = '';
+      state.globalSearch = "";
     },
 
     // Error handling
     setError: (
       state,
-      action: PayloadAction<{ key: string; error: string }>
+      action: PayloadAction<{ key: string; error: string }>,
     ) => {
       state.errors[action.payload.key] = action.payload.error;
     },
@@ -241,7 +317,7 @@ const uiSlice = createSlice({
     // Feature flags
     setFeature: (
       state,
-      action: PayloadAction<{ key: string; enabled: boolean }>
+      action: PayloadAction<{ key: string; enabled: boolean }>,
     ) => {
       state.features[action.payload.key] = action.payload.enabled;
     },
@@ -263,6 +339,7 @@ export const {
   setCommentsPanelOpen,
   toggleCommentsPanel,
   setCurrentView,
+  hydrateCurrentViewFromStorage,
 
   // Modals
   openModal,
@@ -309,6 +386,14 @@ export const {
 
 export default uiSlice.reducer;
 
+/**
+ * recommended
+ *e xport const Features = { 
+  REALTIME: 'realTimeCollaboration', … } as const;
+  
+  type FeatureKey = typeof Features[keyof typeof Features];
+ */
+
 // Selectors
 export const selectIsLoading = (state: { ui: UIState }, key: string) =>
   state.ui.loadingStates[key] || false;
@@ -321,3 +406,14 @@ export const selectOpenModals = (state: { ui: UIState }) =>
 
 export const selectFeatureEnabled = (state: { ui: UIState }, feature: string) =>
   state.ui.features[feature] || false;
+/** recommended 
+export const selectUI = createSelector( 
+(state: RootState) => state.ui,
+  ui => ui
+  );
+
+  export const selectBreadcrumbs = 
+  createSelector(selectUI, 
+  ui => ui.breadcrumbs);
+
+*/

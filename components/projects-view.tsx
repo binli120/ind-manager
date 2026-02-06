@@ -1,16 +1,19 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 "use client";
 
 import { useAppSelector, useAppDispatch } from "@/lib/store";
 import {
-	  setViewMode,
-	  setFilters,
-	  fetchProjects,
-	  createProject,
-	  ProjectCreation,
-	  deleteProject,
-	  updateProject,
-	  ProjectUpdate,
-} from "@/lib/store/slices/projectsSlice";
+  setViewMode,
+  setFilters,
+  fetchProjects,
+  createProject,
+  ProjectCreation,
+  deleteProject,
+  updateProject,
+  ProjectUpdate,
+} from "@/lib/store/slices";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -203,7 +206,7 @@ export function ProjectsView() {
     setShowEditDialog(true);
     setEditProject({
       id: proj.id,
-      tenantid: proj.tenantId,
+      tenantid: proj.tenantId ?? "",
       drug_name: proj.drug,
       ind_title: proj.title,
       ind_number: proj.code,
@@ -270,7 +273,7 @@ export function ProjectsView() {
                       {opt.header}
                     </div>
                   ) : (
-                    <SelectItem key={opt.value} value={opt.value} className="whitespace-normal text-left">
+                    <SelectItem key={opt.value ?? `opt-${idx}`} value={opt.value ?? ""} className="whitespace-normal text-left">
                       {opt.label}
                     </SelectItem>
                   )

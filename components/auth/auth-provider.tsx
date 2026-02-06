@@ -1,28 +1,41 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 'use client';
 
+import { authServices } from '@/app/api/auth/auth-services';
 import { ErrorNullable } from '@/lib/common/types';
+import { useAppDispatch } from '@/lib/store';
 import {
   clearAuth,
   setLoading as setAuthLoading,
   setSession as setAuthSession,
   setUser as setAuthUser,
-} from '@/lib/store/slices/authSlice';
-import { useAppDispatch } from '@/lib/store/store';
-import { Session, User } from '@supabase/supabase-js';
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { authServices } from '@/app/api/auth/auth-services';
+  type User as AuthUser,
+} from '@/lib/store/slices';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 interface AuthContextType {
-  user: User | null;
-  setUser: (user: User | null) => void;
+  user: AuthUser | null;
+  setUser: (user: AuthUser | null) => void;
   updatePassword: (password: string) => Promise<{ error: ErrorNullable }>;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: ErrorNullable }>;
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{ error: ErrorNullable }>;
   signUp: (
     email: string,
     password: string,
-    metadata?: Record<string, unknown>,
+    metadata?: Record<string, unknown>
   ) => Promise<{ error: ErrorNullable }>;
   signOut: () => Promise<{ error: ErrorNullable }>;
   resetPassword: (email: string) => Promise<{ error: ErrorNullable }>;
@@ -31,20 +44,72 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const toAuthUser = (user: SupabaseUser | null): AuthUser | null => {
+  if (!user?.email) return null;
+
+  const nameValue =
+    typeof user.user_metadata?.name === 'string'
+      ? user.user_metadata.name
+      : null;
+  const avatarValue =
+    typeof user.user_metadata?.avatar_url === 'string'
+      ? user.user_metadata.avatar_url
+      : null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: nameValue,
+    avatar: avatarValue,
+    privilege:
+      typeof user.user_metadata?.privilege === 'string'
+        ? user.user_metadata.privilege
+        : 'user',
+    role:
+      typeof user.user_metadata?.role === 'string'
+        ? user.user_metadata.role
+        : null,
+    createdAt: user.created_at,
+    lastLoginAt: user.last_sign_in_at ?? undefined,
+  };
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const dispatch = useAppDispatch();
 
+  const applyAuth = useCallback(
+    (session: Session | null) => {
+      setSession(session);
+      setUser(toAuthUser(session?.user ?? null));
+      setLoading(false);
+      dispatch(setAuthSession(session ?? null));
+      dispatch(setAuthUser(toAuthUser(session?.user ?? null)));
+      dispatch(setAuthLoading(false));
+    },
+    [dispatch]
+  );
+
   const signIn = async (email: string, password: string) => {
     dispatch(setAuthLoading(true));
     const { error } = await authServices.signIn(email, password);
+    if (!error) {
+      const { session } = await authServices.getSession();
+      applyAuth(session);
+      return { error: null };
+    }
     dispatch(setAuthLoading(false));
     return { error };
   };
 
-  const signUp = async (email: string, password: string, metadata?: Record<string, unknown>) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    metadata?: Record<string, unknown>
+  ) => {
+    dispatch(setAuthLoading(true));
     const { error } = await authServices.signUp(email, password, metadata);
     dispatch(setAuthLoading(false));
     return { error };
@@ -54,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch(setAuthLoading(true));
     const { error } = await authServices.signOut();
     dispatch(clearAuth());
+    dispatch(setAuthLoading(false));
     return { error };
   };
 
@@ -68,7 +134,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // DUMMY FUNCTION
-  const resendConfirmation = async (email: string): Promise<{ error?: ErrorNullable }> => {
+  const resendConfirmation = async (
+    email: string
+  ): Promise<{ error?: ErrorNullable }> => {
     void email;
     try {
       await authServices.getUser();
@@ -79,16 +147,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-
-    const applyAuth = (session: Session | null) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      dispatch(setAuthSession(session ?? null));
-      dispatch(setAuthUser(session?.user ?? null));
-      dispatch(setAuthLoading(false));
-    };
-
     const getInitialSession = async () => {
       const { session } = await authServices.getSession();
       applyAuth(session);
@@ -109,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [dispatch]);
+  }, [applyAuth]);
 
   const value = {
     user,

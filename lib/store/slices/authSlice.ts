@@ -1,8 +1,12 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import {
   createSlice,
   createAsyncThunk,
   type PayloadAction,
 } from "@reduxjs/toolkit";
+import { createBrowserClient } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 import { auth_text } from "@/utils/constants";
@@ -12,7 +16,8 @@ export interface User {
   email: string;
   name?: string | null;
   avatar?: string | null;
-  role?: string | null;
+  role?: string | null; // submission/project role
+  privilege?: string | null; // system-level privilege
   permissions?: string[] | null;
   createdAt: string;
   lastLoginAt?: string;
@@ -49,7 +54,7 @@ export const loginUser = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -74,6 +79,11 @@ export const loginUser = createAsyncThunk(
           email: data.user.email!,
           name: profile?.name || data.user.user_metadata?.name,
           avatar: profile?.avatar_url,
+          privilege: (data.user.user_metadata?.privilege as string) ?? "user",
+          role:
+            ((profile as { submission_role?: string })?.submission_role as string) ??
+            (data.user.user_metadata?.role as string) ??
+            null,
           // role: profile?.role || "user",
           // permissions: profile?.permissions || [],
           // teamId: profile?.team_id,
@@ -102,7 +112,7 @@ export const signUpUser = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -138,7 +148,7 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       return true;
@@ -152,15 +162,17 @@ export const getCurrentUser = createAsyncThunk(
   "auth/getCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-      if (error) throw error;
+      if (sessionError) throw sessionError;
+      if (!session?.user) return null;
 
-      if (user) {
+      const user = session.user;
+      {
         // Fetch additional user profile data
         const { data: profile, error: profileError } = await supabase
           .from("users")
@@ -177,6 +189,11 @@ export const getCurrentUser = createAsyncThunk(
           email: user.email!,
           name: profile?.name || user.user_metadata?.name,
           avatar: profile?.avatar_url,
+          privilege: (user.user_metadata?.privilege as string) ?? "user",
+          role:
+            ((profile as { submission_role?: string })?.submission_role as string) ??
+            (user.user_metadata?.role as string) ??
+            null,
           // role: profile?.role || "user",
           // permissions: profile?.permissions || [],
           // teamId: profile?.team_id,
@@ -184,7 +201,7 @@ export const getCurrentUser = createAsyncThunk(
           lastLoginAt: user.last_sign_in_at,
         };
 
-        return userData;
+        return { user: userData, session };
       }
 
       return null;
@@ -265,6 +282,7 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
+        state.session = action.payload.session;
         state.isAuthenticated = true;
         state.sessionToken = action.payload.session?.access_token;
         state.error = null;
@@ -292,6 +310,7 @@ const authSlice = createSlice({
       // Logout
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
+        state.session = null;
         state.isAuthenticated = false;
         state.sessionToken = undefined;
         state.error = null;
@@ -305,14 +324,15 @@ const authSlice = createSlice({
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
-        state.isAuthenticated = !!action.payload;
+        state.user = action.payload?.user ?? null;
+        state.session = action.payload?.session ?? null;
+        state.sessionToken = action.payload?.session?.access_token;
+        state.isAuthenticated = !!action.payload?.user;
+        state.error = null;
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-        state.isAuthenticated = false;
-        state.user = null;
       })
       // Update profile
       .addCase(updateUserProfile.fulfilled, (state, action) => {

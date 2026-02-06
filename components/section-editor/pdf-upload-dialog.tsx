@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 "use client"
 
 import type React from "react"
@@ -9,32 +12,124 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, FileText, X } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { labelUploadedDocument, type LabelCandidate } from "@/lib/services/pdfLabel"
+import { uploadDocumentToS3 } from "@/lib/services/pdfUpload"
 
 interface PdfUploadDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUploadComplete: (sectionNumber: string, fileName: string) => void
+  company?: string
+  projectName?: string
 }
 
-export function PdfUploadDialog({ open, onOpenChange, onUploadComplete }: PdfUploadDialogProps) {
+export function PdfUploadDialog({
+  open,
+  onOpenChange,
+  onUploadComplete,
+  company,
+  projectName,
+}: PdfUploadDialogProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [isLabeling, setIsLabeling] = useState(false)
+  const [labelProgress, setLabelProgress] = useState(0)
+  const [labelTimedOut, setLabelTimedOut] = useState(false)
+  const [labelStarted, setLabelStarted] = useState(false)
   const [autoLabeledSection, setAutoLabeledSection] = useState("")
   const [sectionNumber, setSectionNumber] = useState("")
+  const [candidates, setCandidates] = useState<LabelCandidate[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const labelTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const labelAbortRef = useRef<AbortController | null>(null)
+  const [resultDialog, setResultDialog] = useState<{
+    open: boolean
+    success: boolean
+    title: string
+    message: string
+  }>({ open: false, success: true, title: "", message: "" })
 
-  const handleFileSelect = (selectedFile: File) => {
-    if (selectedFile.type === "application/pdf") {
+  const buildSectionFolder = (section: string) => {
+    const parts = section.split(".").filter(Boolean)
+    if (!parts.length) return ""
+    const segments: string[] = []
+    segments.push(`Module ${parts[0]}`)
+    parts.forEach((_p, idx) => {
+      const slice = parts.slice(0, idx + 1).join(".")
+      segments.push(slice)
+    })
+    return segments.join("/")
+  }
+
+  const startLabeling = useCallback(async () => {
+    if (!file) return
+    if (isLabeling) return
+    setIsLabeling(true)
+    setLabelStarted(true)
+    setLabelTimedOut(false)
+    setLabelProgress(5)
+    if (labelTimeoutRef.current) clearTimeout(labelTimeoutRef.current)
+    if (labelAbortRef.current) labelAbortRef.current.abort()
+    const aborter = new AbortController()
+    labelAbortRef.current = aborter
+    labelTimeoutRef.current = setTimeout(() => {
+      aborter.abort()
+      setIsLabeling(false)
+      setLabelTimedOut(true)
+    }, 30000)
+    try {
+      const ticker = setInterval(() => {
+        setLabelProgress((p) => Math.min(95, p + 5))
+      }, 400)
+      const result = await labelUploadedDocument(file, { page_limit: 5, use_llm: false, signal: aborter.signal })
+      clearInterval(ticker)
+      setLabelProgress(100)
+      setCandidates(result.candidates || [])
+      const top = result.section_number || result.candidates?.[0]?.section_number
+      if (top) {
+        setAutoLabeledSection(top)
+        setSectionNumber(top)
+      }
+    } catch (err) {
+      console.error("label-upload failed", err)
+      setLabelTimedOut(true)
+    } finally {
+      if (labelTimeoutRef.current) {
+        clearTimeout(labelTimeoutRef.current)
+        labelTimeoutRef.current = null
+      }
+      if (labelAbortRef.current === aborter) {
+        labelAbortRef.current = null
+      }
+      setIsLabeling(false)
+    }
+  }, [file, isLabeling])
+
+  const handleFileSelect = useCallback((selectedFile: File) => {
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/rtf",
+      "text/markdown",
+    ]
+    if (allowedTypes.includes(selectedFile.type) || /\.(pdf|doc|docx|rtf|md)$/i.test(selectedFile.name)) {
       setFile(selectedFile)
       setUploadProgress(0)
+      setLabelProgress(0)
+      setLabelStarted(false)
+      setLabelTimedOut(false)
+      setIsUploading(false)
       setAutoLabeledSection("")
       setSectionNumber("")
+      startLabeling()
     } else {
-      alert("Please select a PDF file")
+      alert("Please select a PDF, Word, RTF, or Markdown file")
     }
-  }
+  }, [startLabeling])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -53,41 +148,72 @@ export function PdfUploadDialog({ open, onOpenChange, onUploadComplete }: PdfUpl
     setIsDragging(false)
   }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    const droppedFile = e.dataTransfer.files[0]
-    if (droppedFile) {
-      handleFileSelect(droppedFile)
-    }
-  }, [])
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      const droppedFile = e.dataTransfer.files[0]
+      if (droppedFile) {
+        handleFileSelect(droppedFile)
+      }
+    },
+    [handleFileSelect],
+  )
 
-  const simulateUpload = async () => {
+  const handleUpload = async () => {
+    if (!file) return
+    if ((!labelStarted || !autoLabeledSection) && !labelTimedOut) {
+      await startLabeling()
+    }
+    if (isLabeling) return
     setIsUploading(true)
-    setUploadProgress(0)
-
-    // Simulate upload progress
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise((resolve) => setTimeout(resolve, 200))
-      setUploadProgress(i)
-    }
-
-    // Simulate AI labeling API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    const mockSectionNumber = "2.4.1.1"
-    setAutoLabeledSection(mockSectionNumber)
-    setSectionNumber(mockSectionNumber)
-    setIsUploading(false)
-  }
-
-  const handleUpload = () => {
-    if (file) {
-      simulateUpload()
+    setUploadProgress(10)
+    try {
+      const folder = sectionNumber ? buildSectionFolder(sectionNumber) : undefined
+      console.log("[upload] start", { sectionNumber, folder, company, projectName })
+      const resp = await uploadDocumentToS3(
+        file,
+        {
+          company: company || "unknown-company",
+          project: projectName || "unknown-project",
+          folder,
+          wait_for_completion: true,
+        },
+        undefined,
+      )
+      setUploadProgress(100)
+      setResultDialog({
+        open: true,
+        success: true,
+        title: "Upload complete",
+        message: `File ${file.name} ${
+          (resp as { version_id?: string; versionId?: string; version?: string }).version_id ??
+          (resp as { versionId?: string }).versionId ??
+          (resp as { version?: string }).version ??
+          ""
+        } stored at ${folder ?? "root"}`,
+      })
+      onOpenChange(false)
+    } catch (err) {
+      console.error("[upload] failed", err)
+      setUploadProgress(0)
+      setResultDialog({
+        open: true,
+        success: false,
+        title: "Upload failed",
+        message: err instanceof Error ? err.message : "Unknown error",
+      })
+    } finally {
+      setIsUploading(false)
     }
   }
 
   const handleConfirm = () => {
     if (sectionNumber && file) {
+      if (uploadProgress < 100) {
+        // If user skips explicit upload button, still simulate quickly
+        setUploadProgress(100)
+      }
       onUploadComplete(sectionNumber, file.name)
       handleClose()
     }
@@ -97,6 +223,17 @@ export function PdfUploadDialog({ open, onOpenChange, onUploadComplete }: PdfUpl
     setFile(null)
     setIsUploading(false)
     setUploadProgress(0)
+    setLabelTimedOut(false)
+    setLabelStarted(false)
+    setCandidates([])
+    if (labelAbortRef.current) {
+      labelAbortRef.current.abort()
+      labelAbortRef.current = null
+    }
+    if (labelTimeoutRef.current) {
+      clearTimeout(labelTimeoutRef.current)
+      labelTimeoutRef.current = null
+    }
     setAutoLabeledSection("")
     setSectionNumber("")
     onOpenChange(false)
@@ -105,6 +242,19 @@ export function PdfUploadDialog({ open, onOpenChange, onUploadComplete }: PdfUpl
   const handleRemoveFile = () => {
     setFile(null)
     setUploadProgress(0)
+    setLabelProgress(0)
+    setLabelTimedOut(false)
+    setLabelStarted(false)
+    setCandidates([])
+    if (labelAbortRef.current) {
+      labelAbortRef.current.abort()
+      labelAbortRef.current = null
+    }
+    if (labelTimeoutRef.current) {
+      clearTimeout(labelTimeoutRef.current)
+      labelTimeoutRef.current = null
+    }
+    setIsLabeling(false)
     setAutoLabeledSection("")
     setSectionNumber("")
     if (fileInputRef.current) {
@@ -112,14 +262,46 @@ export function PdfUploadDialog({ open, onOpenChange, onUploadComplete }: PdfUpl
     }
   }
 
-  const canUpload = file && !isUploading && uploadProgress === 0
+  const canUpload = file && !isUploading && (!isLabeling || labelTimedOut)
   const uploadComplete = uploadProgress === 100 && !isUploading
+  const pathPreview = sectionNumber
+    ? (() => {
+        const parts = sectionNumber.split(".").filter(Boolean)
+        if (!parts.length) return ""
+        const segments = []
+        segments.push(`Module ${parts[0]}`)
+        parts.forEach((_p, idx) => {
+          const slice = parts.slice(0, idx + 1).join(".")
+          segments.push(slice)
+        })
+        return segments.join("/")
+      })()
+    : ""
+
+  const SECTION_OPTIONS = Array.from(
+    new Set([
+      "1.0",
+      "2.1",
+      "2.2",
+      "2.3",
+      "2.3.S",
+      "2.3.P",
+      "2.4",
+      "2.4.1",
+      "2.4.1.1",
+      "2.5",
+      "2.6",
+      "3",
+      ...candidates.map((c) => c.section_number).filter(Boolean),
+    ]),
+  )
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px]">
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Upload PDF Document</DialogTitle>
+          <DialogTitle>Upload Document</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -152,12 +334,14 @@ export function PdfUploadDialog({ open, onOpenChange, onUploadComplete }: PdfUpl
             ) : (
               <>
                 <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-sm font-medium mb-2">Drop PDF file here or click to browse</p>
-                <p className="text-xs text-muted-foreground mb-4">Supports PDF files up to 50MB</p>
+                <p className="text-sm font-medium mb-2">Drop a document here or click to browse</p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Supports PDF, Word, RTF, and Markdown up to 50MB
+                </p>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf"
+                  accept=".pdf,.doc,.docx,.rtf,.md"
                   onChange={handleFileChange}
                   className="hidden"
                   id="file-upload"
@@ -171,40 +355,81 @@ export function PdfUploadDialog({ open, onOpenChange, onUploadComplete }: PdfUpl
 
           {/* Upload Button */}
           {file && !uploadComplete && (
-            <Button onClick={handleUpload} disabled={!canUpload || isUploading} className="w-full">
+            <Button onClick={startLabeling} disabled={!canUpload || isUploading} className="w-full">
               <Upload className="h-4 w-4 mr-2" />
-              {isUploading ? "Uploading..." : "Upload"}
+              {isLabeling ? "Auto Labeling..." : "Auto Label"}
             </Button>
           )}
 
           {/* Progress Bar Section */}
-          {(isUploading || uploadProgress > 0) && (
+          {file && (
             <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                You can click OK button to close the dialog before uploading finishes, enter section number or we are
-                going to auto-label it.
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Upload Progress</span>
-                  <span className="font-medium">{uploadProgress}%</span>
+              {(isLabeling || labelProgress > 0) && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Relabeling (suggesting IND section){labelTimedOut ? " — timed out, please pick manually" : ""}
+                    </span>
+                    <span className="font-medium">{labelProgress}%</span>
+                  </div>
+                  <Progress value={labelProgress} className="h-2" />
                 </div>
-                <Progress value={uploadProgress} className="h-2" />
-              </div>
+              )}
+
+              {(isUploading || uploadProgress > 0) && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Upload to S3</span>
+                    <span className="font-medium">{uploadProgress}%</span>
+                  </div>
+                  <Progress value={uploadProgress} className="h-2" />
+                </div>
+              )}
 
               {/* Section Number Input */}
               <div className="space-y-2">
                 <Label htmlFor="section-number">IND Section No.</Label>
+                <Select
+                  value={sectionNumber || (autoLabeledSection ? autoLabeledSection : undefined)}
+                  onValueChange={(v) => setSectionNumber(v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={autoLabeledSection ? `Suggested: ${autoLabeledSection}` : "Pick a section"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SECTION_OPTIONS.map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Input
                   id="section-number"
                   value={sectionNumber}
                   onChange={(e) => setSectionNumber(e.target.value)}
                   placeholder={isUploading && !autoLabeledSection ? "Auto-labeling..." : "e.g., 2.4.1.1"}
                 />
+                {candidates.length > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    Candidates:&nbsp;
+                    {candidates.slice(0, 5).map((c, idx) => (
+                      <span key={`${c.section_number}-${idx}`} className="mr-2">
+                        {c.section_number}
+                        {c.section_title ? ` (${c.section_title})` : ""}
+                        {typeof c.score === "number" ? ` • ${Math.round(c.score * 100)}%` : ""}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {autoLabeledSection && uploadComplete && (
                   <p className="text-xs text-muted-foreground">
                     AI suggested section: <span className="font-medium text-foreground">{autoLabeledSection}</span>
+                  </p>
+                )}
+                {sectionNumber && (
+                  <p className="text-xs text-muted-foreground">
+                    Target S3 path preview: <span className="font-medium text-foreground">{pathPreview}</span>
                   </p>
                 )}
               </div>
@@ -217,11 +442,33 @@ export function PdfUploadDialog({ open, onOpenChange, onUploadComplete }: PdfUpl
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={!sectionNumber || !file}>
+          {file && (
+            <Button onClick={handleUpload} disabled={!canUpload} variant="secondary">
+              {isUploading ? "Uploading..." : "Upload to server"}
+            </Button>
+          )}
+          <Button onClick={handleConfirm} disabled={!sectionNumber || !file || isLabeling}>
             OK
           </Button>
         </div>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      <Dialog open={resultDialog.open} onOpenChange={(v) => setResultDialog((prev) => ({ ...prev, open: v }))}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>{resultDialog.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className={resultDialog.success ? "text-sm text-foreground" : "text-sm text-destructive"}>
+              {resultDialog.message}
+            </p>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={() => setResultDialog((prev) => ({ ...prev, open: false }))}>Dismiss</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

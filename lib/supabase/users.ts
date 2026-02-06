@@ -10,8 +10,18 @@ type UserRow = {
   tenants?: { name?: string | null } | null;
 };
 
+const ADMIN_PROXY_ENDPOINT = "/api/admin/proxy";
+
+const asJson = async <T>(res: Response) => {
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error || "Request failed");
+  }
+  return (await res.json()) as T;
+};
+
 export async function fetchUsers(tenantId?: string): Promise<User[]> {
-  const res = await fetch("/api/database", {
+  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
     method: "POST",
     body: JSON.stringify({
       table: "users",
@@ -21,21 +31,21 @@ export async function fetchUsers(tenantId?: string): Promise<User[]> {
     }),
   });
 
-  const { data } = (await res.json()) as { data: UserRow[] };
+  const { data } = await asJson<{ data: UserRow[] }>(res);
 
   return data.map((row) => ({
     id: row.id,
     name: row.name,
     email: row.email,
-    phone: row.phone,
+    phone: row.phone ?? "",
     role: row.role,
     company: row.tenants?.name ?? "",
-    status: row.status,
+    status: (row.status as User["status"]) ?? "pending",
   }));
 }
 
 export async function updateUserStatus(id: string, status: string) {
-  const res = await fetch("/api/database", {
+  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
     method: "POST",
     body: JSON.stringify({
       table: "users",
@@ -45,7 +55,7 @@ export async function updateUserStatus(id: string, status: string) {
     }),
   });
 
-  const { data } = (await res.json()) as { data: UserRow[] };
+  const { data } = await asJson<{ data: UserRow[] }>(res);
   const row = data[0];
 
   return {
@@ -67,7 +77,7 @@ export async function createUser(user: {
   role: UserRole;
   tenantId: string;
 }) {
-  const res = await fetch("/api/database", {
+  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
     method: "POST",
     body: JSON.stringify({
       table: "users",
@@ -82,12 +92,12 @@ export async function createUser(user: {
           tenantid: user.tenantId,
           status: "pending",
         },
-        select: "*, tenants(name)"
+        select: "*, tenants(name)",
       },
     }),
   });
 
-  const { data } = (await res.json()) as { data: UserRow[] };
+  const { data } = await asJson<{ data: UserRow[] }>(res);
   const row = data[0];
 
   return {
@@ -102,7 +112,7 @@ export async function createUser(user: {
 }
 
 export async function fetchCurrentUser(id: string) {
-  const res = await fetch("/api/database", {
+  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
     method: "POST",
     body: JSON.stringify({
       table: "users",
@@ -111,7 +121,7 @@ export async function fetchCurrentUser(id: string) {
       filters: { id },
     }),
   });
-  const { data } = await res.json();
+  const { data } = await asJson<{ data: UserRow[] }>(res);
   return data?.[0] || null;
 }
 

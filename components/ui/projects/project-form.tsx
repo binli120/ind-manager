@@ -1,22 +1,25 @@
-import { Button } from "@/components/ui/button";
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import {
   getDefaultProjectData,
   PRODUCT_TYPES,
@@ -51,10 +54,13 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   isEditing = false,
 }) => {
   const { currentTenant, selectedTenantId } = useTenant();
+  const defaultTenantId = selectedTenantId ?? currentTenant?.id ?? "demo-tenant";
   const [currentStep, setCurrentStep] = useState(1);
-  const [projectData, setProjectData] = useState<ProjectCreation>(
-    initialData || getDefaultProjectData(),
-  );
+  const [projectData, setProjectData] = useState<ProjectCreation>(() => {
+    const base = initialData || getDefaultProjectData();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { ...base, tenantid: (base as any).tenantid || defaultTenantId };
+  });
 
   const progress = (currentStep / PROJECT_CREATION_STEPS.length) * 100;
 
@@ -97,7 +103,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
 
   const updateProjectData = <T extends keyof ProjectCreation>(
     field: T,
-    value: ProjectCreation[T],
+    value: ProjectCreation[T]
   ) => {
     setProjectData((prev) => ({ ...prev, [field]: value }));
   };
@@ -144,13 +150,13 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               <div>
                 <Label htmlFor="product_type">Product Type *</Label>
                 <Select
-                  value={(projectData.product_type as string) || ""}
+                  value={(projectData.product_type as string) || ''}
                   onValueChange={(value) =>
-                    updateProjectData("product_type", value)
+                    updateProjectData('product_type', value)
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select product type" />
+                    <SelectValue placeholder='Select product type' />
                   </SelectTrigger>
                   <SelectContent>
                     {PRODUCT_TYPES.map((type) => (
@@ -206,43 +212,43 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         );
       case 2:
         return (
-          <div className="space-y-4">
-            <div className="grid gap-4">
+          <div className='space-y-4'>
+            <div className='grid gap-4'>
               <div>
-                <Label htmlFor="sponsor_name">Sponsor Name *</Label>
+                <Label htmlFor='sponsor_name'>Sponsor Name *</Label>
                 <Input
-                  id="sponsor_name"
-                  value={(projectData.sponsor_name as string) || ""}
+                  id='sponsor_name'
+                  value={(projectData.sponsor_name as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("sponsor_name", e.target.value)
+                    updateProjectData('sponsor_name', e.target.value)
                   }
-                  placeholder="e.g., PharmaCorp Inc."
+                  placeholder='e.g., PharmaCorp Inc.'
                 />
               </div>
               <div>
-                <Label htmlFor="sponsor_contact_email">
+                <Label htmlFor='sponsor_contact_email'>
                   Sponsor Contact Email *
                 </Label>
                 <Input
-                  id="sponsor_contact_email"
-                  type="email"
-                  value={(projectData.sponsor_contact_email as string) || ""}
+                  id='sponsor_contact_email'
+                  type='email'
+                  value={(projectData.sponsor_contact_email as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("sponsor_contact_email", e.target.value)
+                    updateProjectData('sponsor_contact_email', e.target.value)
                   }
-                  placeholder="sponsor@company.com"
+                  placeholder='sponsor@company.com'
                 />
               </div>
               <div>
-                <Label htmlFor="fda_contact_email">FDA Contact Email *</Label>
+                <Label htmlFor='fda_contact_email'>FDA Contact Email *</Label>
                 <Input
-                  id="fda_contact_email"
-                  type="email"
-                  value={(projectData.fda_contact_email as string) || ""}
+                  id='fda_contact_email'
+                  type='email'
+                  value={(projectData.fda_contact_email as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("fda_contact_email", e.target.value)
+                    updateProjectData('fda_contact_email', e.target.value)
                   }
-                  placeholder="fda.contact@fda.gov"
+                  placeholder='fda.contact@fda.gov'
                 />
               </div>
             </div>
@@ -250,46 +256,46 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         );
       case 3:
         return (
-          <div className="space-y-4">
-            <div className="grid gap-4">
+          <div className='space-y-4'>
+            <div className='grid gap-4'>
               <div>
-                <Label htmlFor="project_start_date">Project Start Date *</Label>
+                <Label htmlFor='project_start_date'>Project Start Date *</Label>
                 <Input
-                  id="project_start_date"
-                  type="date"
-                  value={(projectData.project_start_date as string) || ""}
+                  id='project_start_date'
+                  type='date'
+                  value={(projectData.project_start_date as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("project_start_date", e.target.value)
+                    updateProjectData('project_start_date', e.target.value)
                   }
                 />
               </div>
               <div>
-                <Label htmlFor="pre_ind_meeting_date">
+                <Label htmlFor='pre_ind_meeting_date'>
                   Pre-IND Meeting Date
                 </Label>
                 <Input
-                  id="pre_ind_meeting_date"
-                  type="date"
-                  value={(projectData.pre_ind_meeting_date as string) || ""}
+                  id='pre_ind_meeting_date'
+                  type='date'
+                  value={(projectData.pre_ind_meeting_date as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("pre_ind_meeting_date", e.target.value)
+                    updateProjectData('pre_ind_meeting_date', e.target.value)
                   }
                 />
               </div>
               <div>
-                <Label htmlFor="target_ind_submission_date">
+                <Label htmlFor='target_ind_submission_date'>
                   Target IND Submission Date *
                 </Label>
                 <Input
-                  id="target_ind_submission_date"
-                  type="date"
+                  id='target_ind_submission_date'
+                  type='date'
                   value={
-                    (projectData.target_ind_submission_date as string) || ""
+                    (projectData.target_ind_submission_date as string) || ''
                   }
                   onChange={(e) =>
                     updateProjectData(
-                      "target_ind_submission_date",
-                      e.target.value,
+                      'target_ind_submission_date',
+                      e.target.value
                     )
                   }
                 />
@@ -299,9 +305,9 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         );
       case 4:
         return (
-          <div className="space-y-4">
-            <div className="grid gap-4">
-              <div className="space-y-2">
+          <div className='space-y-4'>
+            <div className='grid gap-4'>
+              <div className='space-y-2'>
                 <Label>Project Summary</Label>
                 <div className="p-4 border rounded-lg bg-muted/20 space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -335,11 +341,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 </span>
               </div>
                   {(projectData.target_ind_submission_date as string) && (
-                    <div className="flex justify-between">
-                      <span className="font-medium">Target Date:</span>
+                    <div className='flex justify-between'>
+                      <span className='font-medium'>Target Date:</span>
                       <span>
                         {new Date(
-                          projectData.target_ind_submission_date as string,
+                          projectData.target_ind_submission_date as string
                         ).toLocaleDateString()}
                       </span>
                     </div>
@@ -347,14 +353,14 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 </div>
               </div>
               <div>
-                <Label htmlFor="additional_notes">Additional Notes</Label>
+                <Label htmlFor='additional_notes'>Additional Notes</Label>
                 <Textarea
-                  id="additional_notes"
-                  value={(projectData.additional_notes as string) || ""}
+                  id='additional_notes'
+                  value={(projectData.additional_notes as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("additional_notes", e.target.value)
+                    updateProjectData('additional_notes', e.target.value)
                   }
-                  placeholder="Any additional notes or comments"
+                  placeholder='Any additional notes or comments'
                 />
               </div>
             </div>
@@ -366,32 +372,32 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-background rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
+    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+      <div className='bg-background rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto'>
+        <div className='p-6'>
+          <div className='mb-8'>
+            <div className='flex items-center justify-between mb-4'>
               <div>
-                <h2 className="text-xl font-semibold">
-                  {isEditing ? "Edit" : "Create"} IND Project
+                <h2 className='text-xl font-semibold'>
+                  {isEditing ? 'Edit' : 'Create'} IND Project
                 </h2>
-                <span className="text-sm text-muted-foreground">
+                <span className='text-sm text-muted-foreground'>
                   Step {currentStep} of {PROJECT_CREATION_STEPS.length}
                 </span>
               </div>
-              <span className="text-sm italic text-red-500">* required</span>
+              <span className='text-sm italic text-red-500'>* required</span>
             </div>
-            <Progress value={progress} className="mb-4" />
-            <div className="flex justify-between text-sm">
+            <Progress value={progress} className='mb-4' />
+            <div className='flex justify-between text-sm'>
               {PROJECT_CREATION_STEPS.map((step) => (
                 <div
                   key={step.id}
                   className={`flex-1 text-center ${
                     step.id === currentStep
-                      ? "text-primary font-medium"
+                      ? 'text-primary font-medium'
                       : step.id < currentStep
-                        ? "text-green-600"
-                        : "text-muted-foreground"
+                      ? 'text-green-600'
+                      : 'text-muted-foreground'
                   }`}
                 >
                   {step.title}
@@ -401,9 +407,9 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
           </div>
 
           {/* Step Content */}
-          <Card className="card-dark-border">
+          <Card className='card-dark-border'>
             <CardHeader>
-              <CardTitle className="text-lg">
+              <CardTitle className='text-lg'>
                 {PROJECT_CREATION_STEPS[currentStep - 1].title}
               </CardTitle>
               <CardDescription>
@@ -414,28 +420,28 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
           </Card>
 
           {/* Navigation */}
-          <div className="flex justify-between mt-6">
+          <div className='flex justify-between mt-6'>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={prevStep}
               disabled={currentStep === 1}
             >
-              <ChevronLeft className="h-4 w-4 mr-2" />
+              <ChevronLeft className='h-4 w-4 mr-2' />
               Previous
             </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={onCancel}>
+            <div className='flex gap-2'>
+              <Button variant='outline' onClick={onCancel}>
                 Cancel
               </Button>
               {currentStep === PROJECT_CREATION_STEPS.length ? (
                 <Button onClick={handleSubmit} disabled={!isStepValid()}>
-                  <Check className="h-4 w-4 mr-2" />
-                  {isEditing ? "Update" : "Create"} Project
+                  <Check className='h-4 w-4 mr-2' />
+                  {isEditing ? 'Update' : 'Create'} Project
                 </Button>
               ) : (
                 <Button onClick={nextStep} disabled={!isStepValid()}>
                   Next
-                  <ChevronRight className="h-4 w-4 ml-2" />
+                  <ChevronRight className='h-4 w-4 ml-2' />
                 </Button>
               )}
             </div>

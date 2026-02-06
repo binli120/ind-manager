@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'

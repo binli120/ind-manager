@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 "use client";
 
 import GapAnalysisDashboard from "@/components/gap-analysis/gap-analysis-dashboard";

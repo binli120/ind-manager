@@ -1,8 +1,11 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 /**
  * Project-related metadata, constants, and utility functions
  */
 
-import { ProjectCreation } from "../store/slices/projectsSlice";
+import { ProjectCreation } from "../store/slices";
 
 export const PROJECT_STATUSES = {
   DRAFT: "draft",
@@ -127,6 +130,7 @@ export const getDefaultProjectData = () =>
     ind_title: "",
     ind_number: "",
     drug_name: "",
+    tenantid: "",
     product_type: "",
     description: "",
     priority: "medium",

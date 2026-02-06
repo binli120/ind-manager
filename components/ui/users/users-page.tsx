@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 'use client';
 
 import { Badge } from '@/components/ui/badge';
@@ -15,12 +18,11 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, SearchIcon, FolderGit2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AddUserDialog } from './add-user-dialog';
-import { fetchUsers, updateUserStatus, createUser, fetchCurrentUser } from "@/lib/supabase/users";
-import { fetchTenants } from "@/lib/supabase/tenants";
+import { fetchUsers, updateUserStatus, createUser, fetchTenants } from "@/lib/supabase";
 import { authServices } from "@/app/api/auth/auth-services";
 import { AssignProjectDialog } from './assign-project-dialog';
 import { fetchProjects } from "@/lib/supabase/projects";
-import { Project } from '@/components/projects-view';
+import type { Project } from "@/lib/store/slices/projectsSlice";
 
 //These should be made more robust in the future.
 export type UserRole =
@@ -44,6 +46,8 @@ export type User = {
   email: string;
   phone: string;
   role: UserRole;
+  privilege?: UserPrivilege;
+  password?: string;
   company: string;
   status: 'active' | 'inactive' | 'pending';
 };
@@ -76,7 +80,7 @@ export default function UsersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [companies, setCompanies] = useState<string[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<UserPrivilege>('');
+  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<UserPrivilege>('user');
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedUserForAssignment, setSelectedUserForAssignment] = useState<User | null>(null);
   const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
@@ -93,30 +97,15 @@ export default function UsersPage() {
       const privilege =(authUser?.user_metadata?.privilege as UserPrivilege) ?? 'system_admin';
       setCurrentUserPrivilege(privilege);
 
-      //Get the logged in user's tenantid and fetch 
-      const currentUserDbRecord = await fetchCurrentUser(authUser.id);
-      let targetTenantId: string | undefined = undefined;
-      if (privilege !== 'system_admin' && currentUserDbRecord?.tenantid) {
-        targetTenantId = currentUserDbRecord.tenantid;
-      }
-      if (privilege === 'system_admin' || targetTenantId) {
-        fetchUsers(targetTenantId).then(setUsers);
-        fetchProjects(targetTenantId).then((data) => setAvailableProjects(data as unknown as Project[]));
-      } else {
-        setUsers([]);
-        setAvailableProjects([]);
-      }
+      const targetTenantId: string | undefined = undefined;
 
-      //To fill companies
-      if (privilege === 'system_admin' || targetTenantId) {
-        fetchTenants(targetTenantId).then((data) => {
-          setTenants(data);
-          setCompanies(data.map((t) => t.name));
-        });
-      } else {
-        setTenants([]);
-        setCompanies([]);
-      }
+      fetchUsers(targetTenantId).then(setUsers);
+      fetchProjects(targetTenantId).then((data) => setAvailableProjects(data as unknown as Project[]));
+
+      fetchTenants(targetTenantId).then((data) => {
+        setTenants(data);
+        setCompanies(data.map((t) => t.name));
+      });
     }
 
   const filteredUsers = users.filter((user) => {
@@ -140,8 +129,13 @@ export default function UsersPage() {
 
     setUsers((prevUsers) =>
       prevUsers.map((user) =>
-        user.id === userId
-          ? { ...updated }
+            user.id === userId
+          ? {
+              ...user,
+              ...updated,
+              phone: (updated?.phone ?? user.phone ?? "").toString(),
+              status: (updated?.status as User["status"]) ?? user.status,
+            }
           : user
       )
     );
@@ -157,7 +151,7 @@ export default function UsersPage() {
     company: string;
   }) => {
 
-    const { data: signUpData, error: authError } = await authServices.signUp(
+    const { error: authError } = await authServices.signUp(
       formUser.email,
       formUser.password,
       {
@@ -166,27 +160,34 @@ export default function UsersPage() {
       }
     );
 
-    if (authError || !signUpData?.user) {
-      console.error("signup failed or no user returned:", authError);
+    if (authError) {
+      console.error("signup failed:", authError);
       return;
     }
 
-    const authUser = signUpData.user;
     const selectedTenant = tenants.find(t => t.name === formUser.company);
     if (!selectedTenant) {
       console.error("Selected company not found in tenants list");
       return;
     }
 
+    const authUserId = `user-${Date.now()}`;
     const user = await createUser({
-      id: authUser.id, // foreign key → auth.users.id
+      id: authUserId, // placeholder id; replace with auth user id when available
       name: formUser.name,
       email: formUser.email,
       phone: formUser.phone,
       role: formUser.role,
       tenantId: selectedTenant.id,
     });
-    setUsers((prevUsers) => [...prevUsers, user]);
+    const u = user as Partial<User>;
+    const normalizedUser: User = {
+      ...user,
+      phone: (u.phone ?? "").toString(),
+      privilege: u.privilege ?? (formUser.privilege as UserPrivilege),
+      status: (u.status as User["status"]) ?? "pending",
+    };
+    setUsers((prevUsers) => [...prevUsers, normalizedUser]);
 
     await authServices.resetPassword(formUser.email);
   };

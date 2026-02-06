@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -12,15 +15,17 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, User } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
-import { logoutUser } from "@/lib/store/slices/authSlice";
+import { logoutUser } from "@/lib/store/slices";
+import { useRouter } from "next/navigation";
 
 export function UserMenu() {
   const { user, isLoading } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const handleSignOut = async () => {
     dispatch(logoutUser());
-    window.location.reload();
+    router.refresh();
   };
 
   if (isLoading) {

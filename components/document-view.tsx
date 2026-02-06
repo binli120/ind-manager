@@ -1,10 +1,13 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 'use client';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
-import { fetchUserDocuments } from '@/lib/store/slices/documentsSlice';
+import { fetchUserDocuments } from '@/lib/store/slices';
 import { useEffect } from 'react';
 //import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CommentsPanel } from '@/components/comments-panel';
@@ -22,7 +25,10 @@ import {
   Users,
 } from 'lucide-react';
 
-interface DocumentViewProps {
+// src/pages/DocumentView.tsx (or wherever you declare the props)
+
+export interface DocumentViewProps {
+  /** Callback fired when the user clicks one of the “view” action cards. */
   onViewChange?: (
     view:
       | 'workspace'
@@ -36,6 +42,18 @@ interface DocumentViewProps {
       | 'tenants'
       | 'users'
   ) => void;
+
+  /** Show the loading skeleton instead of the real UI. */
+  loading?: boolean;
+
+  /**
+   * When `true` the component will render the “No document selected” panel.
+   *
+   * In practice you can set this to the inverse of
+   * `!!state.documents.currentDocument` – but having it as a prop makes
+   * Storybook controls and tests easier.
+   */
+  noDocument?: boolean;
 }
 
 export function DocumentView({ onViewChange }: DocumentViewProps) {
@@ -43,6 +61,7 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
   const { currentDocument, isLoading } = useAppSelector(
     (state) => state.documents
   );
+  const { currentProject } = useAppSelector((state) => state.projects);
   const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
@@ -89,6 +108,7 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
               <h1 className='text-2xl font-bold text-foreground'>Workspace</h1>
               <Badge variant='secondary'>
                 <Users className='w-3 h-3 mr-1' />
+                {currentProject?.title || 'No Project Selected'}
               </Badge>
             </div>
             <p className='text-muted'>Document authoring and review center</p>
@@ -225,12 +245,13 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
                   {/* Document Content Area */}
                   <div className='flex-1'>
                     <div className='bg-card rounded-lg p-6 border border-border'>
-	                      <div className='flex items-center gap-2 text-sm text-muted mb-4'>
-	                        <Play className='w-4 h-4' />
-	                        <span>
-	                          Click &quot;Start Editing&quot; to begin editing this section
-	                        </span>
-	                      </div>
+                      <div className='flex items-center gap-2 text-sm text-muted mb-4'>
+                        <Play className='w-4 h-4' />
+                        <span>
+                          Click &quot;Start Editing&quot; to begin editing this
+                          section
+                        </span>
+                      </div>
 
                       <div className='space-y-6'>
                         <div>
@@ -241,7 +262,7 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
 
                         <div>
                           <h5 className='font-medium mb-2'>
-                            {currentDocument.content ||
+                            {currentDocument.description ??
                               'Document content will appear here'}
                           </h5>
                         </div>

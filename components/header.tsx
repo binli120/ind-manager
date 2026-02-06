@@ -1,3 +1,6 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 'use client';
 
 import { LoginDialog } from '@/components/auth/login-dialog';
@@ -11,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createClient } from '@/lib/supabase/client';
+import { createBrowserClient } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { ChevronDown, Menu, MessageSquare, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -23,8 +26,6 @@ import {
   fetchProjects,
   fetchProjectDetails,
 } from '@/lib/store/slices/projectsSlice';
-
-import type { ViewType } from '@/lib/store/slices/uiSlice';
 
 import { useTenant } from "@/hooks/useTenant";
 import { fetchUserTenants } from "@/lib/store/slices/tenantsSlice";
@@ -38,13 +39,24 @@ import { NotificationsPanel } from "@/components/notifications/NotificationsPane
 interface HeaderProps {
   onToggleSidebar: () => void;
   onToggleComments: () => void;
-  currentView: ViewType;
+  currentView?: 'workspace'
+    | 'projects'
+    | 'calendar'
+    | 'submission'
+    | 'post-submission'
+    | 'gap-scoring'
+    | 'review-center'
+    | 'tenants'
+    | 'users'
+    | 'gap-analysis'
+    | 'ind-submission'
+    | 'design-system';
 }
 
 export function Header({
   onToggleSidebar,
   onToggleComments,
-  currentView,
+  currentView = 'workspace',
 }: HeaderProps) {
   const dispatch = useAppDispatch();
   const { projects, selectedProjectId, setProject } =
@@ -52,14 +64,15 @@ export function Header({
   //IM-29: Select tenants_id to fetch projects
   const { tenants, selectedTenantId, setTenant } = useTenant();
   const visibleProjects = selectedTenantId
-  ? projects.filter((p) => p.tenantId === selectedTenantId)
-  : projects;
+    ? projects.filter((p) => p.tenantId === selectedTenantId)
+    : projects;
+  const effectiveProjects = visibleProjects.length ? visibleProjects : projects;
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = createBrowserClient();
 
     // Get initial user
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -104,16 +117,21 @@ export function Header({
     }
   }, [dispatch, user?.id]);
 
-  // 4) When projects arrive and no project selected (not hydrated or invalid), pick the first
+  // When projects arrive and no project selected (not hydrated or invalid), pick the first
   useEffect(() => {
-    if (!visibleProjects.length) return;
+    if (!effectiveProjects.length) return;
     if (
       !selectedProjectId ||
-      !visibleProjects.some((p) => p.id === selectedProjectId)
+      !effectiveProjects.some((p) => p.id === selectedProjectId)
     ) {
-      setProject(visibleProjects[0].id);
+      const preferred = effectiveProjects.find(
+        (p) =>
+          p.code?.toLowerCase() === "lpathmab" ||
+          p.title?.toLowerCase().includes("lpathmab")
+      );
+      setProject((preferred ?? effectiveProjects[0]).id);
     }
-  }, [visibleProjects, selectedProjectId, setProject]);
+  }, [effectiveProjects, selectedProjectId, setProject]);
 
   // 5) When project selection changes, hydrate detail + any dependent data
   useEffect(() => {
@@ -192,7 +210,7 @@ export function Header({
 
             {/* PROJECT SELECT DROPDOWN */}
             <Select
-              value={selectedProjectId || ''}
+              value={selectedProjectId || effectiveProjects[0]?.id || ''}
               onValueChange={(projectId) => {
                 setProject(projectId);
                 // details + docs fetched by effect above
@@ -203,16 +221,21 @@ export function Header({
               </SelectTrigger>
               {/**IM-29 select projects owned by tenant */}
               <SelectContent className="max-h-42 overflow-y-auto">
-                {visibleProjects.map((project) => (
+                {effectiveProjects.map((project) => (
                   <SelectItem
                     key={project.id}
                     value={project.id}
                     className="!text-gray-900 dark:!text-gray-100"
                   >
-                    {project.title}
+                    <div className="flex flex-col text-left gap-0.5">
+                      <span className="font-medium">{project.title}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {project.code} • {project.userRole ?? "guest"}
+                      </span>
+                    </div>
                   </SelectItem>
                 ))}
-                {visibleProjects.length === 0 && (
+                {effectiveProjects.length === 0 && (
                   <div className="px-3 py-2 text-xs text-muted-foreground">
                     No projects found
                   </div>

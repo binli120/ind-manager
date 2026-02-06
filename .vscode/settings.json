@@ -4,12 +4,9 @@
   },
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "cSpell.words": [
-    "Supabase"
-  ],
-  "deno.enablePaths": [
-    "supabase/functions"
-  ],
+  "cSpell.words": ["CLOUDCONVERT", "filynai", "Supabase"],
+  "deno.enablePaths": ["supabase/functions"],
+  "deno.enable": false,
   "deno.lint": true,
   "deno.unstable": [
     "bare-node-builtins",

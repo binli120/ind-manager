@@ -1,11 +1,17 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
+import { createBrowserClient } from "@/lib/supabase";
 import {
-  createSlice,
   createAsyncThunk,
+  createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
 import { createClient } from "@/lib/supabase/client";
 import { Database } from "@/lib/supabase/schema";
 import { getErrorMessage, isAdminEmail } from "@/lib/utils";
+import { logoutUser } from "./authSlice";
 
 export interface ProjectMember {
   id: string;
@@ -24,18 +30,18 @@ export interface Project {
   code: string;
   description: string;
   //IM-61 add more status
-  status: 
-  | "draft"
-  | "pre-ind-meeting-requested"
-  | "pre-ind-meeting-completed"
-  | "submitted"
-  | "under-review"
-  | "active"
-  | "clinical-hold-complete"
-  | "clinical-hold-partial"
-  | "inactive"
-  | "withdrawn"
-  | "terminated";
+  status:
+    | "draft"
+    | "pre-ind-meeting-requested"
+    | "pre-ind-meeting-completed"
+    | "submitted"
+    | "under-review"
+    | "active"
+    | "clinical-hold-complete"
+    | "clinical-hold-partial"
+    | "inactive"
+    | "withdrawn"
+    | "terminated";
   priority: "low" | "medium" | "high" | "critical";
   progress: number;
   sponsor: string;
@@ -64,6 +70,7 @@ export interface Project {
   sponsorContactEmail: string;
   additionalNotes: string | null;
   productType: string;
+  userRole?: Database["public"]["Enums"]["user_roles"] | null;
 }
 
 export type ProjectCreation =
@@ -83,6 +90,7 @@ interface ProjectsState {
   projects: Project[];
   currentProject: Project | null;
   isLoading: boolean;
+  hasLoadedOnce: boolean;
   error: string | null;
   filters: ProjectFilters;
   viewMode: "grid" | "list";
@@ -93,6 +101,7 @@ const initialState: ProjectsState = {
   projects: [],
   currentProject: null,
   isLoading: false,
+  hasLoadedOnce: false,
   error: null,
   filters: {
     search: "",
@@ -133,29 +142,30 @@ export const fetchProjects = createAsyncThunk(
         .single();
 
       if (userError) throw userError;
-      const isAdmin = isAdminEmail(userRow?.email);
-      if (!isAdmin && !userRow?.tenantid) return [];
+      const userData = userRow as { email?: string; tenantid?: string };
+      const isAdmin = isAdminEmail(userData?.email);
+      if (!isAdmin && !userData?.tenantid) return [];
 
-      // MOCK: update if you keep mock mode
-      /*
-      if (useMockProjects && userRow.tenantid === MOCK_TENANT_ID) {
-        const response = await fetch(
-          `/api/mock/projects${userRow.tenantid ? `?tenantId=${userRow.tenantid}` : ""}`,
-          { cache: "no-store" },
-        );
-        if (!response.ok) throw new Error("Failed to load mock projects");
-        const { data } = await response.json();
-        return data as Project[];
-      }
-      */
+      // fetch assignments & roles from user_project
+      const { data: assignments, error: assignError } = await supabase
+        .from("user_project")
+        .select("project_id, role")
+        .eq("user_id", userId);
+      if (assignError) throw assignError;
+      const assignmentRows =
+        (assignments ?? []) as {
+          project_id: string;
+          role?: Database["public"]["Enums"]["user_roles"] | null;
+        }[];
+      const assignedIds = assignmentRows.map((a) => a.project_id);
 
       let query = supabase
         .from("projects")
         .select("*")
         .order("updated_at", { ascending: false });
 
-      if (!isAdmin) {
-        query = query.eq("tenantid", userRow.tenantid);
+      if (!isAdmin && assignedIds.length > 0) {
+        query = query.in("id", assignedIds);
       }
 
       const { data: projects, error } = await query;
@@ -176,7 +186,7 @@ export const fetchProjects = createAsyncThunk(
           sponsor: project.sponsor_name || "",
           drug: project.drug_name || "",
           targetDate: project.target_ind_submission_date || "",
-          tenantId: project.tenantid ?? "",
+          tenantId: project.tenantid ?? userData?.tenantid ?? "",
           ownerId: project.project_creator_id ?? "",
           teamSize: 0,
           teamMembers: [],
@@ -186,14 +196,16 @@ export const fetchProjects = createAsyncThunk(
             isPublic: false,
             allowCollaboration: true,
           },
-          metadata: {},
-          targetIndSubmissionDate: project.target_ind_submission_date,
+          metadata: project.metadata as Project["metadata"],
+          targetIndSubmissionDate: project.target_ind_submission_date ?? "",
           preIndMeetingDate: project.pre_ind_meeting_date,
-          projectStartDate: project.project_start_date,
+          projectStartDate: project.project_start_date ?? "",
           fdaContactEmail: project.fda_contact_email,
           sponsorContactEmail: project.sponsor_contact_email,
           additionalNotes: project.additional_notes,
           productType: project.product_type,
+          userRole: assignmentRows.find((a) => a.project_id === project.id)
+            ?.role ?? null,
         })) || [];
 
       return transformedProjects;
@@ -205,24 +217,107 @@ export const fetchProjects = createAsyncThunk(
   },
 );
 
+export const fetchProjectsForCurrentUser = createAsyncThunk(
+  "projects/fetchProjectsForCurrentUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError) throw authError;
+      if (!user?.id) return [];
+
+      const { data: userRow, error: userError } = await supabase
+        .from("users")
+        .select("tenantid,email")
+        .eq("id", user.id)
+        .single();
+
+      if (userError) throw userError;
+      const userData = userRow as { email?: string; tenantid?: string };
+      const isAdmin = isAdminEmail(userData?.email);
+      if (!isAdmin && !userData?.tenantid) return [];
+
+      const { data: assignments, error: assignError } = await supabase
+        .from("user_project")
+        .select("project_id, role")
+        .eq("user_id", user.id);
+      if (assignError) throw assignError;
+      const assignmentRows =
+        (assignments ?? []) as { project_id: string; role?: string | null }[];
+      const assignedIds = assignmentRows.map((a) => a.project_id);
+
+      if (!isAdmin && assignedIds.length === 0) return [];
+
+      let query = supabase
+        .from("projects")
+        .select("*")
+        .order("updated_at", { ascending: false });
+
+      if (!isAdmin) {
+        query = query.in("id", assignedIds);
+      }
+
+      const { data: projects, error } = await query;
+      if (error) throw error;
+
+      const rows = (projects ?? []) as Database["public"]["Tables"]["projects"]["Row"][];
+      const transformedProjects: Project[] =
+        rows.map((project) => ({
+          id: project.id,
+          title: project.ind_title,
+          code: project.ind_number || "",
+          description: project.description || "No description available",
+          status: project.status as Project["status"],
+          priority: project.priority as Project["priority"],
+          progress: project.progress || 0,
+          sponsor: project.sponsor_name || "",
+          drug: project.drug_name || "",
+          targetDate: project.target_ind_submission_date || "",
+          tenantId: project.tenantid ?? userData?.tenantid ?? "",
+          ownerId: project.project_creator_id ?? "",
+          teamSize: 0,
+          teamMembers: [],
+          createdAt: project.created_at,
+          updatedAt: project.updated_at,
+          settings: {
+            isPublic: false,
+            allowCollaboration: true,
+          },
+          metadata: {},
+          targetIndSubmissionDate: project.target_ind_submission_date ?? "",
+          preIndMeetingDate: project.pre_ind_meeting_date,
+          projectStartDate: project.project_start_date ?? "",
+          fdaContactEmail: project.fda_contact_email,
+          sponsorContactEmail: project.sponsor_contact_email,
+          additionalNotes: project.additional_notes,
+          productType: project.product_type,
+          userRole: assignmentRows.find((a) => a.project_id === project.id)
+            ?.role as Project["userRole"],
+        })) || [];
+
+      return transformedProjects;
+    } catch (error: unknown) {
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to fetch projects for current user",
+      );
+    }
+  },
+);
+
 
 export const fetchProjectDetails = createAsyncThunk(
   "projects/fetchProjectDetails",
   async (projectId: string, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
 
       const { data: project, error } = await supabase
         .from("projects")
-        .select(
-          `
-          *,
-          settings:project_settings (
-            allowCollaboration:allow_collaboration,
-            isPublic:is_public
-          )
-        `,
-        )
+        .select("*")
         .eq("id", projectId)
         .single();
 
@@ -240,20 +335,24 @@ export const fetchProjectDetails = createAsyncThunk(
         sponsor: project.sponsor_name || "",
         drug: project.drug_name || "",
         targetDate: project.target_ind_submission_date || "",
-        tenantId: project.tenantid ?? "",
+        tenantId: "",
         ownerId: project.project_creator_id ?? "",
         teamSize: 0,
         teamMembers: [],
         createdAt: project.created_at,
         updatedAt: project.updated_at,
-        settings: project.settings || {
-          isPublic: false,
-          allowCollaboration: true,
+        settings: {
+          isPublic:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (project as any).settings?.isPublic ?? false,
+          allowCollaboration:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (project as any).settings?.allowCollaboration ?? true,
         },
         metadata: (project.metadata as Project["metadata"]) ?? {},
-        targetIndSubmissionDate: project.target_ind_submission_date,
+        targetIndSubmissionDate: project.target_ind_submission_date ?? "",
         preIndMeetingDate: project.pre_ind_meeting_date,
-        projectStartDate: project.project_start_date,
+        projectStartDate: project.project_start_date ?? "",
         fdaContactEmail: project.fda_contact_email,
         sponsorContactEmail: project.sponsor_contact_email,
         additionalNotes: project.additional_notes,
@@ -273,7 +372,7 @@ export const createProject = createAsyncThunk(
   "projects/createProject",
   async (projectData: ProjectCreation, { rejectWithValue, getState }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       const state = getState() as {
         auth: { user: { id: string } | null };
       };
@@ -289,14 +388,15 @@ export const createProject = createAsyncThunk(
         .single();
 
       if (userError) throw userError;
-      if (!userRow?.tenantid) throw new Error("User has no tenant");
+      const userData = userRow as { tenantid?: string };
+      if (!userData?.tenantid) throw new Error("User has no tenant");
 
       const { data: newProject, error } = await supabase
         .from("projects")
         .insert({
           ...projectData,
           project_creator_id: userId,
-          tenantid: userRow.tenantid,
+          tenantid: userData.tenantid,
         })
         .select()
         .single();
@@ -305,7 +405,9 @@ export const createProject = createAsyncThunk(
 
       return newProject;
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to create project");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to create project",
+      );
     }
   },
 );
@@ -318,7 +420,7 @@ export const updateProject = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
       console.log("updating: ", projectId, updates);
 
       const { data, error } = await supabase
@@ -332,7 +434,9 @@ export const updateProject = createAsyncThunk(
 
       return data;
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to update project");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to update project",
+      );
     }
   },
 );
@@ -341,7 +445,7 @@ export const deleteProject = createAsyncThunk(
   "projects/deleteProject",
   async (projectId: string, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
+      const supabase = createBrowserClient();
 
       const { error } = await supabase
         .from("projects")
@@ -352,7 +456,9 @@ export const deleteProject = createAsyncThunk(
 
       return projectId;
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to delete project");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to delete project",
+      );
     }
   },
 );
@@ -397,7 +503,9 @@ export const addProjectMember = createAsyncThunk(
       return data;
       */
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to add project member");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to add project member",
+      );
     }
   },
 );
@@ -438,11 +546,9 @@ const projectsSlice = createSlice({
     },
     setSelectedProjectId: (state, action: PayloadAction<string | null>) => {
       state.selectedProjectId = action.payload;
-      state.currentProject =
-        state.projects.find((project) => project.id === action.payload) || null;
-      //
-      if (action.payload) localStorage.setItem("selectedProjectId", action.payload);
-      else localStorage.removeItem("selectedProjectId");
+      state.currentProject = state.projects.find((project) =>
+        project.id === action.payload
+      ) || null;
     },
     setViewMode: (state, action: PayloadAction<"grid" | "list">) => {
       state.viewMode = action.payload;
@@ -491,11 +597,13 @@ const projectsSlice = createSlice({
       })
       .addCase(fetchProjects.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.hasLoadedOnce = true;
         state.projects = action.payload;
 
         if (state.selectedProjectId) {
-          state.currentProject =
-            state.projects.find(project => project.id === state.selectedProjectId) || null;
+          state.currentProject = state.projects.find((project) =>
+            project.id === state.selectedProjectId
+          ) || null;
 
           if (!state.currentProject && state.projects.length > 0) {
             state.currentProject = state.projects[0];
@@ -508,8 +616,41 @@ const projectsSlice = createSlice({
       })
       .addCase(fetchProjects.rejected, (state, action) => {
         state.isLoading = false;
+        state.hasLoadedOnce = true;
         state.error = action.payload as string;
         console.error("fetchProjects failed:", action.payload ?? action.error.message);
+      })
+      // Fetch projects for current user
+      .addCase(fetchProjectsForCurrentUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchProjectsForCurrentUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.hasLoadedOnce = true;
+        state.projects = action.payload;
+
+        if (state.projects.length > 0) {
+          state.currentProject = state.projects[0];
+          state.selectedProjectId = state.projects[0].id;
+        } else {
+          state.currentProject = null;
+          state.selectedProjectId = null;
+        }
+      })
+      .addCase(fetchProjectsForCurrentUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.hasLoadedOnce = true;
+        state.error = (action.payload as string) || null;
+      })
+      // Clear projects on logout
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.projects = [];
+        state.currentProject = null;
+        state.selectedProjectId = null;
+        state.isLoading = false;
+        state.hasLoadedOnce = false;
+        state.error = null;
       })
       // Fetch project details
       .addCase(fetchProjectDetails.pending, (state) => {
@@ -576,30 +717,39 @@ const projectsSlice = createSlice({
       })
       // Add project member
       .addCase(addProjectMember.fulfilled, (state, action) => {
+        const payload = action.payload as {
+          id?: string
+          user_id?: string
+          project_id?: string
+          profiles?: { name?: string; avatar_url?: string }
+          role?: ProjectMember["role"]
+          created_at?: string
+        };
+        if (!payload?.id) return;
         const member: ProjectMember = {
-          id: action.payload.id,
-          userId: action.payload.user_id,
-          projectId: action.payload.project_id,
-          name: action.payload.profiles?.name || "Unknown User",
-          avatar: action.payload.profiles?.avatar_url,
-          initials:
-            action.payload.profiles?.name
-              ?.split(" ")
-              .map((n: string) => n[0])
-              .join("") || "U",
-          role: action.payload.role,
-          joinedAt: action.payload.created_at,
+          id: payload.id,
+          userId: payload.user_id ?? "",
+          projectId: payload.project_id ?? "",
+          name: payload.profiles?.name || "Unknown User",
+          avatar: payload.profiles?.avatar_url,
+          initials: payload.profiles?.name
+            ?.split(" ")
+            .map((n: string) => n[0])
+            .join("") || "U",
+          role: payload.role ?? "member",
+          joinedAt: payload.created_at ?? new Date().toISOString(),
         };
 
         // Update current project
-        if (state.currentProject?.id === action.payload.project_id) {
-          state.currentProject.teamMembers.push(member);
-          state.currentProject.teamSize += 1;
+        const current = state.currentProject;
+        if (current && current.id === payload.project_id) {
+          current.teamMembers.push(member);
+          current.teamSize += 1;
         }
 
         // Update project in projects array
         const projectIndex = state.projects.findIndex(
-          (project) => project.id === action.payload.project_id,
+          (project) => project.id === payload.project_id,
         );
         if (projectIndex !== -1) {
           state.projects[projectIndex].teamMembers.push(member);
@@ -608,11 +758,13 @@ const projectsSlice = createSlice({
       })
       // Remove project member
       .addCase(removeProjectMember.fulfilled, (state, action) => {
+        if (typeof action.payload !== "string") return;
+        const removedId = action.payload;
         // Update current project
         if (state.currentProject) {
-          state.currentProject.teamMembers =
-            state.currentProject.teamMembers.filter(
-              (member) => member.id !== action.payload,
+          state.currentProject.teamMembers = state.currentProject.teamMembers
+            .filter(
+              (member) => member.id !== removedId,
             );
           state.currentProject.teamSize = Math.max(
             0,
@@ -623,7 +775,7 @@ const projectsSlice = createSlice({
         // Update projects array
         state.projects.forEach((project) => {
           project.teamMembers = project.teamMembers.filter(
-            (member) => member.id !== action.payload,
+            (member) => member.id !== removedId,
           );
           project.teamSize = Math.max(0, project.teamSize - 1);
         });
@@ -633,18 +785,17 @@ const projectsSlice = createSlice({
 
 const dbToClientProject = (
   project: ProjectCreation & { id: string },
-  settings?: Database["public"]["Tables"]["project_settings"]["Row"],
 ): Project => {
   return {
     ...project,
     description: project.description ?? "",
-    tenantId: project.tenantid ?? "",
+    tenantId: "",
     title: project.ind_title,
     code: project.ind_number ?? "",
-    sponsor: project.sponsor_name,
+    sponsor: project.sponsor_name ?? "",
     ownerId: project.project_creator_id ?? "",
-    targetDate: project.target_ind_submission_date,
-    drug: project.drug_name,
+    targetDate: project.target_ind_submission_date ?? "",
+    drug: project.drug_name ?? "",
     createdAt: project.created_at ?? "",
     updatedAt: project.updated_at ?? "",
     teamMembers: [],
@@ -652,18 +803,18 @@ const dbToClientProject = (
     status: (project.status ?? "draft") as Project["status"],
     priority: (project.priority ?? "low") as Project["priority"],
     progress: project.progress ?? 0,
-    metadata: project.metadata as Project["metadata"],
-    settings: {
-      allowCollaboration: settings?.allow_collaboration ?? false,
-      isPublic: settings?.is_public ?? false,
-    },
-    projectStartDate: project.project_start_date,
-    fdaContactEmail: project.fda_contact_email,
-    additionalNotes: project.additional_notes,
-    preIndMeetingDate: project.pre_ind_meeting_date,
-    productType: project.product_type,
-    sponsorContactEmail: project.sponsor_contact_email,
-    targetIndSubmissionDate: project.target_ind_submission_date,
+    metadata: (project.metadata as Project["metadata"]) ?? {},
+        settings: {
+          allowCollaboration: false,
+          isPublic: false,
+        },
+    projectStartDate: project.project_start_date ?? "",
+    fdaContactEmail: project.fda_contact_email ?? null,
+    additionalNotes: project.additional_notes ?? null,
+    preIndMeetingDate: project.pre_ind_meeting_date ?? null,
+    productType: project.product_type ?? "",
+    sponsorContactEmail: project.sponsor_contact_email ?? "",
+    targetIndSubmissionDate: project.target_ind_submission_date ?? "",
   };
 };
 
@@ -675,7 +826,7 @@ export const {
   clearFilters,
   clearError,
   updateProjectLocally,
-  hydrateSelectedProjectFromStorage
+  hydrateSelectedProjectFromStorage,
 } = projectsSlice.actions;
 
 export default projectsSlice.reducer;

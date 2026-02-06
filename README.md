@@ -56,6 +56,9 @@ Required:
 
 Optional:
 - `NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL` - override auth redirect URL in dev.
+- `NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL` - PDF analysis API base URL (defaults to relative paths).
+- `NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES` - idle timeout in minutes (default `30`).
+- `NEXT_PUBLIC_SESSION_WARNING_SECONDS` - warning countdown in seconds (default `60`).
 - `TIPTAP_CONVERSION_APP_ID` - TipTap conversion app ID.
 - `TIPTAP_CONVERSION_SECRET` - TipTap conversion secret.
 - `CLOUDCONVERT_API_KEY` - CloudConvert API key.
@@ -71,15 +74,14 @@ Example template: `.env.example`
 - `GET /api/users` - list users (Supabase).
 - `POST /api/users` - create user (Supabase).
 - `GET/PUT/DELETE /api/users/[id]` - user CRUD (Supabase).
-- `POST /api/database` - generic database proxy (Supabase).
+- `POST /api/admin/proxy` - scoped database proxy for users/tenants (Supabase, admin-only for mutations).
 - `GET /api/health` - Supabase connectivity check.
 - `GET /api/mock/projects` - mock projects data.
 
 ## Mock data
-Projects and teams can run in mock mode. In `lib/store/slices/projectsSlice.ts`
-and `lib/store/slices/teamsSlice.ts`, a `demo-team` is injected and project
-fetching uses `GET /api/mock/projects`. This is intended for UI scaffolding
-until Supabase data is fully wired.
+Projects can run in mock mode. In `lib/store/slices/projectsSlice.ts`, using
+the `demo-team` workspace triggers project fetching via `GET /api/mock/projects`.
+This is intended for UI scaffolding until Supabase data is fully wired.
 
 ## Supabase tooling
 - Apply migrations:
