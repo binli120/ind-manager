@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TiptapEditor } from "@/components/section-editor/tiptap-editor"
-import { TemplateDialog } from "@/components/section-editor/template-dialog"
+import { TemplateDialog, flattenRows } from "@/components/section-editor/template-dialog"
 import { MaterialsDialog } from "@/components/section-editor/materials-dialog"
 import { MyMaterialsDialog } from "@/components/section-editor/my-materials-dialog"
 import { TableInsertDialog } from "@/components/section-editor/table-insert-dialog"
@@ -44,6 +44,37 @@ const wrapHtmlContent = (value: string) => {
   const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(trimmed)
   return looksLikeHtml ? trimmed : `<p>${escapeHtml(trimmed)}</p>`
 }
+
+const normalizeTemplateText = (value: string) =>
+  value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .trim()
+
+const buildTemplatePlaceholder = (payload: unknown) => {
+  const rows = flattenRows(payload)
+  if (!rows.length) return ""
+
+  const unique = new Set<string>()
+  const lines: string[] = []
+
+  rows.forEach((row) => {
+    const line = normalizeTemplateText(row.content || row.subsectionHeader || row.sectionHeader || "")
+    if (!line || unique.has(line)) return
+    unique.add(line)
+    lines.push(line)
+  })
+
+  return lines.slice(0, 3).join("\n")
+}
+
+const templatePlaceholderCache = new Map<string, string>()
 
 const buildTableHtml = (table: TableData) => {
   const title = table.title ? `<p><strong>${escapeHtml(table.title)}</strong></p>` : ""
@@ -131,6 +162,7 @@ function SubsectionEditor({
   const [showTableInsert, setShowTableInsert] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [templateDisabled, setTemplateDisabled] = useState(false)
+  const [templatePlaceholder, setTemplatePlaceholder] = useState("")
   const userId = useAppSelector((s) => s.auth.user?.id)
   const sectionList = useAppSelector((s) => s.sectionList.data)
 
@@ -138,6 +170,56 @@ function SubsectionEditor({
     // Re-enable when user logs in so we can retry
     if (userId) setTemplateDisabled(false)
   }, [userId])
+
+  useEffect(() => {
+    const sectionParam = toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber
+    const isContentEmpty = normalizeTemplateText(subsection.content || "").length === 0
+    if (!isContentEmpty || !userId || !sectionParam) {
+      setTemplatePlaceholder("")
+      return
+    }
+
+    const cacheKey = `${userId}:${sectionParam}`
+    const cached = templatePlaceholderCache.get(cacheKey)
+    if (cached !== undefined) {
+      setTemplatePlaceholder(cached)
+      return
+    }
+
+    let cancelled = false
+    const loadTemplatePlaceholder = async () => {
+      try {
+        const response = await requestPdfAnalysisApi<
+          Record<string, unknown>,
+          undefined,
+          { section: string }
+        >({
+          path: "/ncd/template",
+          method: "GET",
+          query: { section: sectionParam },
+          headers: { "user-id": userId },
+          userIdHeader: userId,
+          allowRedirects: false,
+          suppressErrorLog: true,
+        })
+        const placeholder = buildTemplatePlaceholder(response)
+        templatePlaceholderCache.set(cacheKey, placeholder)
+        if (!cancelled) {
+          setTemplatePlaceholder(placeholder)
+        }
+      } catch {
+        templatePlaceholderCache.set(cacheKey, "")
+        if (!cancelled) {
+          setTemplatePlaceholder("")
+        }
+      }
+    }
+    void loadTemplatePlaceholder()
+
+    return () => {
+      cancelled = true
+    }
+  }, [subsection.content, subsection.subsectionNumber, userId])
 
   useEffect(() => {
     const retryTemplate = async () => {
@@ -439,6 +521,7 @@ function SubsectionEditor({
           onAiGenerate={handleAiGenerate}
           aiGenerating={aiLoading}
           sectionNumber={subsection.subsectionNumber}
+          placeholder={templatePlaceholder}
         />
       </div>
 
@@ -555,27 +638,14 @@ export function SectionEditor({
   const sectionList = useAppSelector((s) => s.sectionList.data)
   const sectionListLoading = useAppSelector((s) => s.sectionList.loading)
   const sectionListError = useAppSelector((s) => s.sectionList.error)
-  const sectionListAttempts = useAppSelector((s) => s.sectionList.attempts)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const reportedSectionListError = useRef<string | null>(null)
 
   useEffect(() => {
     if (!userId) return
-    if (sectionList || sectionListLoading) return
-    if (sectionListError && sectionListAttempts >= maxSectionListAttempts) return
+    if (sectionList || sectionListLoading || sectionListError) return
     void dispatch(fetchSectionList({ userId }))
-  }, [dispatch, userId, sectionList, sectionListLoading, sectionListError, sectionListAttempts, maxSectionListAttempts])
-
-  useEffect(() => {
-    if (sectionList) {
-      reportedSectionListError.current = null
-      return
-    }
-    if (!sectionListError || sectionListAttempts < maxSectionListAttempts) return
-    if (reportedSectionListError.current === sectionListError) return
-    reportedSectionListError.current = sectionListError
-    toast.error(sectionListError)
-  }, [sectionList, sectionListError, sectionListAttempts, maxSectionListAttempts])
+  }, [dispatch, userId, sectionList, sectionListLoading, sectionListError])
 
   const scrollToSubsection = (subsectionNumber: string) => {
     const element = document.getElementById(`section-${subsectionNumber}`)
