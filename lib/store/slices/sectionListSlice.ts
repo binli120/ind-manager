@@ -14,12 +14,14 @@ export interface SectionListState {
   loading: boolean
   error: string | null
   fetchedAt?: number
+  attempts: number
 }
 
 const initialState: SectionListState = {
   data: null,
   loading: false,
   error: null,
+  attempts: 0,
 }
 
 export const fetchSectionList = createAsyncThunk<SectionListPayload, { userId: string }>(
@@ -50,6 +52,7 @@ const sectionListSlice = createSlice({
       state.data = null
       state.error = null
       state.fetchedAt = undefined
+      state.attempts = 0
     },
   },
   extraReducers: (builder) => {
@@ -57,11 +60,13 @@ const sectionListSlice = createSlice({
       .addCase(fetchSectionList.pending, (state) => {
         state.loading = true
         state.error = null
+        state.attempts += 1
       })
       .addCase(fetchSectionList.fulfilled, (state, action: PayloadAction<SectionListPayload>) => {
         state.loading = false
         state.data = action.payload ?? { sections: [] }
         state.fetchedAt = Date.now()
+        state.attempts = 0
       })
       .addCase(fetchSectionList.rejected, (state, action) => {
         state.loading = false

@@ -335,7 +335,7 @@ export const fetchProjectDetails = createAsyncThunk(
         sponsor: project.sponsor_name || "",
         drug: project.drug_name || "",
         targetDate: project.target_ind_submission_date || "",
-        tenantId: "",
+        tenantId: project.tenantid ?? "",
         ownerId: project.project_creator_id ?? "",
         teamSize: 0,
         teamMembers: [],
@@ -658,14 +658,23 @@ const projectsSlice = createSlice({
       })
       .addCase(fetchProjectDetails.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.currentProject = action.payload;
+        const existing = state.projects.find(
+          (project) => project.id === action.payload.id,
+        );
+        const merged: Project = {
+          ...(existing ?? {}),
+          ...action.payload,
+          tenantId: action.payload.tenantId || existing?.tenantId || "",
+          userRole: action.payload.userRole ?? existing?.userRole ?? null,
+        };
+        state.currentProject = merged;
 
         // Update project in projects array
         const index = state.projects.findIndex(
           (project) => project.id === action.payload.id,
         );
         if (index !== -1) {
-          state.projects[index] = action.payload;
+          state.projects[index] = merged;
         }
       })
       .addCase(fetchProjectDetails.rejected, (state, action) => {

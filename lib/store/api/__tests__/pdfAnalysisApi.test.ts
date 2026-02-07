@@ -57,6 +57,7 @@ describe("pdfAnalysisApi", () => {
       requestPdfAnalysisApi({
         path: "/api/test",
         method: "GET",
+        suppressErrorLog: true,
       }),
     ).rejects.toBeInstanceOf(PdfAnalysisApiError)
   })
@@ -75,6 +76,7 @@ describe("pdfAnalysisApi", () => {
       requestPdfAnalysisApi({
         path: "/api/test",
         method: "GET",
+        suppressErrorLog: true,
       }),
     ).rejects.toMatchObject({
       message: "Bad input",

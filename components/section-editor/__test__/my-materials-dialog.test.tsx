@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import type React from "react"
 
 import { render, screen } from "@testing-library/react"
@@ -6,10 +7,15 @@ import { MyMaterialsDialog } from "@/components/section-editor/my-materials-dial
 
 jest.mock("next/image", () => ({
   __esModule: true,
-  default: (props: React.ComponentProps<"img">) => <img {...props} />, // eslint-disable-line jsx-a11y/alt-text
+  default: (props: React.ComponentProps<"img">) => {
+    const { loader, unoptimized, ...rest } = props
+    return <img {...rest} /> // eslint-disable-line jsx-a11y/alt-text
+  },
 }))
 
 describe("MyMaterialsDialog", () => {
+  let consoleInfoSpy: jest.SpyInstance
+
   beforeAll(() => {
     if (!global.ResizeObserver) {
       global.ResizeObserver = class ResizeObserver {
@@ -18,6 +24,14 @@ describe("MyMaterialsDialog", () => {
         disconnect() {}
       }
     }
+  })
+
+  beforeEach(() => {
+    consoleInfoSpy = jest.spyOn(console, "info").mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    consoleInfoSpy.mockRestore()
   })
 
   it("shows only topic materials and inserts selected topics", async () => {

@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -232,6 +233,8 @@ export function MyMaterialsDialog({
               alt={imageData.title || 'Selected image'}
               width={640}
               height={360}
+              unoptimized
+              loader={({ src }) => src}
               className='w-full h-auto max-h-48 object-contain rounded border border-border bg-muted'
             />
           )}
@@ -262,6 +265,9 @@ export function MyMaterialsDialog({
             <FileText className='h-5 w-5' />
             My Materials ({topicEntries.length})
           </DialogTitle>
+          <DialogDescription className='sr-only'>
+            Review selected topics and insert them into your document.
+          </DialogDescription>
         </DialogHeader>
 
         {topicEntries.length === 0 ? (

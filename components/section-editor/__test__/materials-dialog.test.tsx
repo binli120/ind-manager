@@ -1,26 +1,25 @@
+/* eslint-disable @next/next/no-img-element */
 import type React from "react"
 
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MaterialsDialog } from "@/components/section-editor/materials-dialog"
-
-type FetchResponse = {
-  ok: boolean
-  status?: number
-  json: () => Promise<unknown>
-  headers?: { get: (key: string) => string | null }
-}
+import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 
 jest.mock("next/image", () => ({
   __esModule: true,
-  default: (props: React.ComponentProps<"img">) => <img {...props} />, // eslint-disable-line jsx-a11y/alt-text
+  default: (props: React.ComponentProps<"img">) => {
+    const { loader, unoptimized, ...rest } = props
+    return <img {...rest} /> // eslint-disable-line jsx-a11y/alt-text
+  },
 }))
 
-const mockFetch = jest.fn()
+jest.mock("@/lib/store/api/pdfAnalysisApi", () => ({
+  requestPdfAnalysisApi: jest.fn(),
+}))
 
 describe("MaterialsDialog", () => {
   beforeAll(() => {
-    global.fetch = mockFetch as unknown as typeof fetch
     if (!global.ResizeObserver) {
       global.ResizeObserver = class ResizeObserver {
         observe() {}
@@ -31,7 +30,7 @@ describe("MaterialsDialog", () => {
   })
 
   beforeEach(() => {
-    mockFetch.mockReset()
+    ;(requestPdfAnalysisApi as jest.Mock).mockReset()
   })
 
   it("loads topics and adds a topic to My Materials", async () => {
@@ -56,13 +55,7 @@ describe("MaterialsDialog", () => {
       source: "test",
     }
 
-    const response: FetchResponse = {
-      ok: true,
-      json: async () => payload,
-      headers: { get: () => null },
-    }
-
-    mockFetch.mockResolvedValue(response)
+    ;(requestPdfAnalysisApi as jest.Mock).mockResolvedValue(payload)
 
     const onMaterialsChange = jest.fn()
     const onMaterialsCountChange = jest.fn()

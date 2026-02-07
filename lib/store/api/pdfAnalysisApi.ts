@@ -45,10 +45,8 @@ const API_BASE_URL = (process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL ?? "")
 const DEBUG_API = process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_DEBUG === "true";
 
 const buildApiUrl = (path: string, query?: object) => {
-  // Use relative URLs in the browser to avoid CORS. On the server we can call
-  // the absolute API base directly (no CORS concerns) for a minor latency win.
-  const isServer = typeof window === "undefined";
-  const baseUrl = isServer && API_BASE_URL ? `${API_BASE_URL}${path}` : path;
+  // Prefer the explicit public API base when provided (both client + server).
+  const baseUrl = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
   if (!query) return baseUrl;
 
   const params = new URLSearchParams();

@@ -5,7 +5,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TiptapEditor } from "@/components/section-editor/tiptap-editor"
@@ -22,6 +22,7 @@ import { AddSectionDialog } from "@/components/section-editor/add-section-dialog
 import { useAppDispatch, useAppSelector } from "@/lib/store"
 import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 import { fetchSectionList } from "@/lib/store/slices/sectionListSlice"
+import { toast } from "sonner"
 
 const toSectionNumber = (value?: string | null) => {
   if (!value) return null
@@ -548,17 +549,33 @@ export function SectionEditor({
   onAddSubsection,
   onDeleteSubsection,
 }: SectionEditorProps) {
+  const maxSectionListAttempts = 3
   const dispatch = useAppDispatch()
   const userId = useAppSelector((s) => s.auth.user?.id)
   const sectionList = useAppSelector((s) => s.sectionList.data)
   const sectionListLoading = useAppSelector((s) => s.sectionList.loading)
+  const sectionListError = useAppSelector((s) => s.sectionList.error)
+  const sectionListAttempts = useAppSelector((s) => s.sectionList.attempts)
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const reportedSectionListError = useRef<string | null>(null)
 
   useEffect(() => {
     if (!userId) return
     if (sectionList || sectionListLoading) return
+    if (sectionListError && sectionListAttempts >= maxSectionListAttempts) return
     void dispatch(fetchSectionList({ userId }))
-  }, [dispatch, userId, sectionList, sectionListLoading])
+  }, [dispatch, userId, sectionList, sectionListLoading, sectionListError, sectionListAttempts, maxSectionListAttempts])
+
+  useEffect(() => {
+    if (sectionList) {
+      reportedSectionListError.current = null
+      return
+    }
+    if (!sectionListError || sectionListAttempts < maxSectionListAttempts) return
+    if (reportedSectionListError.current === sectionListError) return
+    reportedSectionListError.current = sectionListError
+    toast.error(sectionListError)
+  }, [sectionList, sectionListError, sectionListAttempts, maxSectionListAttempts])
 
   const scrollToSubsection = (subsectionNumber: string) => {
     const element = document.getElementById(`section-${subsectionNumber}`)
