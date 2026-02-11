@@ -240,7 +240,7 @@ type EditingField = {
 
 const toSectionNumber = (value?: string | null) => {
   if (!value) return null
-  const match = value.match(/^(\d+(?:\.\d+)*)(?:\s|$)/)
+  const match = value.match(/^(\d+(?:\.\d+)*)(?:[^\d.]|$)/)
   return match ? match[1] : null
 }
 

@@ -6,6 +6,7 @@
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
 import { Button } from '@/components/ui/button';
+import { ThemedLoadingScreen } from '@/components/ui/themed-loading-screen';
 import {
   Dialog,
   DialogContent,
@@ -113,11 +114,12 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
 
         {isAuthenticated &&
           ((!hasLoadedOnce && !projectsError) || isProjectsLoading || isAuthLoading) && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-10 w-10 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
-                <p className="text-sm text-muted-foreground">Loading workspace…</p>
-              </div>
+            <div className="fixed inset-0 z-50">
+              <ThemedLoadingScreen
+                fullScreen={false}
+                message="Loading workspace..."
+                detail="Fetching IND projects, regulatory modules, and collaboration data."
+              />
             </div>
           )}
       </div>

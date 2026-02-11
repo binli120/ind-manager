@@ -39,3 +39,4 @@ next-env.d.ts
 .vscode
 
 .DS_Store
+__pycache__/

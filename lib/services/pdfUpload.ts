@@ -1,11 +1,9 @@
+import { resolvePdfAnalysisApiBaseUrl } from "@/lib/common/pdfAnalysisApiBaseUrl";
+
 const DEFAULT_BUCKET =
   process.env.NEXT_PUBLIC_DOC_REPOSITORY_BUCKET || "doc-repository-dev";
 
-const apiBase =
-  process.env.NEXT_PUBLIC_ANALYSIS_API_URL ||
-  (process.env.NODE_ENV === "production"
-    ? "https://api.filynai.com"
-    : "http://localhost:8000");
+const apiBase = resolvePdfAnalysisApiBaseUrl();
 
 export type UploadAnalyzeResponse = Record<string, unknown>;
 

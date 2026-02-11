@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { resolvePdfAnalysisApiBaseUrl } from "@/lib/common/pdfAnalysisApiBaseUrl";
 
 interface AssetsSectionImage {
   id?: string;
@@ -39,10 +40,7 @@ interface AssetsSectionResponse {
   source?: string;
 }
 
-const rawBase = process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL;
-const cleanedBase =
-  rawBase?.replace(/\/+$/, "").replace(/\/api\/?$/i, "") || "http://localhost:8000";
-const API_BASE = cleanedBase;
+const API_BASE = resolvePdfAnalysisApiBaseUrl({ stripApiSuffix: true });
 
 const DEFAULT_TENANT = "c38daae8-07a8-4da4-9a68-9a9955b09f70";
 const DEFAULT_PROJECT = "2b44ecab-45c8-4105-b4ae-e9b7080bb4d6";
@@ -339,6 +337,8 @@ export async function GET(request: NextRequest) {
   // If an upstream base URL exists, include a hint so the client can trace provenance.
   const resp = NextResponse.json(responseBody, { status: 200 });
   resp.headers.set("x-assets-section-source", responseBody.source || "unknown");
-  resp.headers.set("x-proxy-target", `${API_BASE}/ncd/assets/section`);
+  if (API_BASE) {
+    resp.headers.set("x-proxy-target", `${API_BASE}/ncd/assets/section`);
+  }
   return resp;
 }

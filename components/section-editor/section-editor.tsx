@@ -26,7 +26,7 @@ import { toast } from "sonner"
 
 const toSectionNumber = (value?: string | null) => {
   if (!value) return null
-  const match = value.match(/^(\d+(?:\.\d+)*)(?:\s|$)/)
+  const match = value.match(/^(\d+(?:\.\d+)*)(?:[^\d.]|$)/)
   return match ? match[1] : null
 }
 
@@ -131,6 +131,7 @@ interface SectionEditorProps {
 
 function SubsectionEditor({
   subsection,
+  fallbackSectionNumber,
   onSave,
   onApprove,
   onDelete,
@@ -138,12 +139,18 @@ function SubsectionEditor({
   total,
 }: {
   subsection: SubsectionContent
+  fallbackSectionNumber?: string
   onSave: (id: string) => void
   onApprove: (id: string) => void
   onDelete: (id: string) => void
   index: number
   total: number
 }) {
+  const effectiveSectionNumber =
+    toSectionNumber(subsection.subsectionNumber) ||
+    toSectionNumber(subsection.title) ||
+    toSectionNumber(fallbackSectionNumber) ||
+    subsection.subsectionNumber
   const [content, setContent] = useState(subsection.content)
   const [showMaterialsDialog, setShowMaterialsDialog] = useState(false)
   const [showMyMaterialsDialog, setShowMyMaterialsDialog] = useState(false)
@@ -156,9 +163,7 @@ function SubsectionEditor({
   const [showTemplate, setShowTemplate] = useState(false)
   const [templateResolving, setTemplateResolving] = useState(false)
   const [templateResolveError, setTemplateResolveError] = useState<string | null>(null)
-  const [resolvedSection, setResolvedSection] = useState(
-    toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber,
-  )
+  const [resolvedSection, setResolvedSection] = useState(effectiveSectionNumber)
   const [showTableInsert, setShowTableInsert] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [templateDisabled, setTemplateDisabled] = useState(false)
@@ -167,12 +172,16 @@ function SubsectionEditor({
   const sectionList = useAppSelector((s) => s.sectionList.data)
 
   useEffect(() => {
+    setResolvedSection(effectiveSectionNumber)
+  }, [effectiveSectionNumber])
+
+  useEffect(() => {
     // Re-enable when user logs in so we can retry
     if (userId) setTemplateDisabled(false)
   }, [userId])
 
   useEffect(() => {
-    const sectionParam = toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber
+    const sectionParam = effectiveSectionNumber
     const isContentEmpty = normalizeTemplateText(subsection.content || "").length === 0
     if (!isContentEmpty || !userId || !sectionParam) {
       setTemplatePlaceholder("")
@@ -219,7 +228,7 @@ function SubsectionEditor({
     return () => {
       cancelled = true
     }
-  }, [subsection.content, subsection.subsectionNumber, userId])
+  }, [effectiveSectionNumber, subsection.content, userId])
 
   useEffect(() => {
     const retryTemplate = async () => {
@@ -232,7 +241,7 @@ function SubsectionEditor({
         >({
           path: "/ncd/template",
           method: "GET",
-          query: { section: toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber },
+          query: { section: effectiveSectionNumber },
           userIdHeader: userId,
         })
         const rows = Array.isArray(response)
@@ -244,7 +253,7 @@ function SubsectionEditor({
       }
     }
     void retryTemplate()
-  }, [templateDisabled, userId, subsection.subsectionNumber])
+  }, [templateDisabled, userId, effectiveSectionNumber])
 
   const [isAnimating, setIsAnimating] = useState(subsection.isUserAdded)
 
@@ -399,7 +408,7 @@ function SubsectionEditor({
 
   const handleOpenTemplate = async () => {
     setTemplateResolveError(null)
-    const direct = toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber
+    const direct = effectiveSectionNumber
     if (direct) {
       setResolvedSection(direct)
       setShowTemplate(true)
@@ -452,7 +461,7 @@ function SubsectionEditor({
             <Badge variant="outline" className="font-mono text-xs px-2 py-1">
               {index + 1} of {total}
             </Badge>
-            <span className="text-base font-bold text-foreground">{subsection.subsectionNumber}</span>
+            <span className="text-base font-bold text-foreground">{effectiveSectionNumber}</span>
             {subsection.isCategory && subsection.title && (
               <span className="text-sm text-muted-foreground">{subsection.title}</span>
             )}
@@ -520,14 +529,14 @@ function SubsectionEditor({
           onOpenMaterials={() => setShowMyMaterialsDialog(true)}
           onAiGenerate={handleAiGenerate}
           aiGenerating={aiLoading}
-          sectionNumber={subsection.subsectionNumber}
+          sectionNumber={effectiveSectionNumber}
           placeholder={templatePlaceholder}
         />
       </div>
 
       <div className="border-t border-border px-6 py-4 bg-card/80 backdrop-blur-sm" data-tour="save-approve">
         <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">Section {subsection.subsectionNumber}</div>
+          <div className="text-xs text-muted-foreground">Section {effectiveSectionNumber}</div>
           <div className="flex gap-3">
             <Button variant="outline" className="gap-2 bg-transparent" onClick={() => onSave(subsection.id)}>
               <Save className="h-4 w-4" />
@@ -549,7 +558,7 @@ function SubsectionEditor({
         onOpenChange={setShowTemplate}
         section={{
           id: subsection.id,
-          number: resolvedSection || toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber,
+          number: resolvedSection || effectiveSectionNumber,
           title: subsection.title,
         }}
         onUnavailable={() => setTemplateDisabled(true)}
@@ -589,7 +598,7 @@ function SubsectionEditor({
       <DeleteSubsectionDialog
         open={showDeleteDialog}
         onOpenChangeAction={setShowDeleteDialog}
-        subsectionNumber={subsection.subsectionNumber}
+        subsectionNumber={effectiveSectionNumber}
         onConfirm={() => onDelete(subsection.id)}
       />
 
@@ -766,6 +775,7 @@ export function SectionEditor({
             <div key={subsection.id}>
               <SubsectionEditor
                 subsection={subsection}
+                fallbackSectionNumber={baseSectionNumber}
                 onSave={() => {}}
                 onApprove={() => {}}
                 onDelete={onDeleteSubsection}

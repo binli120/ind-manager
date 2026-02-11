@@ -112,6 +112,63 @@ const initialState: ProjectsState = {
   selectedProjectId: null,
 };
 
+const DEFAULT_DOC_REPOSITORY_BUCKET = "doc-repository-dev";
+
+const getTenantNameFromMetadata = (metadata: unknown): string | null => {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return null;
+  }
+
+  const tenant = (metadata as { tenant?: unknown }).tenant;
+  if (!tenant || typeof tenant !== "object" || Array.isArray(tenant)) {
+    return null;
+  }
+
+  const tenantName = (tenant as { name?: unknown }).name;
+  return typeof tenantName === "string" && tenantName.trim()
+    ? tenantName.trim()
+    : null;
+};
+
+const createProjectFolderStructure = async ({
+  tenantName,
+  projectName,
+}: {
+  tenantName: string;
+  projectName: string;
+}) => {
+  const response = await fetch("/api/s3/new-project", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      bucket:
+        process.env.NEXT_PUBLIC_DOC_REPOSITORY_BUCKET ||
+        DEFAULT_DOC_REPOSITORY_BUCKET,
+      tenant_name: tenantName,
+      project_name: projectName,
+    }),
+  });
+
+  const raw = await response.text();
+  let payload: unknown = null;
+  try {
+    payload = raw ? JSON.parse(raw) : null;
+  } catch {
+    payload = raw;
+  }
+
+  if (!response.ok) {
+    const message =
+      (payload as { error?: string; message?: string })?.error ||
+      (payload as { error?: string; message?: string })?.message ||
+      "Failed to create S3 project folders";
+    throw new Error(message);
+  }
+};
+
 
 // MOCK: Remove mock mode when Supabase projects are live.
 //const useMockProjects = true;
@@ -391,10 +448,28 @@ export const createProject = createAsyncThunk(
       const userData = userRow as { tenantid?: string };
       if (!userData?.tenantid) throw new Error("User has no tenant");
 
+      const normalizedProjectData: ProjectCreation = {
+        ...projectData,
+        fda_contact_email:
+          typeof projectData.fda_contact_email === "string" &&
+            !projectData.fda_contact_email.trim()
+            ? null
+            : projectData.fda_contact_email,
+      };
+
+      const tenantName =
+        getTenantNameFromMetadata(normalizedProjectData.metadata) ||
+        userData.tenantid;
+
+      await createProjectFolderStructure({
+        tenantName,
+        projectName: normalizedProjectData.ind_title,
+      });
+
       const { data: newProject, error } = await supabase
         .from("projects")
         .insert({
-          ...projectData,
+          ...normalizedProjectData,
           project_creator_id: userId,
           tenantid: userData.tenantid,
         })
@@ -402,6 +477,32 @@ export const createProject = createAsyncThunk(
         .single();
 
       if (error) throw error;
+      if (!newProject?.id) throw new Error("Failed to create project");
+
+      const { error: assignmentError } = await supabase
+        .from("user_project")
+        .insert({
+          project_id: newProject.id,
+          user_id: userId,
+          created_by: userId,
+          role: "admin",
+        });
+
+      if (assignmentError) {
+        const { error: rollbackError } = await supabase
+          .from("projects")
+          .delete()
+          .eq("id", newProject.id);
+
+        if (rollbackError) {
+          console.error("Failed to rollback project after assignment error", {
+            projectId: newProject.id,
+            rollbackError,
+            assignmentError,
+          });
+        }
+        throw assignmentError;
+      }
 
       return newProject;
     } catch (error: unknown) {

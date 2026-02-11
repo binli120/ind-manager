@@ -47,7 +47,7 @@ export const PRODUCT_TYPES = [
 export const PROJECT_CREATION_STEPS = [
   {
     id: 1,
-    title: "Basic Information",
+    title: "Project Details",
     description: "Project details and drug information",
     requiredFields: ["ind_title", "ind_number", "drug_name", "product_type"],
   },
@@ -58,7 +58,6 @@ export const PROJECT_CREATION_STEPS = [
     requiredFields: [
       "sponsor_name",
       "sponsor_contact_email",
-      "fda_contact_email",
     ],
   },
   {
@@ -124,9 +123,22 @@ export const validateProjectStep = (
   );
 };
 
+const toDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 // Default project form data
-export const getDefaultProjectData = () =>
-  ({
+export const getDefaultProjectData = () => {
+  const now = new Date();
+  const oneMonthLater = new Date(now);
+  oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+  const oneYearLater = new Date(now);
+  oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+
+  return ({
     ind_title: "",
     ind_number: "",
     drug_name: "",
@@ -139,9 +151,9 @@ export const getDefaultProjectData = () =>
     sponsor_name: "",
     sponsor_contact_email: "",
     fda_contact_email: "",
-    project_start_date: "",
-    target_ind_submission_date: "",
-    pre_ind_meeting_date: "",
+    project_start_date: toDateInputValue(now),
+    target_ind_submission_date: toDateInputValue(oneYearLater),
+    pre_ind_meeting_date: toDateInputValue(oneMonthLater),
     additional_notes: "",
     cmc_lead: null,
     clinical_lead: null,
@@ -161,3 +173,4 @@ export const getDefaultProjectData = () =>
     // nda_submission_date: "",
     // fda_approval_date: "",
   }) satisfies ProjectCreation;
+};

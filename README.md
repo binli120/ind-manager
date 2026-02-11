@@ -1,6 +1,6 @@
-# Filynail IND Manager
+# Filynai IND Manager
 
-Filynail IND Manager is a Next.js app for managing IND submissions with a
+Filynai IND Manager is a Next.js app for managing IND submissions with a
 workspace UI for projects, teams, documents, reviews, and gap analysis.
 It uses Supabase for auth and data access and includes a document authoring
 experience built on TipTap.
@@ -46,8 +46,16 @@ experience built on TipTap.
 Available scripts:
 - `npm run dev`: start the dev server.
 - `npm run build`: production build.
+- `npm run build:bump`: increment build number in `config/build-number.json` (for example, `0.1.000` -> `0.1.001`).
 - `npm run start`: run the production server.
 - `npm run lint`: run Next.js linting.
+
+## Build number workflow
+- Build numbers are tracked in `config/build-number.json` under `buildNumber`.
+- Format is `major.minor.patch` with a zero-padded patch value (for example, `0.1.000`).
+- Start from `0.1.000`.
+- On each merge to `main`, `.github/workflows/bump-build-on-main.yml` automatically increments patch (`0.1.000` -> `0.1.001`).
+- For local/manual bumps, run `npm run build:bump`.
 
 ## Environment variables
 Required:
@@ -56,7 +64,8 @@ Required:
 
 Optional:
 - `NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL` - override auth redirect URL in dev.
-- `NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL` - PDF analysis API base URL (defaults to relative paths).
+- `NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL` - PDF analysis API base URL (`local`: `http://localhost:8000`, `dev`: your ALB URL).
+- `PDF_ANALYSIS_API_BASE_URL` - server-only override for PDF analysis API base URL.
 - `NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES` - idle timeout in minutes (default `30`).
 - `NEXT_PUBLIC_SESSION_WARNING_SECONDS` - warning countdown in seconds (default `60`).
 - `TIPTAP_CONVERSION_APP_ID` - TipTap conversion app ID.

@@ -2,6 +2,7 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { resolvePdfAnalysisApiBaseUrl } from "@/lib/common/pdfAnalysisApiBaseUrl";
 
 export type PdfAnalysisApiQueryValue =
   | string
@@ -38,9 +39,7 @@ export class PdfAnalysisApiError extends Error {
   }
 }
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL ?? "")
-  .trim()
-  .replace(/\/+$/, "");
+const API_BASE_URL = resolvePdfAnalysisApiBaseUrl({ includeLocalDefault: false });
 
 const DEBUG_API = process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_DEBUG === "true";
 

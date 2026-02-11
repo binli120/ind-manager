@@ -6,6 +6,7 @@
 import type React from "react"
 
 import { createBrowserClient } from "@/lib/supabase"
+import { APP_BUILD_NUMBER, APP_NAME, COMPANY_CONTACT_EMAIL, COMPANY_NAME } from "@/lib/app-info"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -114,8 +115,10 @@ export function LoginDialog({ children }: LoginDialogProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Welcome to Filyn</DialogTitle>
-          <DialogDescription>Sign in to your account or create a new one to get started.</DialogDescription>
+          <DialogTitle>{APP_NAME}</DialogTitle>
+          <DialogDescription>
+            Build {APP_BUILD_NUMBER}. Sign in to your account or create a new one to get started.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -195,6 +198,16 @@ export function LoginDialog({ children }: LoginDialogProps) {
             </form>
           </TabsContent>
         </Tabs>
+        <div className="mt-2 space-y-1 text-center text-xs text-muted-foreground">
+          <p>{COMPANY_NAME}</p>
+          <p>Copyright @ {COMPANY_NAME}</p>
+          <p>
+            Contact:{" "}
+            <a href={`mailto:${COMPANY_CONTACT_EMAIL}`} className="underline underline-offset-2">
+              {COMPANY_CONTACT_EMAIL}
+            </a>
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -305,10 +305,10 @@ export function Sidebar({
                       />
                     )}
                     <div className='flex-1 min-w-0'>
-                      <div className='font-medium text-sm text-foreground'>
+                      <div className='font-medium text-[13px] text-foreground'>
                         {section.number}
                       </div>
-                      <div className='text-sm text-muted-foreground line-clamp-2 mt-0.5'>
+                      <div className='text-[13px] text-muted-foreground line-clamp-2 mt-0.5'>
                         {section.title}
                       </div>
                     </div>

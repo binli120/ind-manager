@@ -126,6 +126,8 @@ export function ProjectsView() {
 
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [createProjectError, setCreateProjectError] = useState<string | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editProject, setEditProject] = useState<ProjectCreation | null>(null);
   //IM-61 add pagination state
@@ -174,9 +176,21 @@ export function ProjectsView() {
     dispatch(setFilters({ priority }));
   };
 
-  const handleCreateProject = (data: ProjectCreation) => {
-    dispatch(createProject(data));
-    setShowCreateDialog(false);
+  const handleCreateProject = async (data: ProjectCreation) => {
+    setCreateProjectError(null);
+    setIsCreatingProject(true);
+    try {
+      await dispatch(createProject(data)).unwrap();
+      setShowCreateDialog(false);
+      setPage(1);
+    } catch (error: unknown) {
+      setCreateProjectError(
+        typeof error === "string" ? error : "Failed to create project",
+      );
+      throw error;
+    } finally {
+      setIsCreatingProject(false);
+    }
   };
 
   const handleEditProject = (data: ProjectUpdate) => {
@@ -238,7 +252,10 @@ export function ProjectsView() {
 
           <Button
             className="bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
-            onClick={() => setShowCreateDialog(true)}
+            onClick={() => {
+              setCreateProjectError(null);
+              setShowCreateDialog(true);
+            }}
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Project
@@ -573,9 +590,14 @@ export function ProjectsView() {
       </div>
       {showCreateDialog && (
         <ProjectForm
-          
           onSubmit={handleCreateProject}
-          onCancel={() => setShowCreateDialog(false)}
+          isSubmitting={isCreatingProject}
+          submitError={createProjectError}
+          onCancel={() => {
+            if (isCreatingProject) return;
+            setCreateProjectError(null);
+            setShowCreateDialog(false);
+          }}
         />
       )}
       {showEditDialog && editProject && (

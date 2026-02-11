@@ -29,7 +29,7 @@ import {
 import {
   ProjectCreation,
 } from "@/lib/store/slices/projectsSlice";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useTenant } from "@/hooks/useTenant";
 
@@ -39,12 +39,15 @@ const PRIORITY_OPTIONS = [
   { value: "high", label: "High" },
   { value: "critical", label: "Critical" },
 ] as const;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface ProjectFormProps {
   initialData?: ProjectCreation;
-  onSubmit: (data: ProjectCreation) => void;
+  onSubmit: (data: ProjectCreation) => Promise<void> | void;
   onCancel: () => void;
   isEditing?: boolean;
+  isSubmitting?: boolean;
+  submitError?: string | null;
 }
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({
@@ -52,6 +55,8 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   onSubmit,
   onCancel,
   isEditing = false,
+  isSubmitting = false,
+  submitError,
 }) => {
   const { currentTenant, selectedTenantId } = useTenant();
   const defaultTenantId = selectedTenantId ?? currentTenant?.id ?? "demo-tenant";
@@ -76,11 +81,27 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     }
   };
 
+  const sponsorEmail =
+    typeof projectData.sponsor_contact_email === "string"
+      ? projectData.sponsor_contact_email.trim()
+      : "";
+  const fdaEmail =
+    typeof projectData.fda_contact_email === "string"
+      ? projectData.fda_contact_email.trim()
+      : "";
+  const sponsorEmailValid = EMAIL_REGEX.test(sponsorEmail);
+  const fdaEmailValid = !fdaEmail || EMAIL_REGEX.test(fdaEmail);
+
   const isStepValid = () => {
-    return validateProjectStep(currentStep, projectData);
+    const baseStepValid = validateProjectStep(currentStep, projectData);
+    if (!baseStepValid) return false;
+    if (currentStep !== 2) return true;
+    return sponsorEmailValid && fdaEmailValid;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     const tenantMeta = currentTenant
       ? { id: currentTenant.id, name: currentTenant.name }
       : selectedTenantId
@@ -96,9 +117,31 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       ? { ...projectData, metadata: { ...baseMetadata, tenant: tenantMeta } }
       : projectData;
 
-    onSubmit(nextData);
-    setProjectData(initialData || getDefaultProjectData());
-    setCurrentStep(1);
+    const normalizedData = {
+      ...nextData,
+      sponsor_contact_email:
+        typeof nextData.sponsor_contact_email === "string"
+          ? nextData.sponsor_contact_email.trim()
+          : nextData.sponsor_contact_email,
+      fda_contact_email:
+        typeof nextData.fda_contact_email === "string" &&
+          !nextData.fda_contact_email.trim()
+          ? null
+          : typeof nextData.fda_contact_email === "string"
+            ? nextData.fda_contact_email.trim()
+            : nextData.fda_contact_email,
+    };
+
+    try {
+      await onSubmit(normalizedData);
+      setProjectData({
+        ...(initialData || getDefaultProjectData()),
+        tenantid: defaultTenantId,
+      });
+      setCurrentStep(1);
+    } catch {
+      // Keep form state when submit fails so user can retry.
+    }
   };
 
   const updateProjectData = <T extends keyof ProjectCreation>(
@@ -231,25 +274,35 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 </Label>
                 <Input
                   id='sponsor_contact_email'
-                  type='email'
+                  type='text'
                   value={(projectData.sponsor_contact_email as string) || ''}
                   onChange={(e) =>
                     updateProjectData('sponsor_contact_email', e.target.value)
                   }
                   placeholder='sponsor@company.com'
                 />
+                {sponsorEmail && !sponsorEmailValid && (
+                  <p className='mt-1 text-xs text-red-500'>
+                    Enter a valid email address.
+                  </p>
+                )}
               </div>
               <div>
-                <Label htmlFor='fda_contact_email'>FDA Contact Email *</Label>
+                <Label htmlFor='fda_contact_email'>FDA Contact Email</Label>
                 <Input
                   id='fda_contact_email'
-                  type='email'
+                  type='text'
                   value={(projectData.fda_contact_email as string) || ''}
                   onChange={(e) =>
                     updateProjectData('fda_contact_email', e.target.value)
                   }
                   placeholder='fda.contact@fda.gov'
                 />
+                {fdaEmail && !fdaEmailValid && (
+                  <p className='mt-1 text-xs text-red-500'>
+                    Enter a valid email address.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -372,10 +425,10 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   };
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
-      <div className='bg-background rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto'>
-        <div className='p-6'>
-          <div className='mb-8'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'>
+      <div className='mx-4 flex h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-background shadow-lg'>
+        <div className='flex shrink-0 flex-col p-6 pb-4'>
+          <div className='mb-4'>
             <div className='flex items-center justify-between mb-4'>
               <div>
                 <h2 className='text-xl font-semibold'>
@@ -388,7 +441,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               <span className='text-sm italic text-red-500'>* required</span>
             </div>
             <Progress value={progress} className='mb-4' />
-            <div className='flex justify-between text-sm'>
+            <div className='grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 sm:text-sm'>
               {PROJECT_CREATION_STEPS.map((step) => (
                 <div
                   key={step.id}
@@ -405,9 +458,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               ))}
             </div>
           </div>
+        </div>
 
           {/* Step Content */}
-          <Card className='card-dark-border'>
+        <div className='min-h-0 flex-1 px-6'>
+          <Card className='card-dark-border flex h-full min-h-0 flex-col'>
             <CardHeader>
               <CardTitle className='text-lg'>
                 {PROJECT_CREATION_STEPS[currentStep - 1].title}
@@ -416,37 +471,67 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 {PROJECT_CREATION_STEPS[currentStep - 1].description}
               </CardDescription>
             </CardHeader>
-            <CardContent>{renderStepContent()}</CardContent>
+            <CardContent className='min-h-0 flex-1 overflow-y-auto pb-6'>
+              {renderStepContent()}
+            </CardContent>
           </Card>
+        </div>
 
           {/* Navigation */}
-          <div className='flex justify-between mt-6'>
+        <div className='mt-4 flex shrink-0 justify-between p-6 pt-0'>
             <Button
+              type='button'
               variant='outline'
               onClick={prevStep}
-              disabled={currentStep === 1}
+              disabled={currentStep === 1 || isSubmitting}
             >
               <ChevronLeft className='h-4 w-4 mr-2' />
               Previous
             </Button>
             <div className='flex gap-2'>
-              <Button variant='outline' onClick={onCancel}>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={onCancel}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               {currentStep === PROJECT_CREATION_STEPS.length ? (
-                <Button onClick={handleSubmit} disabled={!isStepValid()}>
-                  <Check className='h-4 w-4 mr-2' />
-                  {isEditing ? 'Update' : 'Create'} Project
+                <Button
+                  type='button'
+                  onClick={handleSubmit}
+                  disabled={!isStepValid() || isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                  ) : (
+                    <Check className='h-4 w-4 mr-2' />
+                  )}
+                  {isSubmitting
+                    ? isEditing
+                      ? "Updating..."
+                      : "Creating..."
+                    : isEditing
+                      ? "Update"
+                      : "Create"}{" "}
+                  Project
                 </Button>
               ) : (
-                <Button onClick={nextStep} disabled={!isStepValid()}>
+                <Button
+                  type='button'
+                  onClick={nextStep}
+                  disabled={!isStepValid() || isSubmitting}
+                >
                   Next
                   <ChevronRight className='h-4 w-4 ml-2' />
                 </Button>
               )}
             </div>
           </div>
-        </div>
+          {submitError && (
+            <p className='px-6 pb-4 text-sm text-red-500'>{submitError}</p>
+          )}
       </div>
     </div>
   );

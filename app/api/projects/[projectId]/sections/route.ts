@@ -12,6 +12,9 @@ type TreeNode = {
   files: string[];
 };
 
+const STRICT_SECTION_NUMBER_REGEX = /^\d+(?:\.\d+)*$/;
+const LEADING_SECTION_NUMBER_REGEX = /^(\d+(?:\.\d+)*)(?:[^\d.]|$)/;
+
 const region = process.env.AWS_REGION ?? "us-east-1";
 const defaultBucket =
   process.env.DOC_REPOSITORY_BUCKET ??
@@ -69,6 +72,25 @@ async function listAllKeys(bucket: string, prefix: string) {
 function isAllowedFile(fileName: string) {
   const lower = fileName.toLowerCase();
   return ALLOWED_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+function stripExtension(fileName: string) {
+  return fileName.replace(/\.[^.]+$/, "");
+}
+
+function extractSectionNumber(value?: string | null) {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (STRICT_SECTION_NUMBER_REGEX.test(trimmed)) return trimmed;
+  const match = trimmed.match(LEADING_SECTION_NUMBER_REGEX);
+  return match ? match[1] : null;
+}
+
+function resolveSectionNumber(raw: string, fallback?: string) {
+  const extracted = extractSectionNumber(raw);
+  if (extracted) return extracted;
+  return fallback ?? raw;
 }
 
 function buildTree(keys: string[], prefix: string) {
@@ -130,9 +152,13 @@ function buildTree(keys: string[], prefix: string) {
 
 function fileToSubsection(
   fileName: string,
-  parentPath: string
+  parentPath: string,
+  parentSectionNumber?: string
 ): SubsectionContent {
-  const number = fileName;
+  const number = resolveSectionNumber(
+    stripExtension(fileName),
+    parentSectionNumber
+  );
   return {
     id: `${parentPath}${fileName}`,
     subsectionNumber: number,
@@ -148,8 +174,11 @@ function fileToSubsection(
   };
 }
 
-function nodeToSubsection(node: TreeNode): SubsectionContent {
-  const number = node.name;
+function nodeToSubsection(
+  node: TreeNode,
+  parentSectionNumber?: string
+): SubsectionContent {
+  const number = resolveSectionNumber(node.name, parentSectionNumber);
   return {
     id: node.path,
     subsectionNumber: number,
@@ -162,27 +191,30 @@ function nodeToSubsection(node: TreeNode): SubsectionContent {
     isCategory: true,
     isUserAdded: false,
     subsections: [
-      ...node.children.map((child) => nodeToSubsection(child)),
-      ...node.files.map((file) => fileToSubsection(file, node.path)),
+      ...node.children.map((child) => nodeToSubsection(child, number)),
+      ...node.files.map((file) => fileToSubsection(file, node.path, number)),
     ],
   };
 }
 
 function treeToSections(nodes: TreeNode[], rootFiles: string[], prefix: string): Section[] {
-  const sections: Section[] = nodes.map((node) => ({
-    id: node.path,
-    number: node.name,
-    title: node.name,
-    parentSection: "",
-    isRequired: false,
-    status: "draft",
-    isCategory: true,
-    isUserAdded: false,
-    subsections: [
-      ...node.children.map((child) => nodeToSubsection(child)),
-      ...node.files.map((file) => fileToSubsection(file, node.path)),
-    ],
-  }));
+  const sections: Section[] = nodes.map((node) => {
+    const number = resolveSectionNumber(node.name);
+    return {
+      id: node.path,
+      number,
+      title: node.name,
+      parentSection: "",
+      isRequired: false,
+      status: "draft",
+      isCategory: true,
+      isUserAdded: false,
+      subsections: [
+        ...node.children.map((child) => nodeToSubsection(child, number)),
+        ...node.files.map((file) => fileToSubsection(file, node.path, number)),
+      ],
+    };
+  });
 
   if (rootFiles.length) {
     sections.push({

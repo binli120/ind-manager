@@ -17,7 +17,7 @@ import { useAppDispatch, useAppSelector } from '@/lib/store';
 import { getCurrentUser, logoutUser } from '@/lib/store/slices';
 import { createBrowserClient } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { Loader2 } from 'lucide-react';
+import { ThemedLoadingScreen } from '@/components/ui/themed-loading-screen';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -242,12 +242,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (isLoading) {
     return (
       <>
-        <div className='min-h-screen flex items-center justify-center bg-background'>
-          <div className='flex flex-col items-center space-y-4'>
-            <Loader2 className='h-8 w-8 animate-spin text-primary' />
-            <p className='text-sm text-muted-foreground'>Loading...</p>
-          </div>
-        </div>
+        <ThemedLoadingScreen
+          message="Loading..."
+          detail="Validating secure session and regulatory access."
+        />
         <SessionTimeoutDialog
           open={showTimeoutDialog}
           countdownSeconds={countdownSeconds}
@@ -273,14 +271,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
     } else {
       return (
         <>
-          <div className='min-h-screen flex items-center justify-center bg-background'>
-            <div className='flex flex-col items-center space-y-4'>
-              <Loader2 className='h-8 w-8 animate-spin text-primary' />
-              <p className='text-sm text-muted-foreground'>
-                Redirecting to workspace...
-              </p>
-            </div>
-          </div>
+          <ThemedLoadingScreen
+            message="Redirecting to workspace..."
+            detail="Loading assigned IND projects and submission context."
+          />
           <SessionTimeoutDialog
             open={showTimeoutDialog}
             countdownSeconds={countdownSeconds}
@@ -319,14 +313,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
   } else {
     return (
       <>
-        <div className='min-h-screen flex items-center justify-center bg-background'>
-          <div className='flex flex-col items-center space-y-4'>
-            <Loader2 className='h-8 w-8 animate-spin text-primary' />
-            <p className='text-sm text-muted-foreground'>
-              Redirecting to login...
-            </p>
-          </div>
-        </div>
+        <ThemedLoadingScreen
+          message="Redirecting to login..."
+          detail="Session unavailable. Returning to secure sign-in."
+        />
         <SessionTimeoutDialog
           open={showTimeoutDialog}
           countdownSeconds={countdownSeconds}

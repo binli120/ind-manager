@@ -132,6 +132,12 @@ export function SmartEditorView() {
     return blocks || '<p></p>';
   };
 
+  const toSectionNumber = (value?: string | null) => {
+    if (!value) return null;
+    const match = value.match(/^(\d+(?:\.\d+)*)(?:[^\d.]|$)/);
+    return match ? match[1] : null;
+  };
+
   useEffect(() => {
     if (!hasSeenTour) {
       setShowTour(true);
@@ -809,7 +815,11 @@ export function SmartEditorView() {
                   onChange={() => {}}
                   readOnly={false}
                   hideToolbar={false}
-                  sectionNumber={selectedSubsection?.subsectionNumber}
+                  sectionNumber={
+                    toSectionNumber(selectedSubsection?.subsectionNumber) ||
+                    toSectionNumber(selectedSection?.number) ||
+                    selectedSubsection?.subsectionNumber
+                  }
                 />
               </div>
             )}

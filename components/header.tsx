@@ -26,6 +26,7 @@ import {
   fetchProjects,
   fetchProjectDetails,
 } from '@/lib/store/slices/projectsSlice';
+import { APP_BUILD_NUMBER, APP_NAME } from '@/lib/app-info';
 
 import { useTenant } from "@/hooks/useTenant";
 import { fetchUserTenants } from "@/lib/store/slices/tenantsSlice";
@@ -174,6 +175,11 @@ export function Header({
           <Button variant='ghost' size='sm' onClick={onToggleSidebar}>
             <Menu className='w-4 h-4' />
           </Button>
+
+          <div className='hidden md:flex flex-col leading-tight'>
+            <span className='text-sm font-semibold text-foreground'>{APP_NAME}</span>
+            <span className='text-xs text-muted-foreground'>Build {APP_BUILD_NUMBER}</span>
+          </div>
 
           <nav className='flex items-center gap-2 text-sm text-muted'>
             <span>Home</span>
