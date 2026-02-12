@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { fetchTenants, updateTenantStatus, createTenant } from "../tenants"
 
 const mockFetch = jest.fn()

@@ -1,9 +1,15 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 'use client'
 
 import { useEffect } from 'react'
 import { useTheme } from 'next-themes'
-
-const THEME_COOKIE = 'theme'
+import {
+  THEME_COOKIE_MAX_AGE_SECONDS,
+  THEME_COOKIE_NAME,
+} from '@/lib/common/theme'
 
 export function ThemeCookieSync() {
   const { theme, resolvedTheme } = useTheme()
@@ -12,7 +18,7 @@ export function ThemeCookieSync() {
     const value = theme === 'system' ? (resolvedTheme ?? 'light') : theme
     if (!value) return
 
-    document.cookie = `${THEME_COOKIE}=${value}; path=/; max-age=31536000; samesite=lax`
+    document.cookie = `${THEME_COOKIE_NAME}=${value}; path=/; max-age=${THEME_COOKIE_MAX_AGE_SECONDS}; samesite=lax`
     document.documentElement.style.colorScheme = value
   }, [theme, resolvedTheme])
 

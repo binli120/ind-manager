@@ -4,6 +4,14 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
 import { createBrowserClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase/client"
+import {
+  mapSupabaseCommentRowToDocumentComment,
+  mapSupabaseDocumentRowToDocument,
+  mapSupabaseDocumentRowsToDocuments,
+  parseSupabaseDocumentCommentRow,
+  parseSupabaseDocumentRow,
+  parseSupabaseDocumentRows,
+} from "@/lib/store/mappers/documentMapper"
 
 export interface DocumentSection {
   id: string
@@ -78,67 +86,6 @@ export interface Document {
   }
 }
 
-type SupabaseProfileRow = {
-  name?: string | null
-  avatar_url?: string | null
-}
-
-type SupabaseDocumentSectionRow = {
-  id: string
-  title: string
-  content?: string | null
-  order_index: number
-  is_locked?: boolean | null
-  locked_by?: string | null
-  locked_at?: string | null
-  version?: number | null
-  created_at: string
-  updated_at: string
-}
-
-type SupabaseDocumentCommentRow = {
-  id: string
-  section_id?: string | null
-  user_id: string
-  content: string
-  position?: DocumentComment["position"] | null
-  is_resolved?: boolean | null
-  parent_id?: string | null
-  created_at: string
-  updated_at: string
-  profiles?: SupabaseProfileRow | null
-}
-
-type SupabaseDocumentVersionRow = {
-  id: string
-  version: number
-  title: string
-  changes: string
-  created_by: string
-  created_at: string
-}
-
-type SupabaseDocumentRow = {
-  id: string
-  title: string
-  description?: string | null
-  project_id: string
-  team_id: string
-  owner_id: string
-  status: Document["status"]
-  type: Document["type"]
-  due_date?: string | null
-  updated_at: string
-  active_users?: number | null
-  version?: number | null
-  is_template?: boolean | null
-  document_sections?: SupabaseDocumentSectionRow[] | null
-  document_comments?: SupabaseDocumentCommentRow[] | null
-  document_versions?: SupabaseDocumentVersionRow[] | null
-  profiles?: SupabaseProfileRow | null
-  metadata?: Document["metadata"] | null
-}
-
 export interface SectionLock {
   sectionId: string
   userId: string
@@ -191,29 +138,8 @@ export const fetchDocuments = createAsyncThunk(
       if (projectId) query = query.eq("project_id", projectId)
       const { data, error } = await query.order("updated_at", { ascending: false })
       if (error) throw error
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const docs: Document[] = (data ?? []).map((doc: any) => ({
-        id: doc.id,
-        title: doc.title,
-        description: doc.description ?? undefined,
-        projectId: doc.project_id,
-        teamId: doc.team_id,
-        ownerId: doc.owner_id,
-        ownerName: doc.profiles?.name || "Unknown User",
-        status: doc.status,
-        type: doc.type,
-        dueDate: doc.due_date ?? "",
-        lastModified: doc.updated_at ?? "",
-        activeUsers: doc.active_users || 0,
-        version: doc.version || 1,
-        isTemplate: doc.is_template || false,
-        metadata: doc.metadata ?? undefined,
-        sections: [],
-        comments: [],
-        versions: [],
-        permissions: { canEdit: true, canComment: true, canView: true },
-      }))
-      return docs
+      const rawDocuments = parseSupabaseDocumentRows(data ?? [])
+      return mapSupabaseDocumentRowsToDocuments(rawDocuments)
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to fetch documents")
     }
@@ -235,30 +161,9 @@ export const fetchDocumentDetails = createAsyncThunk(
         .eq("id", documentId)
         .single()
       if (error) throw error
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const doc: any = data
-      const transformed: Document = {
-        id: doc.id,
-        title: doc.title,
-        description: doc.description ?? undefined,
-        projectId: doc.project_id,
-        teamId: doc.team_id,
-        ownerId: doc.owner_id,
-        ownerName: doc.profiles?.name || "Unknown User",
-        status: doc.status,
-        type: doc.type,
-        dueDate: doc.due_date ?? undefined,
-        lastModified: doc.updated_at,
-        activeUsers: doc.active_users || 0,
-        version: doc.version || 1,
-        isTemplate: doc.is_template || false,
-        metadata: doc.metadata ?? undefined,
-        sections: [],
-        comments: [],
-        versions: [],
-        permissions: { canEdit: true, canComment: true, canView: true },
-      }
-      return transformed
+      return mapSupabaseDocumentRowToDocument(
+        parseSupabaseDocumentRow(data),
+      )
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to fetch document details")
     }
@@ -337,22 +242,9 @@ export const addComment = createAsyncThunk(
 
       if (error) throw error
 
-      const comment: DocumentComment = {
-        id: data.id,
-        documentId: data.document_id ?? "",
-        sectionId: data.section_id ?? undefined,
-        userId: data.user_id,
-        userName: data.profiles?.name || "Unknown User",
-        userAvatar: data.profiles?.avatar_url ?? undefined,
-        content: data.content ?? "",
-        position: data.position ?? undefined,
-        isResolved: data.is_resolved || false,
-        parentId: data.parent_id ?? undefined,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-      }
-
-      return comment
+      return mapSupabaseCommentRowToDocumentComment(
+        parseSupabaseDocumentCommentRow(data),
+      )
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to add comment")
     }
@@ -412,30 +304,8 @@ export const fetchUserDocuments = createAsyncThunk(
 
       if (error) throw error
 
-      const rawDocuments = (documents ?? []) as SupabaseDocumentRow[]
-      const transformedDocuments: Document[] = rawDocuments.map((doc) => ({
-        id: doc.id,
-        title: doc.title,
-        description: doc.description ?? undefined,
-        projectId: doc.project_id,
-        teamId: doc.team_id,
-        ownerId: doc.owner_id,
-        ownerName: doc.profiles?.name || "Unknown User",
-        status: doc.status,
-        type: doc.type,
-        dueDate: doc.due_date ?? "",
-        lastModified: doc.updated_at ?? "",
-        activeUsers: doc.active_users || 0,
-        version: doc.version || 1,
-        isTemplate: doc.is_template || false,
-        metadata: doc.metadata ?? undefined,
-        sections: [],
-        comments: [],
-        versions: [],
-        permissions: { canEdit: true, canComment: true, canView: true },
-      }))
-
-      return transformedDocuments
+      const rawDocuments = parseSupabaseDocumentRows(documents ?? [])
+      return mapSupabaseDocumentRowsToDocuments(rawDocuments)
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to fetch user documents")
     }

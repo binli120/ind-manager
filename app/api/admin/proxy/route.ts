@@ -5,7 +5,12 @@ import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
-const adminPrivileges = ["system_admin", "user_manager"] as const
+const adminPrivileges = [
+  "system_admin",
+  "user_manager",
+  "admin",
+  "system_administrator",
+] as const
 type AdminPrivilege = (typeof adminPrivileges)[number]
 
 const requestSchema = z.object({
@@ -125,7 +130,25 @@ export async function POST(request: NextRequest) {
   const { table, action, data, filters } = parsed.data
   const policy = tablePolicies[table]
   const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
-  const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
+  const role = (user.user_metadata?.role ?? "") as AdminPrivilege | string
+  let isAdmin =
+    adminPrivileges.includes(privilege as AdminPrivilege) ||
+    adminPrivileges.includes(role as AdminPrivilege)
+
+  if (!isAdmin) {
+    const { data: userRow } = await supabase
+      .from("users")
+      .select("submission_role")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    const submissionRole = (userRow as { submission_role?: string } | null)
+      ?.submission_role
+
+    if (submissionRole === "system_administrator") {
+      isAdmin = true
+    }
+  }
 
   if (policy[action as keyof typeof policy]?.adminOnly && !isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })

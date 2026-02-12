@@ -7,6 +7,7 @@ import type React from "react"
 
 import { useAppSelector, useAppDispatch } from "@/lib/store"
 import { loginUser } from "@/lib/store/slices"
+import { APP_BUILD_NUMBER, APP_NAME, COMPANY_CONTACT_EMAIL, COMPANY_NAME } from "@/lib/app-info"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -41,6 +42,10 @@ export default function Page() {
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
+          <div className="space-y-1 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">{APP_NAME}</h1>
+            <p className="text-xs text-muted-foreground">Build {APP_BUILD_NUMBER}</p>
+          </div>
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Login</CardTitle>
@@ -88,6 +93,16 @@ export default function Page() {
                   <Link href="/auth/sign-up" className="underline underline-offset-4">
                     Sign up
                   </Link>
+                </div>
+                <div className="mt-6 space-y-1 text-center text-xs text-muted-foreground">
+                  <p>{COMPANY_NAME}</p>
+                  <p>Copyright @ {COMPANY_NAME}</p>
+                  <p>
+                    Contact:{" "}
+                    <a href={`mailto:${COMPANY_CONTACT_EMAIL}`} className="underline underline-offset-2">
+                      {COMPANY_CONTACT_EMAIL}
+                    </a>
+                  </p>
                 </div>
               </form>
             </CardContent>

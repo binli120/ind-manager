@@ -3,7 +3,7 @@
 // Email: blee@filynai.com
 'use client';
 
-import { authServices } from '@/app/api/auth/auth-services';
+import { authServices } from '@/lib/auth/auth-services';
 import { ErrorNullable } from '@/lib/common/types';
 import { useAppDispatch } from '@/lib/store';
 import {
@@ -30,12 +30,12 @@ interface AuthContextType {
   loading: boolean;
   signIn: (
     email: string,
-    password: string
+    password: string,
   ) => Promise<{ error: ErrorNullable }>;
   signUp: (
     email: string,
     password: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ) => Promise<{ error: ErrorNullable }>;
   signOut: () => Promise<{ error: ErrorNullable }>;
   resetPassword: (email: string) => Promise<{ error: ErrorNullable }>;
@@ -56,7 +56,7 @@ const toAuthUser = (user: SupabaseUser | null): AuthUser | null => {
       ? user.user_metadata.avatar_url
       : null;
 
-  return {
+  const authUser: AuthUser = {
     id: user.id,
     email: user.email,
     name: nameValue,
@@ -72,6 +72,7 @@ const toAuthUser = (user: SupabaseUser | null): AuthUser | null => {
     createdAt: user.created_at,
     lastLoginAt: user.last_sign_in_at ?? undefined,
   };
+  return authUser;
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       dispatch(setAuthUser(toAuthUser(session?.user ?? null)));
       dispatch(setAuthLoading(false));
     },
-    [dispatch]
+    [dispatch],
   );
 
   const signIn = async (email: string, password: string) => {
@@ -107,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (
     email: string,
     password: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ) => {
     dispatch(setAuthLoading(true));
     const { error } = await authServices.signUp(email, password, metadata);
@@ -135,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // DUMMY FUNCTION
   const resendConfirmation = async (
-    email: string
+    email: string,
   ): Promise<{ error?: ErrorNullable }> => {
     void email;
     try {

@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,10 +13,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState, useEffect } from "react";
-import { User } from "./users-page";
-import type { Project } from "@/lib/store/slices/projectsSlice";
-import { fetchUserProjectIds, addUserToProject, removeUserFromProject } from "@/lib/supabase/users";
+import type { User } from "@/lib/users/types";
+import type { Project } from "@/lib/projects/types";
+import { useProjectAssignmentEditor } from "@/hooks/useProjectAssignmentEditor";
 
 interface AssignProjectDialogProps {
   open: boolean;
@@ -27,61 +30,19 @@ export function AssignProjectDialog({
   user,
   projects,
 }: AssignProjectDialogProps) {
-  const [assignedProjectIds, setAssignedProjectIds] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (open && user) {
-      loadAssignments();
-    } else {
-      setAssignedProjectIds([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, user]);
-
-  const loadAssignments = async () => {
-    if (!user) return;
-    setIsLoading(true);
-    try {
-      const ids = await fetchUserProjectIds(user.id);
-      setAssignedProjectIds(ids);
-    } catch (error) {
-      console.error("Failed to load assignments", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleToggleProject = (projectId: string, checked: boolean) => {
-    if (checked) {
-      setAssignedProjectIds((prev) => [...prev, projectId]);
-    } else {
-      setAssignedProjectIds((prev) => prev.filter((id) => id !== projectId));
-    }
-  };
-
-  const handleSave = async () => {
-    if (!user) return;
-    setIsSaving(true);
-    try {
-      const originalIds = await fetchUserProjectIds(user.id);
-      
-      const toAdd = assignedProjectIds.filter(id => !originalIds.includes(id));
-      const toRemove = originalIds.filter(id => !assignedProjectIds.includes(id));
-
-      await Promise.all([
-        ...toAdd.map(id => addUserToProject(user.id, id)),
-        ...toRemove.map(id => removeUserFromProject(user.id, id))
-      ]);
-      
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Failed to save assignments", error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const {
+    assignedProjectIds,
+    isLoading,
+    isSaving,
+    loadError,
+    saveError,
+    toggleProjectSelection,
+    saveAssignments,
+  } = useProjectAssignmentEditor({
+    open,
+    userId: user?.id ?? null,
+    onSaved: () => onOpenChange(false),
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,6 +56,9 @@ export function AssignProjectDialog({
         
         <div className="py-4">
           <Label className="mb-2 block">Select Projects</Label>
+          {loadError && (
+            <p className="mb-2 text-sm text-red-500">{loadError}</p>
+          )}
           <ScrollArea className="h-[300px] border rounded-md p-4">
             {isLoading ? (
               <div className="text-center py-4 text-sm text-muted-foreground">Loading...</div>
@@ -108,7 +72,7 @@ export function AssignProjectDialog({
                       id={`proj-${project.id}`}
                       checked={assignedProjectIds.includes(project.id)}
                       onCheckedChange={(checked) => 
-                        handleToggleProject(project.id, checked as boolean)
+                        toggleProjectSelection(project.id, checked as boolean)
                       }
                     />
                     <div className="grid gap-1.5 leading-none">
@@ -127,13 +91,16 @@ export function AssignProjectDialog({
               </div>
             )}
           </ScrollArea>
+          {saveError && (
+            <p className="mt-2 text-sm text-red-500">{saveError}</p>
+          )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
+          <Button onClick={saveAssignments} disabled={isSaving}>
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>

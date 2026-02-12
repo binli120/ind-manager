@@ -1,4 +1,8 @@
-import { Tenant } from "@/components/ui/tenants/tenants-page";
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
+import type { Tenant } from '@/lib/tenants/types';
 
 type TenantRow = {
   id: string;

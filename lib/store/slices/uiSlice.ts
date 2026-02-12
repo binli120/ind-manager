@@ -44,7 +44,7 @@ export interface Modal {
 }
 
 const initialState: UIState = {
-  sidebarOpen: true,
+  sidebarOpen: false,
   commentsPanelOpen: true,
   currentView: "workspace",
 

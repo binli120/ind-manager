@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 export const ROUTES = {
     workspace: {
         indEditorPage: "/workspace/ind_editor",

@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { PdfAnalysisApiError, requestPdfAnalysisApi } from "../pdfAnalysisApi"
 
 type MockResponse = {
@@ -57,6 +61,7 @@ describe("pdfAnalysisApi", () => {
       requestPdfAnalysisApi({
         path: "/api/test",
         method: "GET",
+        suppressErrorLog: true,
       }),
     ).rejects.toBeInstanceOf(PdfAnalysisApiError)
   })
@@ -75,6 +80,7 @@ describe("pdfAnalysisApi", () => {
       requestPdfAnalysisApi({
         path: "/api/test",
         method: "GET",
+        suppressErrorLog: true,
       }),
     ).rejects.toMatchObject({
       message: "Bad input",

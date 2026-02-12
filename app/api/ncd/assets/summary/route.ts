@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from "next/server"
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
 
-const rawBase = process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL
-const cleanedBase =
-  rawBase?.replace(/\/+$/, "").replace(/\/api\/?$/i, "") || "http://localhost:8000"
-const API_BASE = cleanedBase
+import { NextRequest, NextResponse } from "next/server"
+import { resolvePdfAnalysisApiBaseUrl } from "@/lib/common/pdfAnalysisApiBaseUrl"
+
+const API_BASE = resolvePdfAnalysisApiBaseUrl({ stripApiSuffix: true })
 const DEFAULT_BUCKET =
   process.env.DOC_REPOSITORY_BUCKET ||
   process.env.NEXT_PUBLIC_DOC_REPOSITORY_BUCKET ||
@@ -13,6 +15,16 @@ const DEFAULT_PROJECT = "2b44ecab-45c8-4105-b4ae-e9b7080bb4d6"
 
 export async function POST(req: NextRequest) {
   try {
+    if (!API_BASE) {
+      return NextResponse.json(
+        {
+          error:
+            "PDF analysis API base URL is not configured. Set PDF_ANALYSIS_API_BASE_URL or NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL.",
+        },
+        { status: 500 },
+      )
+    }
+
     const body = (await req.json()) as Record<string, unknown>
 
     const payload = {

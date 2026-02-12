@@ -25,14 +25,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useEffect, useState } from 'react';
-import type { User, UserPrivilege, UserRole } from './users-page';
-import { roleLabels } from './users-page';
+import { formatPhoneNumberInput, isPhoneNumberValid } from '@/lib/users/phone';
+import { useState } from 'react';
+import type { AddUserInput, UserPrivilege, UserRole } from '@/lib/users/types';
+import {
+  coreRegulatoryRoles,
+  roleLabels,
+  scientificClinicalRoles,
+  supportingRoles,
+} from '@/lib/users/types';
 
 type AddUserDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (user: Omit<User, 'id' | 'status'> & { password: string; privilege: UserPrivilege }) => void;
+  onAdd: (user: AddUserInput) => Promise<void> | void;
   companies: string[];
   currentUserPrivilege: UserPrivilege;
 };
@@ -47,28 +53,42 @@ export function AddUserDialog({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
     phone: '',
     role: '' as UserRole | '',
     privilege: '' as UserPrivilege | '',
     company: '',
   });
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const requiresTenant = formData.privilege !== 'system_admin';
+  const hasPhone = Boolean(formData.phone);
+  const phoneValid = isPhoneNumberValid(formData.phone);
+  const canSubmit =
+    Boolean(formData.name) &&
+    Boolean(formData.email) &&
+    Boolean(formData.phone) &&
+    Boolean(formData.role) &&
+    Boolean(formData.privilege) &&
+    (!requiresTenant || Boolean(formData.company)) &&
+    phoneValid;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      formData.name &&
-      formData.email &&
-      formData.password &&
-      formData.phone &&
-      formData.role &&
-      formData.privilege &&
-      formData.company
-    ) {
-      onAdd({
+    setSubmitError(null);
+
+    if (!canSubmit) {
+      if (hasPhone && !phoneValid) {
+        setSubmitError('Phone number must be in xxx-xxx-xxxx format.');
+      }
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await onAdd({
         name: formData.name,
         email: formData.email,
-        password: formData.password,
         phone: formData.phone,
         role: formData.role as UserRole,
         privilege: formData.privilege as UserPrivilege,
@@ -77,13 +97,16 @@ export function AddUserDialog({
       setFormData({
         name: '',
         email: '',
-        password: '',
         phone: '',
         role: '',
         privilege: '',
         company: '',
       });
       onOpenChange(false);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to create user');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -91,41 +114,14 @@ export function AddUserDialog({
     setFormData({
       name: '',
       email: '',
-      password: '',
       phone: '',
       role: '',
       privilege: '',
       company: '',
     });
+    setSubmitError(null);
     onOpenChange(false);
   };
-
-  const coreRegulatoryRoles: UserRole[] = [
-    'reg_affairs_manager_lead',
-    'regulatory_writer_medical_writer',
-    'ectd_publishing_specialist',
-  ];
-
-  const scientificClinicalRoles: UserRole[] = [
-    'clinical_development_lead',
-    'medical_monitor',
-    'nonclinical_toxicology_lead',
-    'cmc_lead',
-  ];
-
-  const supportingRoles: UserRole[] = [
-    'quality_assurance',
-    'project_manager',
-    'data_manager_biostatistician',
-    'document_management_specialist',
-  ];
-
-  useEffect(() => {
-    if (open) {
-      const randomPass = crypto.randomUUID().slice(0, 12);
-      setFormData((prev) => ({ ...prev, password: randomPass }));
-    }
-  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -165,33 +161,31 @@ export function AddUserDialog({
               />
             </div>
             <div className='grid gap-2'>
-              <Label htmlFor='password'>Password</Label>
-              <Input
-                id='password'
-                type='text'
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                placeholder='Enter password'
-                required
-              />
-            </div>
-            <div className='grid gap-2'>
               <Label htmlFor='phone'>Phone</Label>
               <Input
                 id='phone'
                 type='tel'
                 value={formData.phone}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
+                  setFormData({
+                    ...formData,
+                    phone: formatPhoneNumberInput(e.target.value),
+                  })
                 }
-                placeholder='Enter phone number'
+                placeholder='xxx-xxx-xxxx'
                 required
               />
+              {hasPhone && !phoneValid && (
+                <p className='text-xs text-red-500'>
+                  Enter a valid phone number (xxx-xxx-xxxx).
+                </p>
+              )}
             </div>
             <div className='grid gap-2'>
-              <Label htmlFor='company'>Company</Label>
+              <Label htmlFor='company'>
+                Tenant
+                {formData.privilege !== 'system_admin' ? ' *' : ''}
+              </Label>
               <Select
                 value={formData.company}
                 onValueChange={(value) =>
@@ -199,7 +193,7 @@ export function AddUserDialog({
                 }
               >
                 <SelectTrigger id='company'>
-                  <SelectValue placeholder='Select a company' />
+                  <SelectValue placeholder='Select a tenant' />
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((company) => (
@@ -209,6 +203,11 @@ export function AddUserDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {formData.privilege === 'system_admin' && (
+                <p className='text-xs text-muted-foreground'>
+                  Optional for system admin users.
+                </p>
+              )}
             </div>
             <div className='grid gap-2'>
               <Label htmlFor='role'>Role</Label>
@@ -274,12 +273,15 @@ export function AddUserDialog({
                 </SelectContent>
               </Select>
             </div>
+            {submitError && <p className='text-sm text-red-500'>{submitError}</p>}
           </div>
           <DialogFooter>
             <Button type='button' variant='outline' onClick={handleCancel}>
               Cancel
             </Button>
-            <Button type='submit'>Add User</Button>
+            <Button type='submit' disabled={!canSubmit || isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create User'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

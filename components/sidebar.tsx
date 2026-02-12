@@ -25,7 +25,7 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import type { UserPrivilege } from '@/components/ui/users/users-page';
+import type { UserPrivilege } from '@/lib/users/types';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -101,14 +101,14 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
       icon: Building2Icon,
       label: 'tenants',
       path: '/admin/tenants',
-      allowedRoles: ['system_admin'],
+      allowedRoles: ['system_admin', 'admin', 'system_administrator'],
     },
     {
       title: 'Users',
       icon: UserIcon,
       label: 'users',
       path: '/admin/users',
-      allowedRoles: ['system_admin', 'user_manager'],
+      allowedRoles: ['system_admin', 'user_manager', 'admin', 'system_administrator'],
     },
   ];
 

@@ -14,21 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createBrowserClient } from '@/lib/supabase';
-import type { User } from '@supabase/supabase-js';
 import { ChevronDown, Menu, MessageSquare, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
-import { useProject } from '@/hooks/useProject';
-import { useAppDispatch } from '@/lib/store';
-import { fetchUserDocuments } from '@/lib/store/slices/documentsSlice';
-import {
-  fetchProjects,
-  fetchProjectDetails,
-} from '@/lib/store/slices/projectsSlice';
-
-import { useTenant } from "@/hooks/useTenant";
-import { fetchUserTenants } from "@/lib/store/slices/tenantsSlice";
+import { APP_BUILD_NUMBER, APP_NAME } from '@/lib/app-info';
+import { useHeaderController } from '@/hooks/useHeaderController';
+import type { HeaderView } from '@/lib/header/headerViewModel';
 
 import { NotificationsBell } from "@/components/notifications/NotificationsBell";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
@@ -39,18 +28,7 @@ import { NotificationsPanel } from "@/components/notifications/NotificationsPane
 interface HeaderProps {
   onToggleSidebar: () => void;
   onToggleComments: () => void;
-  currentView?: 'workspace'
-    | 'projects'
-    | 'calendar'
-    | 'submission'
-    | 'post-submission'
-    | 'gap-scoring'
-    | 'review-center'
-    | 'tenants'
-    | 'users'
-    | 'gap-analysis'
-    | 'ind-submission'
-    | 'design-system';
+  currentView?: HeaderView;
 }
 
 export function Header({
@@ -58,113 +36,17 @@ export function Header({
   onToggleComments,
   currentView = 'workspace',
 }: HeaderProps) {
-  const dispatch = useAppDispatch();
-  const { projects, selectedProjectId, setProject } =
-    useProject();
-  //IM-29: Select tenants_id to fetch projects
-  const { tenants, selectedTenantId, setTenant } = useTenant();
-  const visibleProjects = selectedTenantId
-    ? projects.filter((p) => p.tenantId === selectedTenantId)
-    : projects;
-  const effectiveProjects = visibleProjects.length ? visibleProjects : projects;
-
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const supabase = createBrowserClient();
-
-    // Get initial user
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Fetch user tenants when user loads
-  useEffect(() => {
-    if (user?.id) {
-      dispatch(fetchUserTenants({ userId: user.id }));
-    }
-  }, [dispatch, user?.id]);
-
-
-  // 2) 
-  useEffect(() => {
-    if (!tenants.length) return;
-    if (!selectedTenantId) {
-      setTenant(tenants[0].id);
-    } else if (!tenants.some((t) => t.id === selectedTenantId)) {
-      setTenant(tenants[0].id);
-    }
-  }, [tenants, selectedTenantId, setTenant]);
-
-
-  // 3)fetch its projects
-  useEffect(() => {
-    if (user?.id) {
-      dispatch(fetchProjects({ userId: user.id }));
-    }
-  }, [dispatch, user?.id]);
-
-  // When projects arrive and no project selected (not hydrated or invalid), pick the first
-  useEffect(() => {
-    if (!effectiveProjects.length) return;
-    if (
-      !selectedProjectId ||
-      !effectiveProjects.some((p) => p.id === selectedProjectId)
-    ) {
-      const preferred = effectiveProjects.find(
-        (p) =>
-          p.code?.toLowerCase() === "lpathmab" ||
-          p.title?.toLowerCase().includes("lpathmab")
-      );
-      setProject((preferred ?? effectiveProjects[0]).id);
-    }
-  }, [effectiveProjects, selectedProjectId, setProject]);
-
-  // 5) When project selection changes, hydrate detail + any dependent data
-  useEffect(() => {
-    if (selectedProjectId) {
-      dispatch(fetchProjectDetails(selectedProjectId));
-      if (user?.id) dispatch(fetchUserDocuments(user.id));
-    }
-  }, [dispatch, selectedProjectId, user?.id]);
-
-  const getBreadcrumbText = () => {
-    switch (currentView) {
-      case 'projects':
-        return 'Projects';
-      case 'calendar':
-        return 'Calendar';
-      case 'submission':
-        return 'Submission';
-      case 'post-submission':
-        return 'Post Submission';
-      case 'gap-scoring':
-        return 'Test Gap Scoring';
-      case 'review-center':
-        return 'Review Center';
-      case 'gap-analysis':
-        return 'Gap Analysis';
-      case 'tenants':
-        return 'Tenants';
-      case 'users':
-        return 'Users';
-      default:
-        return 'eCTD Workspace';
-    }
-  };
+  const {
+    user,
+    isLoading,
+    tenants,
+    selectedTenantId,
+    setTenant,
+    effectiveProjects,
+    selectedProjectId,
+    setProject,
+    breadcrumbText,
+  } = useHeaderController(currentView);
 
   return (
     <header className='bg-background border-b border-border px-6 py-4'>
@@ -175,11 +57,16 @@ export function Header({
             <Menu className='w-4 h-4' />
           </Button>
 
+          <div className='hidden md:flex flex-col leading-tight'>
+            <span className='text-sm font-semibold text-foreground'>{APP_NAME}</span>
+            <span className='text-xs text-muted-foreground'>Build {APP_BUILD_NUMBER}</span>
+          </div>
+
           <nav className='flex items-center gap-2 text-sm text-muted'>
             <span>Home</span>
             <ChevronDown className='w-3 h-3 rotate-[-90deg]' />
             <span className='text-foreground font-medium'>
-              {getBreadcrumbText()}
+              {breadcrumbText}
             </span>
           </nav>
         </div>

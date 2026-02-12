@@ -1,0 +1,38 @@
+name: Bump Build Number
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Increment build number
+        run: node scripts/bump-build-number.cjs
+
+      - name: Commit and push
+        run: |
+          if git diff --quiet -- config/build-number.json; then
+            echo "No build number changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config/build-number.json
+          git commit -m "chore: bump build number [skip ci]"
+          git push

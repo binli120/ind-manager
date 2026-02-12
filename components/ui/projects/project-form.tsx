@@ -20,31 +20,27 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useProjectFormController } from '@/hooks/useProjectFormController';
 import {
-  getDefaultProjectData,
+  PROJECT_PRIORITY_OPTIONS,
   PRODUCT_TYPES,
   PROJECT_CREATION_STEPS,
-  validateProjectStep,
-} from "@/lib/metadata/projects";
+} from '@/lib/metadata/projects';
 import {
-  ProjectCreation,
-} from "@/lib/store/slices/projectsSlice";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
-import { useTenant } from "@/hooks/useTenant";
-
-const PRIORITY_OPTIONS = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "critical", label: "Critical" },
-] as const;
+  TEAM_ROLE_OPTIONS,
+  TEAM_ROLE_OWNER,
+  TeamAssignableRole,
+} from '@/lib/projects/projectFormModel';
+import { ProjectCreation } from '@/lib/projects/types';
+import { Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 interface ProjectFormProps {
   initialData?: ProjectCreation;
-  onSubmit: (data: ProjectCreation) => void;
+  onSubmit: (data: ProjectCreation) => Promise<void> | void;
   onCancel: () => void;
   isEditing?: boolean;
+  isSubmitting?: boolean;
+  submitError?: string | null;
 }
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({
@@ -52,103 +48,78 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   onSubmit,
   onCancel,
   isEditing = false,
+  isSubmitting = false,
+  submitError,
 }) => {
-  const { currentTenant, selectedTenantId } = useTenant();
-  const defaultTenantId = selectedTenantId ?? currentTenant?.id ?? "demo-tenant";
-  const [currentStep, setCurrentStep] = useState(1);
-  const [projectData, setProjectData] = useState<ProjectCreation>(() => {
-    const base = initialData || getDefaultProjectData();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return { ...base, tenantid: (base as any).tenantid || defaultTenantId };
+  const {
+    currentStep,
+    projectData,
+    currentTenant,
+    selectedTenantId,
+    teamRows,
+    tenantUsers,
+    usersLoadError,
+    ownerDisplayName,
+    progress,
+    stepValid,
+    sponsorEmail,
+    fdaEmail,
+    sponsorEmailValid,
+    fdaEmailValid,
+    nextStep,
+    prevStep,
+    addTeamRow,
+    removeTeamRow,
+    updateTeamRow,
+    updateProjectData,
+    handleSubmit,
+  } = useProjectFormController({
+    initialData,
+    onSubmit,
+    isSubmitting,
   });
-
-  const progress = (currentStep / PROJECT_CREATION_STEPS.length) * 100;
-
-  const nextStep = () => {
-    if (currentStep < PROJECT_CREATION_STEPS.length) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const isStepValid = () => {
-    return validateProjectStep(currentStep, projectData);
-  };
-
-  const handleSubmit = () => {
-    const tenantMeta = currentTenant
-      ? { id: currentTenant.id, name: currentTenant.name }
-      : selectedTenantId
-        ? { id: selectedTenantId }
-        : null;
-    const baseMetadata =
-      projectData.metadata &&
-      typeof projectData.metadata === "object" &&
-      !Array.isArray(projectData.metadata)
-        ? (projectData.metadata as Record<string, unknown>)
-        : {};
-    const nextData = tenantMeta
-      ? { ...projectData, metadata: { ...baseMetadata, tenant: tenantMeta } }
-      : projectData;
-
-    onSubmit(nextData);
-    setProjectData(initialData || getDefaultProjectData());
-    setCurrentStep(1);
-  };
-
-  const updateProjectData = <T extends keyof ProjectCreation>(
-    field: T,
-    value: ProjectCreation[T]
-  ) => {
-    setProjectData((prev) => ({ ...prev, [field]: value }));
-  };
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
-            <div className="grid gap-4">
+          <div className='space-y-4'>
+            <div className='grid gap-4'>
               <div>
-                <Label htmlFor="ind_title">IND Title *</Label>
+                <Label htmlFor='ind_title'>IND Title *</Label>
                 <Input
-                  id="ind_title"
-                  value={(projectData.ind_title as string) || ""}
+                  id='ind_title'
+                  value={(projectData.ind_title as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("ind_title", e.target.value)
+                    updateProjectData('ind_title', e.target.value)
                   }
-                  placeholder="e.g., Phase 1 Study of XYZ-123 in Oncology"
+                  placeholder='e.g., Phase 1 Study of XYZ-123 in Oncology'
                 />
               </div>
               <div>
-                <Label htmlFor="ind_number">Drug / Asset Code *</Label>
+                <Label htmlFor='ind_number'>Drug / Asset Code *</Label>
                 <Input
-                  id="ind_number"
-                  value={(projectData.ind_number as string) || ""}
+                  id='ind_number'
+                  value={(projectData.ind_number as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("ind_number", e.target.value)
+                    updateProjectData('ind_number', e.target.value)
                   }
-                  placeholder="e.g., ABC-001"
+                  placeholder='e.g., ABC-001'
                 />
               </div>
               <div>
-                <Label htmlFor="drug_name">Drug Name *</Label>
+                <Label htmlFor='drug_name'>Drug Name *</Label>
                 <Input
-                  id="drug_name"
-                  value={(projectData.drug_name as string) || ""}
+                  id='drug_name'
+                  value={(projectData.drug_name as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("drug_name", e.target.value)
+                    updateProjectData('drug_name', e.target.value)
                   }
-                  placeholder="e.g., XYZ-123"
+                  placeholder='e.g., XYZ-123'
                 />
               </div>
               <div>
-                <Label htmlFor="product_type">Product Type *</Label>
+                <Label htmlFor='product_type'>Product Type *</Label>
                 <Select
                   value={(projectData.product_type as string) || ''}
                   onValueChange={(value) =>
@@ -168,16 +139,18 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="priority">Priority</Label>
+                <Label htmlFor='priority'>Priority</Label>
                 <Select
-                  value={(projectData.priority as string) || "medium"}
-                  onValueChange={(value) => updateProjectData("priority", value)}
+                  value={(projectData.priority as string) || 'medium'}
+                  onValueChange={(value) =>
+                    updateProjectData('priority', value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
+                    <SelectValue placeholder='Select priority' />
                   </SelectTrigger>
                   <SelectContent>
-                    {PRIORITY_OPTIONS.map((opt) => (
+                    {PROJECT_PRIORITY_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>
@@ -186,23 +159,25 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor='description'>Description</Label>
                 <Textarea
-                  id="description"
-                  value={(projectData.description as string) || ""}
+                  id='description'
+                  value={(projectData.description as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("description", e.target.value)
+                    updateProjectData('description', e.target.value)
                   }
-                  placeholder="Brief description of the program"
+                  placeholder='Brief description of the program'
                 />
               </div>
               <div>
-                <Label htmlFor="tenant_name">Tenant</Label>
+                <Label htmlFor='tenant_name'>Tenant</Label>
                 <Input
-                  id="tenant_name"
+                  id='tenant_name'
                   value={
                     currentTenant?.name ??
-                    (selectedTenantId ? "Tenant selected" : "No tenant selected")
+                    (selectedTenantId
+                      ? 'Tenant selected'
+                      : 'No tenant selected')
                   }
                   disabled
                 />
@@ -231,25 +206,35 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 </Label>
                 <Input
                   id='sponsor_contact_email'
-                  type='email'
+                  type='text'
                   value={(projectData.sponsor_contact_email as string) || ''}
                   onChange={(e) =>
                     updateProjectData('sponsor_contact_email', e.target.value)
                   }
                   placeholder='sponsor@company.com'
                 />
+                {sponsorEmail && !sponsorEmailValid && (
+                  <p className='mt-1 text-xs text-red-500'>
+                    Enter a valid email address.
+                  </p>
+                )}
               </div>
               <div>
-                <Label htmlFor='fda_contact_email'>FDA Contact Email *</Label>
+                <Label htmlFor='fda_contact_email'>FDA Contact Email</Label>
                 <Input
                   id='fda_contact_email'
-                  type='email'
+                  type='text'
                   value={(projectData.fda_contact_email as string) || ''}
                   onChange={(e) =>
                     updateProjectData('fda_contact_email', e.target.value)
                   }
                   placeholder='fda.contact@fda.gov'
                 />
+                {fdaEmail && !fdaEmailValid && (
+                  <p className='mt-1 text-xs text-red-500'>
+                    Enter a valid email address.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -295,7 +280,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                   onChange={(e) =>
                     updateProjectData(
                       'target_ind_submission_date',
-                      e.target.value
+                      e.target.value,
                     )
                   }
                 />
@@ -306,46 +291,155 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       case 4:
         return (
           <div className='space-y-4'>
+            <div className='space-y-3'>
+              {teamRows.map((row, index) => {
+                const isOwnerRow = row.role === TEAM_ROLE_OWNER;
+                const isLastRow = index === teamRows.length - 1;
+                const isInvalidRow =
+                  !isOwnerRow && (!row.userId.trim() || !row.role);
+
+                return (
+                  <div key={row.id} className='space-y-2'>
+                    <div className='grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_auto]'>
+                      {isOwnerRow ? (
+                        <div>
+                          <Label>Owner</Label>
+                          <Input value={ownerDisplayName} disabled />
+                        </div>
+                      ) : (
+                        <div>
+                          <Label>User</Label>
+                          <Select
+                            value={row.userId || undefined}
+                            onValueChange={(value) =>
+                              updateTeamRow(row.id, { userId: value })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select user' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {tenantUsers.map((tenantUser) => (
+                                <SelectItem
+                                  key={tenantUser.id}
+                                  value={tenantUser.id}
+                                >
+                                  {tenantUser.name} ({tenantUser.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      <div>
+                        <Label>Type</Label>
+                        {isOwnerRow ? (
+                          <Input value='Owner' disabled />
+                        ) : (
+                          <Select
+                            value={row.role || undefined}
+                            onValueChange={(value) =>
+                              updateTeamRow(row.id, {
+                                role: value as TeamAssignableRole,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select type' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {TEAM_ROLE_OPTIONS.map((roleOption) => (
+                                <SelectItem
+                                  key={roleOption.value}
+                                  value={roleOption.value}
+                                >
+                                  {roleOption.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                      <div className='flex items-end gap-2'>
+                        {isLastRow && (
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='icon'
+                            onClick={addTeamRow}
+                          >
+                            +
+                          </Button>
+                        )}
+                        {!isOwnerRow && (
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='icon'
+                            onClick={() => removeTeamRow(row.id)}
+                          >
+                            -
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    {isInvalidRow && (
+                      <p className='text-xs text-red-500'>
+                        Both user and type are required.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {usersLoadError && (
+              <p className='text-xs text-red-500'>{usersLoadError}</p>
+            )}
+          </div>
+        );
+      case 5:
+        return (
+          <div className='space-y-4'>
             <div className='grid gap-4'>
               <div className='space-y-2'>
                 <Label>Project Summary</Label>
-                <div className="p-4 border rounded-lg bg-muted/20 space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="font-medium">IND Title:</span>
+                <div className='p-4 border rounded-lg bg-muted/20 space-y-2 text-sm'>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>IND Title:</span>
                     <span>
-                  {(projectData.ind_title as string) || "Not specified"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Drug / Asset Code:</span>
-                <span>
-                  {(projectData.ind_number as string) || "Not specified"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Drug Name:</span>
-                <span>
-                  {(projectData.drug_name as string) || "Not specified"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Product Type:</span>
-                <span>
-                  {(projectData.product_type as string) || "Not specified"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Sponsor:</span>
-                <span>
-                  {(projectData.sponsor_name as string) || "Not specified"}
-                </span>
-              </div>
+                      {(projectData.ind_title as string) || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>Drug / Asset Code:</span>
+                    <span>
+                      {(projectData.ind_number as string) || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>Drug Name:</span>
+                    <span>
+                      {(projectData.drug_name as string) || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>Product Type:</span>
+                    <span>
+                      {(projectData.product_type as string) || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>Sponsor:</span>
+                    <span>
+                      {(projectData.sponsor_name as string) || 'Not specified'}
+                    </span>
+                  </div>
                   {(projectData.target_ind_submission_date as string) && (
                     <div className='flex justify-between'>
                       <span className='font-medium'>Target Date:</span>
                       <span>
                         {new Date(
-                          projectData.target_ind_submission_date as string
+                          projectData.target_ind_submission_date as string,
                         ).toLocaleDateString()}
                       </span>
                     </div>
@@ -372,10 +466,10 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   };
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
-      <div className='bg-background rounded-lg shadow-lg w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto'>
-        <div className='p-6'>
-          <div className='mb-8'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'>
+      <div className='mx-4 flex h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-background shadow-lg'>
+        <div className='flex shrink-0 flex-col p-6 pb-4'>
+          <div className='mb-4'>
             <div className='flex items-center justify-between mb-4'>
               <div>
                 <h2 className='text-xl font-semibold'>
@@ -388,7 +482,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               <span className='text-sm italic text-red-500'>* required</span>
             </div>
             <Progress value={progress} className='mb-4' />
-            <div className='flex justify-between text-sm'>
+            <div className='grid grid-cols-2 gap-2 text-xs sm:grid-cols-5 sm:text-sm'>
               {PROJECT_CREATION_STEPS.map((step) => (
                 <div
                   key={step.id}
@@ -396,8 +490,8 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                     step.id === currentStep
                       ? 'text-primary font-medium'
                       : step.id < currentStep
-                      ? 'text-green-600'
-                      : 'text-muted-foreground'
+                        ? 'text-green-600'
+                        : 'text-muted-foreground'
                   }`}
                 >
                   {step.title}
@@ -405,9 +499,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Step Content */}
-          <Card className='card-dark-border'>
+        {/* Step Content */}
+        <div className='min-h-0 flex-1 px-6'>
+          <Card className='card-dark-border flex h-full min-h-0 flex-col'>
             <CardHeader>
               <CardTitle className='text-lg'>
                 {PROJECT_CREATION_STEPS[currentStep - 1].title}
@@ -416,37 +512,66 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 {PROJECT_CREATION_STEPS[currentStep - 1].description}
               </CardDescription>
             </CardHeader>
-            <CardContent>{renderStepContent()}</CardContent>
+            <CardContent className='min-h-0 flex-1 overflow-y-auto pb-6'>
+              {renderStepContent()}
+            </CardContent>
           </Card>
+        </div>
 
-          {/* Navigation */}
-          <div className='flex justify-between mt-6'>
+        {/* Navigation */}
+        <div className='mt-4 flex shrink-0 justify-between p-6 pt-0'>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={prevStep}
+            disabled={currentStep === 1 || isSubmitting}
+          >
+            <ChevronLeft className='h-4 w-4 mr-2' />
+            Previous
+          </Button>
+          <div className='flex gap-2'>
             <Button
+              type='button'
               variant='outline'
-              onClick={prevStep}
-              disabled={currentStep === 1}
+              onClick={onCancel}
+              disabled={isSubmitting}
             >
-              <ChevronLeft className='h-4 w-4 mr-2' />
-              Previous
+              Cancel
             </Button>
-            <div className='flex gap-2'>
-              <Button variant='outline' onClick={onCancel}>
-                Cancel
-              </Button>
-              {currentStep === PROJECT_CREATION_STEPS.length ? (
-                <Button onClick={handleSubmit} disabled={!isStepValid()}>
+            {currentStep === PROJECT_CREATION_STEPS.length ? (
+              <Button
+                type='button'
+                onClick={handleSubmit}
+                disabled={!stepValid || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                ) : (
                   <Check className='h-4 w-4 mr-2' />
-                  {isEditing ? 'Update' : 'Create'} Project
-                </Button>
-              ) : (
-                <Button onClick={nextStep} disabled={!isStepValid()}>
-                  Next
-                  <ChevronRight className='h-4 w-4 ml-2' />
-                </Button>
-              )}
-            </div>
+                )}
+                {isSubmitting
+                  ? isEditing
+                    ? 'Updating...'
+                    : 'Creating...'
+                  : isEditing
+                    ? 'Update'
+                    : 'Create Project'}
+              </Button>
+            ) : (
+              <Button
+                type='button'
+                onClick={nextStep}
+                disabled={!stepValid || isSubmitting}
+              >
+                Next
+                <ChevronRight className='h-4 w-4 ml-2' />
+              </Button>
+            )}
           </div>
         </div>
+        {submitError && (
+          <p className='px-6 pb-4 text-sm text-red-500'>{submitError}</p>
+        )}
       </div>
     </div>
   );

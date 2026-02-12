@@ -5,12 +5,17 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react"
 import Image from "next/image"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
+import {
+  MATERIALS_ASSET_SECTION_FALLBACK,
+  MATERIALS_DEFAULTS,
+} from "@/lib/section-editor/constants"
 import {
   AlertCircle,
   FileText,
@@ -61,10 +66,6 @@ interface AssetsSectionResponse {
   source?: string
 }
 
-const DEFAULT_TENANT = "c38daae8-07a8-4da4-9a68-9a9955b09f70"
-const DEFAULT_PROJECT = "2b44ecab-45c8-4105-b4ae-e9b7080bb4d6"
-const DEFAULT_SECTION = "4"
-
 interface MaterialsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -77,6 +78,8 @@ interface MaterialsDialogProps {
   tenantId?: string
   projectId?: string
   sectionNumber?: string
+  bucket?: string
+  limit?: number
 }
 
 const toPlainText = (html: string) =>
@@ -102,6 +105,102 @@ const parseHtmlTable = (html?: string): TableData | undefined => {
   }
 }
 
+const asString = (value: unknown): string | undefined =>
+  typeof value === "string" && value.trim() ? value : undefined
+
+const resolveImageUrl = (value: unknown): string | undefined => {
+  if (typeof value === "string") return value
+  if (!value || typeof value !== "object") return undefined
+  const obj = value as Record<string, unknown>
+  const direct =
+    asString(obj.url) ||
+    asString(obj.download_url) ||
+    asString(obj.downloadUrl) ||
+    asString(obj.file_url) ||
+    asString(obj.fileUrl) ||
+    asString(obj.image_url) ||
+    asString(obj.imageUrl) ||
+    asString(obj.s3_url) ||
+    asString(obj.s3Url)
+  if (direct) return direct
+  const nestedKeys = ["file", "asset", "source", "image", "data"]
+  for (const key of nestedKeys) {
+    const nested = obj[key]
+    if (nested && typeof nested === "object") {
+      const nestedObj = nested as Record<string, unknown>
+      const nestedUrl =
+        asString(nestedObj.url) ||
+        asString(nestedObj.download_url) ||
+        asString(nestedObj.downloadUrl) ||
+        asString(nestedObj.file_url) ||
+        asString(nestedObj.fileUrl) ||
+        asString(nestedObj.image_url) ||
+        asString(nestedObj.imageUrl) ||
+        asString(nestedObj.s3_url) ||
+        asString(nestedObj.s3Url)
+      if (nestedUrl) return nestedUrl
+    }
+  }
+  return undefined
+}
+
+const resolveTableHtml = (value: unknown): string | undefined => {
+  if (typeof value === "string") return value
+  if (!value || typeof value !== "object") return undefined
+  const obj = value as Record<string, unknown>
+  return (
+    asString(obj.html) ||
+    asString(obj.table) ||
+    asString(obj.html_table) ||
+    asString(obj.htmlTable) ||
+    asString(obj.html_table_html) ||
+    asString(obj.htmlTableHtml)
+  )
+}
+
+const hasTableSignature = (value: unknown): boolean => {
+  if (typeof value === "string") {
+    const lower = value.toLowerCase()
+    return lower.includes("<table") || lower.includes("<tr") || lower.includes("<td")
+  }
+  if (!value || typeof value !== "object") return false
+  const obj = value as Record<string, unknown>
+  const type = asString(obj.type) ?? asString(obj.asset_type)
+  if (type && type.toLowerCase().includes("table")) return true
+  return (
+    Boolean(resolveTableHtml(obj)) ||
+    Array.isArray(obj.headers) ||
+    Array.isArray(obj.rows)
+  )
+}
+
+const hasImageSignature = (value: unknown): boolean => {
+  if (typeof value === "string") {
+    const lower = value.toLowerCase()
+    return /\.(png|jpe?g|gif|bmp|webp|svg)(\?.*)?$/.test(lower)
+  }
+  if (!value || typeof value !== "object") return false
+  const obj = value as Record<string, unknown>
+  const type = asString(obj.type) ?? asString(obj.asset_type)
+  if (type && (type.toLowerCase().includes("image") || type.toLowerCase().includes("figure"))) return true
+  return Boolean(resolveImageUrl(obj))
+}
+
+const splitAssets = (assets: unknown[]) => {
+  const imageAssets: unknown[] = []
+  const tableAssets: unknown[] = []
+  for (const asset of assets) {
+    if (hasTableSignature(asset)) {
+      tableAssets.push(asset)
+      continue
+    }
+    if (hasImageSignature(asset)) {
+      imageAssets.push(asset)
+    }
+  }
+  return { imageAssets, tableAssets }
+}
+
 const normalizeDocuments = (
   docs: AssetsSectionDocument[],
   fallbackSection: string,
@@ -117,25 +216,77 @@ const normalizeDocuments = (
         `Document ${docIdx + 1}`,
       section: doc.section ?? fallbackSection,
       topics: topics.map((topic, topicIdx) => {
-        const images = Array.isArray(topic.images) ? topic.images : []
-        const tables = Array.isArray(topic.tables) ? topic.tables : []
+        const topicObj = topic as Record<string, unknown>
+        const imagesRaw = Array.isArray(topic.images) ? topic.images : []
+        const assetsObj =
+          topicObj.assets && typeof topicObj.assets === "object" && !Array.isArray(topicObj.assets)
+            ? (topicObj.assets as Record<string, unknown>)
+            : null
+        const assetsImagesRaw = Array.isArray(assetsObj?.images) ? assetsObj?.images ?? [] : []
+        const assetsTablesRaw = Array.isArray(assetsObj?.tables) ? assetsObj?.tables ?? [] : []
+        const assetsRaw = Array.isArray(topicObj.assets) ? topicObj.assets : []
+        const tablesRaw = Array.isArray(topic.tables) ? topic.tables : []
+        const htmlTablesRaw = Array.isArray(topicObj.html_tables)
+          ? topicObj.html_tables
+          : Array.isArray(topicObj.htmlTables)
+            ? topicObj.htmlTables
+            : topicObj.htmlTable || topicObj.html_table
+              ? [topicObj.htmlTable ?? topicObj.html_table]
+              : []
+        const { imageAssets, tableAssets } = splitAssets(assetsRaw)
+        const imageInputs = [...imagesRaw, ...assetsImagesRaw, ...imageAssets]
+        const tableInputs = [...tablesRaw, ...assetsTablesRaw, ...tableAssets, ...htmlTablesRaw]
+
         return {
           id: topic.id ?? (topic as Record<string, string>)?.topic_id ?? `topic-${docIdx}-${topicIdx}`,
           title: topic.title ?? (topic as Record<string, string>)?.topic ?? `Topic ${topicIdx + 1}`,
-          content: topic.content ?? (topic as Record<string, string>)?.text ?? "",
-          images: images.map((img, imgIdx) => ({
-            id: img.id ?? `img-${docIdx}-${topicIdx}-${imgIdx}`,
-            title: img.title ?? img.caption ?? `Image ${imgIdx + 1}`,
-            caption: img.caption,
-            url: img.url ?? "",
-          })),
-          tables: tables.map((tbl, tblIdx) => ({
-            id: tbl.id ?? `table-${docIdx}-${topicIdx}-${tblIdx}`,
-            title: tbl.title ?? `Table ${tblIdx + 1}`,
-            headers: tbl.headers,
-            rows: tbl.rows,
-            html: tbl.html,
-          })),
+          content:
+            topic.content ??
+            (topic as Record<string, string>)?.text ??
+            (topic as Record<string, string>)?.description ??
+            (topic as Record<string, string>)?.summary ??
+            "",
+          images: imageInputs.map((img, imgIdx) => {
+            if (typeof img === "string") {
+              return {
+                id: `img-${docIdx}-${topicIdx}-${imgIdx}`,
+                title: `Image ${imgIdx + 1}`,
+                url: img,
+              }
+            }
+            const imgObj = img as Record<string, unknown>
+            const url = resolveImageUrl(imgObj) ?? ""
+            return {
+              id: (img as AssetsSectionImage)?.id ?? `img-${docIdx}-${topicIdx}-${imgIdx}`,
+              title: (img as AssetsSectionImage)?.title ?? (img as AssetsSectionImage)?.caption ?? `Image ${imgIdx + 1}`,
+              caption: (img as AssetsSectionImage)?.caption,
+              url,
+            }
+          }),
+          tables: tableInputs.map((tbl, tblIdx) => {
+            if (typeof tbl === "string") {
+              return {
+                id: `table-${docIdx}-${topicIdx}-${tblIdx}`,
+                title: `Table ${tblIdx + 1}`,
+                html: tbl,
+              }
+            }
+            const tblObj = tbl as Record<string, unknown>
+            const html = resolveTableHtml(tblObj)
+            return {
+              id: (tbl as AssetsSectionTable)?.id ?? `table-${docIdx}-${topicIdx}-${tblIdx}`,
+              title: (tbl as AssetsSectionTable)?.title ?? `Table ${tblIdx + 1}`,
+              headers: Array.isArray(tblObj.headers)
+                ? tblObj.headers.map((h) => String(h))
+                : (tbl as AssetsSectionTable)?.headers,
+              rows: Array.isArray(tblObj.rows)
+                ? tblObj.rows
+                    .filter((row) => Array.isArray(row))
+                    .map((row) => (row as unknown[]).map((cell) => String(cell)))
+                : (tbl as AssetsSectionTable)?.rows,
+              html,
+            }
+          }),
         }
       }),
     }
@@ -150,9 +301,11 @@ export function MaterialsDialog({
   onMaterialsCountChange,
   materials,
   onMaterialsChange,
-  tenantId = DEFAULT_TENANT,
-  projectId = DEFAULT_PROJECT,
-  sectionNumber = DEFAULT_SECTION,
+  tenantId = MATERIALS_DEFAULTS.tenantId,
+  projectId = MATERIALS_DEFAULTS.projectId,
+  sectionNumber = MATERIALS_DEFAULTS.sectionNumber,
+  bucket = MATERIALS_DEFAULTS.bucket,
+  limit = MATERIALS_DEFAULTS.limit,
 }: MaterialsDialogProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [documents, setDocuments] = useState<AssetsSectionDocument[]>([])
@@ -174,29 +327,37 @@ export function MaterialsDialog({
     setLoading(true)
     setError(null)
     try {
-      const params = new URLSearchParams({
-        tenant_id: tenantId,
-        project_id: projectId,
-        section: sectionNumber,
+      const hardcodedSection = MATERIALS_ASSET_SECTION_FALLBACK
+      const payload = await requestPdfAnalysisApi<AssetsSectionResponse, undefined, {
+        tenant_id: string
+        project_id: string
+        section: string
+        bucket: string
+        limit: number
+      }>({
+        path: "/ncd/assets/section",
+        method: "GET",
+        query: {
+          tenant_id: tenantId,
+          project_id: projectId,
+          section: hardcodedSection,
+          bucket,
+          limit,
+        },
+        allowRedirects: false,
+        suppressErrorLog: true,
       })
-      const res = await fetch(`/api/ncd/assets/section?${params.toString()}`)
-      const payload = (await res.json()) as AssetsSectionResponse & { source?: string }
-      if (!res.ok) {
-        throw new Error(
-          (payload as { error?: string })?.error || (payload as { message?: string })?.message || "Request failed",
-        )
-      }
-      const normalized = normalizeDocuments(payload.documents ?? [], payload.section ?? sectionNumber)
+      const normalized = normalizeDocuments(payload.documents ?? [], payload.section ?? hardcodedSection)
       setDocuments(normalized)
       setSelectedDocumentId((normalized[0]?.id as string | undefined) ?? null)
-      setSource(payload.source ?? res.headers.get("x-assets-section-source"))
+      setSource(payload.source ?? null)
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to load materials"
       setError(msg)
     } finally {
       setLoading(false)
     }
-  }, [projectId, sectionNumber, tenantId])
+  }, [projectId, tenantId, bucket, limit])
 
   useEffect(() => {
     if (open) {
@@ -284,10 +445,10 @@ export function MaterialsDialog({
                 <FileText className="h-5 w-5" />
                 Materials from Module 4
               </DialogTitle>
-              <p className="text-sm text-muted-foreground">
+              <DialogDescription className="text-sm text-muted-foreground">
                 Section {sectionNumber || subsectionId}: {subsectionTitle} • Tenant {tenantId.slice(0, 8)} · Project{" "}
                 {projectId.slice(0, 8)} {source ? `• Source: ${source}` : ""}
-              </p>
+              </DialogDescription>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={fetchAssets} disabled={loading} className="gap-2">
@@ -425,7 +586,7 @@ export function MaterialsDialog({
                             </div>
                             {topic.images && topic.images.length > 0 ? (
                               <div className="space-y-2">
-                                {topic.images.map((img, imgIdx) => (
+                                {topic.images.map((img) => (
                                   <div key={img.id} className="rounded-md border border-border/60 overflow-hidden">
                                     {img.url ? (
                                       <Image
@@ -433,6 +594,8 @@ export function MaterialsDialog({
                                         alt={img.title || "Selected image"}
                                         width={600}
                                         height={340}
+                                        unoptimized
+                                        loader={({ src }) => src}
                                         className="w-full h-36 object-cover bg-muted"
                                       />
                                     ) : (
@@ -459,7 +622,7 @@ export function MaterialsDialog({
                             </div>
                             {topic.tables && topic.tables.length > 0 ? (
                               <div className="space-y-3">
-                                {topic.tables.map((tbl, tblIdx) => {
+                                {topic.tables.map((tbl) => {
                                   const tableData = buildTableData(tbl)
                                   return (
                                     <div key={tbl.id} className="rounded-md border border-border/60 p-2 bg-muted/40 space-y-2">

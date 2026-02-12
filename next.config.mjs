@@ -18,7 +18,9 @@ const nextConfig = {
     unoptimized: true,
   },
   async rewrites() {
-    const apiBase = process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL;
+    const apiBase =
+      process.env.NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_ANALYSIS_API_URL;
     if (!apiBase) return [];
     const normalized = apiBase.replace(/\/+$/, "");
     return [

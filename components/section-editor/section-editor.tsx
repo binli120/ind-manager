@@ -9,7 +9,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TiptapEditor } from "@/components/section-editor/tiptap-editor"
-import { TemplateDialog } from "@/components/section-editor/template-dialog"
+import { TemplateDialog, flattenRows } from "@/components/section-editor/template-dialog"
 import { MaterialsDialog } from "@/components/section-editor/materials-dialog"
 import { MyMaterialsDialog } from "@/components/section-editor/my-materials-dialog"
 import { TableInsertDialog } from "@/components/section-editor/table-insert-dialog"
@@ -19,15 +19,10 @@ import { FileText, Save, CheckCircle2, Trash2, Loader2 } from "lucide-react"
 import type { Section, SubsectionContent } from "@/types/section"
 import type { ImageData, MaterialItem, TableData, TopicData } from "@/components/section-editor/my-materials-dialog"
 import { AddSectionDialog } from "@/components/section-editor/add-section-dialog"
+import { extractSectionNumber } from "@/lib/section-editor/section-number"
 import { useAppDispatch, useAppSelector } from "@/lib/store"
 import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 import { fetchSectionList } from "@/lib/store/slices/sectionListSlice"
-
-const toSectionNumber = (value?: string | null) => {
-  if (!value) return null
-  const match = value.match(/^(\d+(?:\.\d+)*)(?:\s|$)/)
-  return match ? match[1] : null
-}
 
 const escapeHtml = (value: string) =>
   value
@@ -43,6 +38,37 @@ const wrapHtmlContent = (value: string) => {
   const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(trimmed)
   return looksLikeHtml ? trimmed : `<p>${escapeHtml(trimmed)}</p>`
 }
+
+const normalizeTemplateText = (value: string) =>
+  value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .trim()
+
+const buildTemplatePlaceholder = (payload: unknown) => {
+  const rows = flattenRows(payload)
+  if (!rows.length) return ""
+
+  const unique = new Set<string>()
+  const lines: string[] = []
+
+  rows.forEach((row) => {
+    const line = normalizeTemplateText(row.content || row.subsectionHeader || row.sectionHeader || "")
+    if (!line || unique.has(line)) return
+    unique.add(line)
+    lines.push(line)
+  })
+
+  return lines.slice(0, 3).join("\n")
+}
+
+const templatePlaceholderCache = new Map<string, string>()
 
 const buildTableHtml = (table: TableData) => {
   const title = table.title ? `<p><strong>${escapeHtml(table.title)}</strong></p>` : ""
@@ -99,6 +125,7 @@ interface SectionEditorProps {
 
 function SubsectionEditor({
   subsection,
+  fallbackSectionNumber,
   onSave,
   onApprove,
   onDelete,
@@ -106,12 +133,18 @@ function SubsectionEditor({
   total,
 }: {
   subsection: SubsectionContent
+  fallbackSectionNumber?: string
   onSave: (id: string) => void
   onApprove: (id: string) => void
   onDelete: (id: string) => void
   index: number
   total: number
 }) {
+  const effectiveSectionNumber =
+    extractSectionNumber(subsection.subsectionNumber) ||
+    extractSectionNumber(subsection.title) ||
+    extractSectionNumber(fallbackSectionNumber) ||
+    subsection.subsectionNumber
   const [content, setContent] = useState(subsection.content)
   const [showMaterialsDialog, setShowMaterialsDialog] = useState(false)
   const [showMyMaterialsDialog, setShowMyMaterialsDialog] = useState(false)
@@ -124,19 +157,72 @@ function SubsectionEditor({
   const [showTemplate, setShowTemplate] = useState(false)
   const [templateResolving, setTemplateResolving] = useState(false)
   const [templateResolveError, setTemplateResolveError] = useState<string | null>(null)
-  const [resolvedSection, setResolvedSection] = useState(
-    toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber,
-  )
+  const [resolvedSection, setResolvedSection] = useState(effectiveSectionNumber)
   const [showTableInsert, setShowTableInsert] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [templateDisabled, setTemplateDisabled] = useState(false)
+  const [templatePlaceholder, setTemplatePlaceholder] = useState("")
   const userId = useAppSelector((s) => s.auth.user?.id)
   const sectionList = useAppSelector((s) => s.sectionList.data)
+
+  useEffect(() => {
+    setResolvedSection(effectiveSectionNumber)
+  }, [effectiveSectionNumber])
 
   useEffect(() => {
     // Re-enable when user logs in so we can retry
     if (userId) setTemplateDisabled(false)
   }, [userId])
+
+  useEffect(() => {
+    const sectionParam = effectiveSectionNumber
+    const isContentEmpty = normalizeTemplateText(subsection.content || "").length === 0
+    if (!isContentEmpty || !userId || !sectionParam) {
+      setTemplatePlaceholder("")
+      return
+    }
+
+    const cacheKey = `${userId}:${sectionParam}`
+    const cached = templatePlaceholderCache.get(cacheKey)
+    if (cached !== undefined) {
+      setTemplatePlaceholder(cached)
+      return
+    }
+
+    let cancelled = false
+    const loadTemplatePlaceholder = async () => {
+      try {
+        const response = await requestPdfAnalysisApi<
+          Record<string, unknown>,
+          undefined,
+          { section: string }
+        >({
+          path: "/ncd/template",
+          method: "GET",
+          query: { section: sectionParam },
+          headers: { "user-id": userId },
+          userIdHeader: userId,
+          allowRedirects: false,
+          suppressErrorLog: true,
+        })
+        const placeholder = buildTemplatePlaceholder(response)
+        templatePlaceholderCache.set(cacheKey, placeholder)
+        if (!cancelled) {
+          setTemplatePlaceholder(placeholder)
+        }
+      } catch {
+        templatePlaceholderCache.set(cacheKey, "")
+        if (!cancelled) {
+          setTemplatePlaceholder("")
+        }
+      }
+    }
+    void loadTemplatePlaceholder()
+
+    return () => {
+      cancelled = true
+    }
+  }, [effectiveSectionNumber, subsection.content, userId])
 
   useEffect(() => {
     const retryTemplate = async () => {
@@ -149,7 +235,7 @@ function SubsectionEditor({
         >({
           path: "/ncd/template",
           method: "GET",
-          query: { section: toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber },
+          query: { section: effectiveSectionNumber },
           userIdHeader: userId,
         })
         const rows = Array.isArray(response)
@@ -161,7 +247,7 @@ function SubsectionEditor({
       }
     }
     void retryTemplate()
-  }, [templateDisabled, userId, subsection.subsectionNumber])
+  }, [templateDisabled, userId, effectiveSectionNumber])
 
   const [isAnimating, setIsAnimating] = useState(subsection.isUserAdded)
 
@@ -308,7 +394,7 @@ function SubsectionEditor({
       const label = text.includes("—") ? text.split("—").pop()?.trim() : text
       if (!title || !label) continue
       if (label.toLowerCase() === title || text.toLowerCase() === title || text.endsWith(subsection.title || "")) {
-        return value || toSectionNumber(text) || null
+        return value || extractSectionNumber(text) || null
       }
     }
     return null
@@ -316,7 +402,7 @@ function SubsectionEditor({
 
   const handleOpenTemplate = async () => {
     setTemplateResolveError(null)
-    const direct = toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber
+    const direct = effectiveSectionNumber
     if (direct) {
       setResolvedSection(direct)
       setShowTemplate(true)
@@ -369,7 +455,7 @@ function SubsectionEditor({
             <Badge variant="outline" className="font-mono text-xs px-2 py-1">
               {index + 1} of {total}
             </Badge>
-            <span className="text-base font-bold text-foreground">{subsection.subsectionNumber}</span>
+            <span className="text-base font-bold text-foreground">{effectiveSectionNumber}</span>
             {subsection.isCategory && subsection.title && (
               <span className="text-sm text-muted-foreground">{subsection.title}</span>
             )}
@@ -437,13 +523,14 @@ function SubsectionEditor({
           onOpenMaterials={() => setShowMyMaterialsDialog(true)}
           onAiGenerate={handleAiGenerate}
           aiGenerating={aiLoading}
-          sectionNumber={subsection.subsectionNumber}
+          sectionNumber={effectiveSectionNumber}
+          placeholder={templatePlaceholder}
         />
       </div>
 
       <div className="border-t border-border px-6 py-4 bg-card/80 backdrop-blur-sm" data-tour="save-approve">
         <div className="flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">Section {subsection.subsectionNumber}</div>
+          <div className="text-xs text-muted-foreground">Section {effectiveSectionNumber}</div>
           <div className="flex gap-3">
             <Button variant="outline" className="gap-2 bg-transparent" onClick={() => onSave(subsection.id)}>
               <Save className="h-4 w-4" />
@@ -465,7 +552,7 @@ function SubsectionEditor({
         onOpenChange={setShowTemplate}
         section={{
           id: subsection.id,
-          number: resolvedSection || toSectionNumber(subsection.subsectionNumber) || subsection.subsectionNumber,
+          number: resolvedSection || effectiveSectionNumber,
           title: subsection.title,
         }}
         onUnavailable={() => setTemplateDisabled(true)}
@@ -505,7 +592,7 @@ function SubsectionEditor({
       <DeleteSubsectionDialog
         open={showDeleteDialog}
         onOpenChangeAction={setShowDeleteDialog}
-        subsectionNumber={subsection.subsectionNumber}
+        subsectionNumber={effectiveSectionNumber}
         onConfirm={() => onDelete(subsection.id)}
       />
 
@@ -552,13 +639,14 @@ export function SectionEditor({
   const userId = useAppSelector((s) => s.auth.user?.id)
   const sectionList = useAppSelector((s) => s.sectionList.data)
   const sectionListLoading = useAppSelector((s) => s.sectionList.loading)
+  const sectionListError = useAppSelector((s) => s.sectionList.error)
   const [showAddDialog, setShowAddDialog] = useState(false)
 
   useEffect(() => {
     if (!userId) return
-    if (sectionList || sectionListLoading) return
+    if (sectionList || sectionListLoading || sectionListError) return
     void dispatch(fetchSectionList({ userId }))
-  }, [dispatch, userId, sectionList, sectionListLoading])
+  }, [dispatch, userId, sectionList, sectionListLoading, sectionListError])
 
   const scrollToSubsection = (subsectionNumber: string) => {
     const element = document.getElementById(`section-${subsectionNumber}`)
@@ -679,6 +767,7 @@ export function SectionEditor({
             <div key={subsection.id}>
               <SubsectionEditor
                 subsection={subsection}
+                fallbackSectionNumber={baseSectionNumber}
                 onSave={() => {}}
                 onApprove={() => {}}
                 onDelete={onDeleteSubsection}

@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 // Central exports for store slices: reducers, thunks, actions, and shared types.
 
 export {

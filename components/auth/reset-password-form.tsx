@@ -10,44 +10,40 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useAsyncTask } from '@/hooks/useAsyncTask';
 import { validatePassword } from '@/utils/validatePassword';
 
 export function ResetPasswordForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const { updatePassword } = useAuth();
+  const updatePasswordTask = useAsyncTask(
+    async (nextPassword: string) => {
+      const { error } = await updatePassword(nextPassword);
+      if (error) {
+        throw error;
+      }
+    },
+    undefined,
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
     setMessage(null);
 
     const validationError = validatePassword(password, confirmPassword);
     if (validationError) {
-      setError(validationError);
-      setLoading(false);
+      updatePasswordTask.setError(validationError);
       return;
     }
 
-    try {
-      const { error } = await updatePassword(password);
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setMessage('Password updated successfully! Redirecting...');
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 1000);
-      }
-    } catch {
-      setError('An unexpected error occurred');
-    } finally {
-      setLoading(false);
+    const result = await updatePasswordTask.run(password);
+    if (!result.error) {
+      setMessage('Password updated successfully! Redirecting...');
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     }
   };
 
@@ -59,9 +55,9 @@ export function ResetPasswordForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
+          {updatePasswordTask.error && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{updatePasswordTask.error}</AlertDescription>
             </Alert>
           )}
 
@@ -95,8 +91,8 @@ export function ResetPasswordForm() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Updating...' : 'Update Password'}
+          <Button type="submit" className="w-full" disabled={updatePasswordTask.isLoading}>
+            {updatePasswordTask.isLoading ? 'Updating...' : 'Update Password'}
           </Button>
         </form>
       </CardContent>

@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 /**
  * 1️⃣ Email – RFC‑5322-ish, but not 100 % exhaustive.
  */

@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import React, { Component } from 'react';
 
 type ErrorBoundaryProps = {

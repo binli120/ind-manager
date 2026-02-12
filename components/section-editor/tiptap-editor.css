@@ -1,5 +1,9 @@
 .ProseMirror {
   color: var(--color-foreground);
+  font-family: var(--font-editor), "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.02rem;
+  line-height: 1.72;
+  letter-spacing: 0.002em;
 }
 
 .ProseMirror p {
@@ -10,6 +14,7 @@
 .ProseMirror h1,
 .ProseMirror h2,
 .ProseMirror h3 {
+  font-family: var(--font-sans), sans-serif;
   font-weight: 600;
   margin-top: 1.5em;
   margin-bottom: 0.5em;

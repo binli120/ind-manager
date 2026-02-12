@@ -1,4 +1,9 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import type { User } from "@/lib/store/slices";
+import { isAdminEmail } from "@/lib/utils";
 
 export type AccessDecision = {
   allowed: boolean;
@@ -6,7 +11,12 @@ export type AccessDecision = {
   reason?: string;
 };
 
-const adminPrivileges = ["system_admin", "user_manager"] as const;
+const adminPrivileges = [
+  "system_admin",
+  "user_manager",
+  "admin",
+  "system_administrator",
+] as const;
 const projectRoles = [
   "project_owner",
   "project_lead",
@@ -22,13 +32,20 @@ const projectPaths = [
   /^\/analysis(\/|$)/,
 ];
 
-const isAdmin = (privilege?: string | null) =>
-  privilege != null &&
-  adminPrivileges.includes(privilege as (typeof adminPrivileges)[number]);
+const isAdmin = (
+  privilege?: string | null,
+  role?: string | null,
+  email?: string | null,
+) =>
+  (privilege != null &&
+    adminPrivileges.includes(privilege as (typeof adminPrivileges)[number])) ||
+  (role != null &&
+    adminPrivileges.includes(role as (typeof adminPrivileges)[number])) ||
+  isAdminEmail(email);
 
 const hasProjectAccess = (user?: User | null) => {
   if (!user) return false;
-  if (isAdmin(user.privilege)) return true;
+  if (isAdmin(user.privilege, user.role, user.email)) return true;
   if (
     user.role &&
     projectRoles.includes(user.role as (typeof projectRoles)[number])
@@ -71,7 +88,7 @@ export function canAccessPath(
   }
 
   if (adminPaths.some((regex) => regex.test(path))) {
-    if (isAdmin(user.privilege)) return { allowed: true };
+    if (isAdmin(user.privilege, user.role, user.email)) return { allowed: true };
     return { allowed: false, redirectTo: baseRedirect, reason: "admin_only" };
   }
 

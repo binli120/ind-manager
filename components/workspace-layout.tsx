@@ -6,6 +6,7 @@
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
 import { Button } from '@/components/ui/button';
+import { ThemedLoadingScreen } from '@/components/ui/themed-loading-screen';
 import {
   Dialog,
   DialogContent,
@@ -16,10 +17,10 @@ import {
 } from '@/components/ui/dialog';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 import { setCommentsPanelOpen, setSidebarOpen } from '@/lib/store/slices/uiSlice';
+import { authServices } from '@/lib/auth/auth-services';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { authServices } from '@/app/api/auth/auth-services';
-import type { UserPrivilege } from '@/components/ui/users/users-page';
+import { isAdminEmail } from '@/lib/utils';
 
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -50,19 +51,44 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     setShowNoProjectDialog(shouldLockWorkspace);
   }, [shouldLockWorkspace]);
 
-  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<UserPrivilege | ''>('');
+  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<string>('user');
 
   useEffect(() => {
-    async function getUserPrivilege() {
-      const authData = await authServices.getUser();
-      const authUser = authData.data?.user;
-      if (authUser) {
-        const privilege = (authUser?.user_metadata?.privilege as UserPrivilege) ?? 'user';
-        setCurrentUserPrivilege(privilege);
-      }
+    const privilege = typeof user?.privilege === 'string' ? user.privilege : null;
+    const role = typeof user?.role === 'string' ? user.role : null;
+    const email = typeof user?.email === 'string' ? user.email : null;
+    const adminValues = new Set([
+      'system_admin',
+      'user_manager',
+      'admin',
+      'system_administrator',
+    ]);
+
+    if (email && isAdminEmail(email)) {
+      setCurrentUserPrivilege('system_admin');
+      return;
     }
-    getUserPrivilege();
-  }, []);
+
+    if (role && adminValues.has(role)) {
+      setCurrentUserPrivilege(role);
+      return;
+    }
+
+    if (privilege && adminValues.has(privilege)) {
+      setCurrentUserPrivilege(privilege);
+      return;
+    }
+
+    if (privilege) {
+      setCurrentUserPrivilege(privilege);
+      return;
+    }
+    if (role) {
+      setCurrentUserPrivilege(role);
+      return;
+    }
+    setCurrentUserPrivilege('user');
+  }, [user?.privilege, user?.role, user?.email]);
 
   const handleToggleSidebar = () => {
     dispatch(setSidebarOpen(!sidebarOpen));
@@ -113,11 +139,12 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
 
         {isAuthenticated &&
           ((!hasLoadedOnce && !projectsError) || isProjectsLoading || isAuthLoading) && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-10 w-10 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
-                <p className="text-sm text-muted-foreground">Loading workspace…</p>
-              </div>
+            <div className="fixed inset-0 z-50">
+              <ThemedLoadingScreen
+                fullScreen={false}
+                message="Loading workspace..."
+                detail="Fetching IND projects, regulatory modules, and collaboration data."
+              />
             </div>
           )}
       </div>

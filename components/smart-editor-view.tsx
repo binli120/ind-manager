@@ -20,10 +20,28 @@ import {
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useProject } from '@/hooks/useProject';
 import { useTenant } from '@/hooks/useTenant';
+import {
+  buildTreeCacheKey,
+  deriveSmartEditorContext,
+  fetchSectionTree,
+  fetchSignedProjectAsset,
+  loadCachedTree,
+  markdownToHtml,
+  saveTreeCache,
+  toSectionNumber,
+} from '@/lib/smart-editor/smartEditorViewModel';
+import {
+  addSubsectionForSelection,
+  buildUploadedSection,
+  deleteSubsectionFromSection,
+  findParentSectionForSubsection,
+  reorderSubsectionsInSection,
+  toRelativeS3Key,
+} from '@/lib/smart-editor/sectionTreeModel';
 import { upsertSectionPath } from '@/lib/section-tree';
 import type { Section, SubsectionContent } from '@/types/section';
 import { HelpCircle, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 // Default empty template; actual sections are fetched from S3.
 // No hardcoded template; always load from S3
@@ -53,84 +71,15 @@ export function SmartEditorView() {
   const [usedCachedTree, setUsedCachedTree] = useState(false);
   const [treeCacheKey, setTreeCacheKey] = useState<string | null>(null);
 
-  const deriveCompany = () => {
-    let companyValue: string | undefined;
-    if (
-      currentProject?.metadata &&
-      typeof currentProject.metadata === 'object' &&
-      currentProject.metadata !== null
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const m = currentProject.metadata as any;
-      if (m.company) companyValue = String(m.company);
-    }
-    const tenantEntry = tenants.find((t) => t.id === selectedTenantId);
-    if (!companyValue) {
-      companyValue =
-        tenantEntry?.name ||
-        currentProject?.tenantId ||
-        selectedTenantId ||
-        'unknown-company';
-    }
-    return companyValue;
-  };
-
-  const deriveProjectName = () => {
-    let projectNameValue: string | undefined;
-    if (
-      currentProject?.metadata &&
-      typeof currentProject.metadata === 'object' &&
-      currentProject.metadata !== null
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const m = currentProject.metadata as any;
-      if (m.ind_title) projectNameValue = String(m.ind_title);
-    }
-    if (!projectNameValue) {
-      projectNameValue =
-        currentProject?.title ||
-        currentProject?.code ||
-        currentProject?.id ||
-        'unknown-project';
-    }
-    return projectNameValue;
-  };
-
-  const companyValue = deriveCompany();
-  const projectNameValue = deriveProjectName();
-  const derivePrimaryS3Key = () => {
-    if (
-      currentProject?.metadata &&
-      typeof currentProject.metadata === 'object' &&
-      currentProject.metadata !== null &&
-      'primaryDocumentS3Key' in currentProject.metadata
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const m = currentProject.metadata as any;
-      if (m.primaryDocumentS3Key) return String(m.primaryDocumentS3Key);
-    }
-    return undefined;
-  };
-  const primaryS3Key = derivePrimaryS3Key();
-
-  const markdownToHtml = (md: string) => {
-    const escapeHtml = (str: string) =>
-      str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-
-    const escaped = escapeHtml(md);
-    const blocks = escaped
-      .replace(/\r\n/g, '\n')
-      .split(/\n{2,}/)
-      .map((block) => `<p>${block.replace(/\n/g, '<br />')}</p>`)
-      .join('');
-
-    return blocks || '<p></p>';
-  };
+  const { companyValue, projectNameValue, primaryS3Key } = useMemo(
+    () =>
+      deriveSmartEditorContext({
+        currentProject,
+        tenants,
+        selectedTenantId,
+      }),
+    [currentProject, tenants, selectedTenantId],
+  );
 
   useEffect(() => {
     if (!hasSeenTour) {
@@ -159,42 +108,6 @@ export function SmartEditorView() {
   }, [sectionData, selectedSection]);
 
   // Load section tree from S3 based on the selected project
-  const buildTreeCacheKey = (
-    projectId: string,
-    s3Key?: string,
-    company?: string,
-    projectName?: string,
-  ) =>
-    [
-      'sectionTree',
-      projectId || 'no-project',
-      s3Key || 'no-s3key',
-      company || 'no-company',
-      projectName || 'no-projectName',
-    ].join(':');
-
-  const loadCachedTree = (key: string) => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const raw = sessionStorage.getItem(key);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as { ts: number; sections: Section[] };
-      const tenMinutes = 10 * 60 * 1000;
-      if (Date.now() - parsed.ts > tenMinutes) return null;
-      return parsed.sections;
-    } catch {
-      return null;
-    }
-  };
-
-  const saveTreeCache = (key: string, sections: Section[]) => {
-    if (typeof window === 'undefined') return;
-    try {
-      sessionStorage.setItem(key, JSON.stringify({ ts: Date.now(), sections }));
-    } catch {
-      // ignore quota errors
-    }
-  };
 
   useEffect(() => {
     const loadTree = async () => {
@@ -212,60 +125,11 @@ export function SmartEditorView() {
       setTreeError(null);
 
       try {
-        const s3Key =
-          typeof currentProject?.metadata === 'object' &&
-          currentProject?.metadata !== null &&
-          'primaryDocumentS3Key' in currentProject.metadata
-            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (currentProject.metadata as any).primaryDocumentS3Key
-            : undefined;
-
-        const url = new URL(
-          `/api/projects/${selectedProjectId}/sections`,
-          window.location.origin,
-        );
-        if (s3Key) {
-          url.searchParams.set('s3Key', s3Key);
-        }
-        let companyValue: string | undefined;
-        let projectNameValue: string | undefined;
-
-        if (
-          currentProject?.metadata &&
-          typeof currentProject.metadata === 'object' &&
-          currentProject.metadata !== null
-        ) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const m = currentProject.metadata as any;
-          if (m.company) companyValue = String(m.company);
-          if (m.ind_title) projectNameValue = String(m.ind_title);
-        }
-
-        const tenantEntry = tenants.find((t) => t.id === selectedTenantId);
-        if (!companyValue) {
-          companyValue =
-            tenantEntry?.name ||
-            currentProject?.tenantId ||
-            selectedTenantId ||
-            'unknown-company';
-        }
-
-        if (!projectNameValue) {
-          projectNameValue =
-            currentProject?.title ||
-            currentProject?.code ||
-            currentProject?.id ||
-            'unknown-project';
-        }
-
-        url.searchParams.set('company', companyValue);
-        url.searchParams.set('projectName', projectNameValue);
-
         const abort = new AbortController();
         abortTimer = setTimeout(() => abort.abort(), 30000);
         const cacheKey = buildTreeCacheKey(
           selectedProjectId,
-          s3Key || undefined,
+          primaryS3Key || undefined,
           companyValue,
           projectNameValue,
         );
@@ -280,18 +144,13 @@ export function SmartEditorView() {
           setIsLoadingTree(false);
         }
 
-        const res = await fetch(url.toString(), { signal: abort.signal });
-        if (!res.ok) {
-          const errPayload = await res.json().catch(() => null);
-          throw new Error(
-            errPayload?.message ||
-              errPayload?.error ||
-              'Failed to load section tree',
-          );
-        }
-
-        const payload = await res.json();
-        const fetchedSections = (payload?.sections ?? []) as Section[];
+        const fetchedSections = await fetchSectionTree({
+          projectId: selectedProjectId,
+          s3Key: primaryS3Key || undefined,
+          company: companyValue,
+          projectName: projectNameValue,
+          signal: abort.signal,
+        });
 
         setSectionData(fetchedSections);
         setSelectedSection(fetchedSections[0] ?? null);
@@ -321,16 +180,16 @@ export function SmartEditorView() {
     loadTree();
   }, [
     selectedProjectId,
-    currentProject,
-    selectedTenantId,
-    tenants,
+    primaryS3Key,
+    companyValue,
+    projectNameValue,
     treeRetryKey,
   ]);
 
   // Load file content (md or pdf) when a file subsection is selected
   useEffect(() => {
     const loadFile = async () => {
-      if (!selectedSubsection || selectedSubsection.isCategory) {
+      if (!selectedSubsection || selectedSubsection.isCategory || !selectedProjectId) {
         setFileMode(null);
         setFileUrl(null);
         setFileText(null);
@@ -339,9 +198,7 @@ export function SmartEditorView() {
         return;
       }
 
-      const fullPath =
-        (selectedSubsection as { fullPath?: string }).fullPath ||
-        selectedSubsection.title;
+      const fullPath = selectedSubsection.fullPath || selectedSubsection.title;
 
       console.info('[SmartEditor] file selection', {
         id: selectedSubsection.id,
@@ -357,32 +214,14 @@ export function SmartEditorView() {
 
       const mdKey = `${fullPath}.extracted.md`;
 
-      const fetchSigned = async (
-        key: string,
-        format: 'url' | 'text' = 'url',
-      ) => {
-        console.info(
-          '[SmartEditor] signing url for key',
-          key,
-          'format',
-          format,
-        );
-        const url = new URL(
-          `/api/projects/${selectedProjectId}/asset`,
-          window.location.origin,
-        );
-        url.searchParams.set('key', key);
-        url.searchParams.set('format', format);
-        const res = await fetch(url.toString());
-        if (!res.ok) throw new Error(`asset api failed ${res.status}`);
-        const payload = await res.json();
-        return payload;
-      };
-
       try {
         // Try markdown sidecar first
-        const mdPayload = await fetchSigned(mdKey, 'text');
-        const mdText = (mdPayload as { text?: string }).text;
+        const mdPayload = await fetchSignedProjectAsset<{ text?: string }>({
+          projectId: selectedProjectId,
+          key: mdKey,
+          format: 'text',
+        });
+        const mdText = mdPayload.text;
         if (!mdText) {
           throw new Error('md sidecar empty');
         }
@@ -395,8 +234,12 @@ export function SmartEditorView() {
       } catch (mdError) {
         console.warn('[SmartEditor] markdown sidecar missing', mdKey, mdError);
         try {
-          const pdfPayload = await fetchSigned(fullPath, 'url');
-          setFileUrl((pdfPayload as { url: string }).url);
+          const pdfPayload = await fetchSignedProjectAsset<{ url: string }>({
+            projectId: selectedProjectId,
+            key: fullPath,
+            format: 'url',
+          });
+          setFileUrl(pdfPayload.url);
           setFileMode('pdf');
         } catch (pdfError) {
           setFileError(
@@ -424,15 +267,9 @@ export function SmartEditorView() {
 
   const handleSelectSubsection = (subsection: SubsectionContent) => {
     setSelectedSubsection(subsection);
-    const parentSection = sectionData.find((s) => {
-      const findInSubsections = (subs: SubsectionContent[]): boolean => {
-        return subs.some((sub) => {
-          if (sub.id === subsection.id) return true;
-          if (sub.subsections) return findInSubsections(sub.subsections);
-          return false;
-        });
-      };
-      return s.subsections && findInSubsections(s.subsections);
+    const parentSection = findParentSectionForSubsection({
+      sections: sectionData,
+      subsectionId: subsection.id,
     });
 
     if (
@@ -446,91 +283,22 @@ export function SmartEditorView() {
 
   const handleAddSubsection = (subsectionNumber: string, header: string) => {
     console.log('[v0] Adding subsection:', subsectionNumber, header);
-
-    const newSubsection: SubsectionContent = {
-      id: `new-${Date.now()}`,
-      subsectionNumber,
-      title: header,
-      header,
-      content: '',
-      isRequired: false,
-      status: 'draft',
-      isUserAdded: true,
-    };
-
-    let shouldUpdateSelection = false;
-    let newParentSubsection: SubsectionContent | null = null;
-
     if (!selectedSection) return;
-    if (!selectedSection) return;
-    if (!selectedSection) return;
-    if (!selectedSection) return;
-    setSectionData((prevSections) =>
-      prevSections.map((section) => {
-        if (section.id === selectedSection.id) {
-          // Helper function to recursively add subsection to the correct parent
-          const addSubsectionRecursive = (
-            subs: SubsectionContent[],
-          ): SubsectionContent[] => {
-            // If we're viewing a category subsection, add to its children
-            if (selectedSubsection?.isCategory) {
-              return subs.map((sub) => {
-                if (sub.id === selectedSubsection.id) {
-                  shouldUpdateSelection = true;
-                  newParentSubsection = {
-                    ...sub,
-                    subsections: [...(sub.subsections || []), newSubsection],
-                  };
-                  return newParentSubsection;
-                }
-                if (sub.subsections) {
-                  return {
-                    ...sub,
-                    subsections: addSubsectionRecursive(sub.subsections),
-                  };
-                }
-                return sub;
-              });
-            }
-            // If we're viewing a regular subsection's parent
-            else if (selectedSubsection) {
-              return subs.map((sub) => {
-                // Check if this sub contains our selected subsection
-                if (
-                  sub.subsections?.some((s) => s.id === selectedSubsection.id)
-                ) {
-                  shouldUpdateSelection = true;
-                  newParentSubsection = {
-                    ...sub,
-                    subsections: [...(sub.subsections || []), newSubsection],
-                  };
-                  return newParentSubsection;
-                }
-                if (sub.subsections) {
-                  return {
-                    ...sub,
-                    subsections: addSubsectionRecursive(sub.subsections),
-                  };
-                }
-                return sub;
-              });
-            }
-            // No specific subsection selected, add to top level
-            return [...subs, newSubsection];
-          };
 
-          return {
-            ...section,
-            subsections: addSubsectionRecursive(section.subsections || []),
-          };
-        }
-        return section;
-      }),
-    );
+    const { sections: nextSections, nextSelectedSubsection } =
+      addSubsectionForSelection({
+        sections: sectionData,
+        selectedSectionId: selectedSection.id,
+        selectedSubsection,
+        subsectionNumber,
+        header,
+      });
 
-    if (shouldUpdateSelection && newParentSubsection) {
+    setSectionData(nextSections);
+
+    if (nextSelectedSubsection) {
       setTimeout(() => {
-        setSelectedSubsection(newParentSubsection);
+        setSelectedSubsection(nextSelectedSubsection);
         setTimeout(() => {
           const element = document.getElementById(
             `section-${subsectionNumber}`,
@@ -554,18 +322,10 @@ export function SmartEditorView() {
     templateNumber: string,
     createdKey?: string,
   ) => {
-    const toRelativeKey = (uri: string) => {
-      if (uri.startsWith('s3://')) {
-        const parts = uri.replace('s3://', '').split('/');
-        return parts.slice(1).join('/');
-      }
-      return uri;
-    };
-
     const result = upsertSectionPath(sectionData, templateNumber);
 
     if (createdKey) {
-      const relKey = toRelativeKey(createdKey);
+      const relKey = toRelativeS3Key(createdKey);
       result.leaf.fullPath = relKey;
     }
 
@@ -598,49 +358,18 @@ export function SmartEditorView() {
 
   const handleUploadComplete = (sectionNumber: string, fileName: string) => {
     console.log('[v0] PDF uploaded:', fileName, 'Section:', sectionNumber);
-
-    // Create new section from uploaded PDF
-    const newSection: Section = {
-      id: `uploaded-${Date.now()}`,
-      number: sectionNumber,
-      title: fileName.replace('.pdf', ''),
-      parentSection: sectionNumber.split('.').slice(0, -1).join('.'),
-      isRequired: false,
-      status: 'draft',
-      isCategory: false,
-      isUserAdded: false,
-    };
-
+    const newSection = buildUploadedSection({ sectionNumber, fileName });
     setSectionData((prev) => [...prev, newSection]);
   };
 
   const handleDeleteSubsection = (subsectionId: string) => {
     console.log('[v0] Deleting subsection:', subsectionId);
 
-    if (!selectedSection) return;
     setSectionData((prevSections) =>
-      prevSections.map((section) => {
-        if (section.id === selectedSection.id) {
-          // Helper function to recursively remove subsection
-          const removeSubsectionRecursive = (
-            subs: SubsectionContent[],
-          ): SubsectionContent[] => {
-            return subs
-              .filter((sub) => sub.id !== subsectionId)
-              .map((sub) => ({
-                ...sub,
-                subsections: sub.subsections
-                  ? removeSubsectionRecursive(sub.subsections)
-                  : undefined,
-              }));
-          };
-
-          return {
-            ...section,
-            subsections: removeSubsectionRecursive(section.subsections || []),
-          };
-        }
-        return section;
+      deleteSubsectionFromSection({
+        sections: prevSections,
+        selectedSectionId: selectedSection?.id ?? null,
+        subsectionId,
       }),
     );
 
@@ -664,41 +393,12 @@ export function SmartEditorView() {
       parentId,
     );
 
-    if (!selectedSection) return;
     setSectionData((prevSections) =>
-      prevSections.map((section) => {
-        if (section.id === selectedSection.id) {
-          // Helper function to reorder subsections recursively
-          const reorderSubsectionsRecursive = (
-            subs: SubsectionContent[],
-          ): SubsectionContent[] => {
-            // Find the dragged and target items
-            const draggedIndex = subs.findIndex((s) => s.id === draggedId);
-            const targetIndex = subs.findIndex((s) => s.id === targetId);
-
-            // If both found at this level, reorder them
-            if (draggedIndex !== -1 && targetIndex !== -1) {
-              const newSubs = [...subs];
-              const [draggedItem] = newSubs.splice(draggedIndex, 1);
-              newSubs.splice(targetIndex, 0, draggedItem);
-              return newSubs;
-            }
-
-            // Otherwise, recurse into nested subsections
-            return subs.map((sub) => ({
-              ...sub,
-              subsections: sub.subsections
-                ? reorderSubsectionsRecursive(sub.subsections)
-                : undefined,
-            }));
-          };
-
-          return {
-            ...section,
-            subsections: reorderSubsectionsRecursive(section.subsections || []),
-          };
-        }
-        return section;
+      reorderSubsectionsInSection({
+        sections: prevSections,
+        selectedSectionId: selectedSection?.id ?? null,
+        draggedId,
+        targetId,
       }),
     );
   };
@@ -809,7 +509,11 @@ export function SmartEditorView() {
                   onChange={() => {}}
                   readOnly={false}
                   hideToolbar={false}
-                  sectionNumber={selectedSubsection?.subsectionNumber}
+                  sectionNumber={
+                    toSectionNumber(selectedSubsection?.subsectionNumber) ||
+                    toSectionNumber(selectedSection?.number) ||
+                    selectedSubsection?.subsectionNumber
+                  }
                 />
               </div>
             )}

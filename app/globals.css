@@ -88,8 +88,8 @@
   --color-warning: var(--warning);
   --color-error: var(--error);
   --color-info: var(--info);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-ui-sans);
+  --font-mono: var(--font-ui-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -133,7 +133,10 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-weight: 300;
+    font-feature-settings: "ss01", "cv05", "cv11";
+    text-rendering: optimizeLegibility;
   }
 }
 
@@ -174,10 +177,8 @@
   --sidebar-border: oklch(0.92 0 0);
   --sidebar-ring: oklch(0.45 0.15 142);
 
-  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas,
-    "Liberation Mono", Menlo, monospace;
+  --font-sans: var(--font-ui-sans);
+  --font-mono: var(--font-ui-mono);
 }
 
 .dark .smart-editor-theme {
@@ -280,8 +281,7 @@
 
 .markdown-view {
   white-space: pre-wrap;
-  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco,
-    "Liberation Mono", "Courier New", monospace;
+  font-family: var(--font-mono), monospace;
   background-color: rgba(15, 23, 42, 0.04);
   border-radius: 0.5rem;
   padding: 1rem;

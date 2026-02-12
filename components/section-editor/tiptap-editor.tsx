@@ -37,6 +37,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { SMART_ASSISTANT_TRIGGER_KEYWORDS } from "@/lib/section-editor/constants"
 import { SmartAssistantBubble } from "@/components/section-editor/smart-assistant-bubble"
 import { CommentPopup } from "@/components/section-editor/comment-popup"
 import { TableInsertDialog } from "@/components/section-editor/table-insert-dialog"
@@ -60,6 +61,7 @@ interface TiptapEditorProps {
   sectionNumber?: string
   readOnly?: boolean
   hideToolbar?: boolean
+  placeholder?: string
 }
 
 export function TiptapEditor({
@@ -72,6 +74,7 @@ export function TiptapEditor({
   sectionNumber,
   readOnly = false,
   hideToolbar = false,
+  placeholder = "",
 }: TiptapEditorProps) {
   const [showBubble, setShowBubble] = useState(false)
   const [bubblePosition, setBubblePosition] = useState({ top: 0, left: 0 })
@@ -83,6 +86,7 @@ export function TiptapEditor({
   const [currentCursorPosition, setCurrentCursorPosition] = useState(0)
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
   const [showTableDialog, setShowTableDialog] = useState(false)
+  const [isEditorEmpty, setIsEditorEmpty] = useState(true)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const editorRef = useRef<HTMLDivElement>(null)
 
@@ -111,11 +115,14 @@ export function TiptapEditor({
       if (readOnly) return
       const newContent = editor.getHTML()
       onChange(newContent)
+      setIsEditorEmpty(editor.getText().trim().length === 0)
       console.info("[materials] editor onUpdate", { length: newContent.length })
 
       if (!isReviewMode) {
         const text = editor.getText().toLowerCase()
-        const foundKeyword = TRIGGER_KEYWORDS.find((keyword) => text.includes(keyword))
+        const foundKeyword = SMART_ASSISTANT_TRIGGER_KEYWORDS.find((keyword) =>
+          text.includes(keyword),
+        )
 
         if (foundKeyword) {
           if (typingTimeoutRef.current) {
@@ -218,6 +225,7 @@ export function TiptapEditor({
       console.info("[materials] syncing editor content from prop", { newLength: content.length, oldLength: currentHtml.length })
       editor.commands.setContent(content)
     }
+    setIsEditorEmpty(editor.getText().trim().length === 0)
   }, [content, editor])
 
   const handleSaveComment = (commentText: string) => {
@@ -501,7 +509,12 @@ export function TiptapEditor({
           </div>
         )}
 
-        <div className={cn(isReviewMode && "cursor-pointer")}>
+        <div className={cn("relative", isReviewMode && "cursor-pointer")}>
+          {placeholder.trim() && isEditorEmpty && !readOnly && (
+            <div className="pointer-events-none absolute left-4 right-4 top-3 text-sm text-muted-foreground/70 whitespace-pre-wrap">
+              {placeholder}
+            </div>
+          )}
           <EditorContent editor={editor} />
         </div>
       </div>
@@ -528,14 +541,3 @@ export function TiptapEditor({
     </>
   )
 }
-
-const TRIGGER_KEYWORDS = [
-  "pharmacology",
-  "pharmacokinetic",
-  "toxicology",
-  "nonclinical",
-  "kinase inhibitor",
-  "efficacy",
-  "safety",
-  "bioavailability",
-]

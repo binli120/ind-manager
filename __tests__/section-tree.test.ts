@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { upsertSectionPath } from "@/lib/section-tree"
 import type { Section } from "@/types/section"
 

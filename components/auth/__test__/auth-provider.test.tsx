@@ -10,7 +10,7 @@ jest.mock('@/lib/store', () => ({
   useAppDispatch: () => mockDispatch,
 }))
 
-jest.mock('@/app/api/auth/auth-services', () => ({
+jest.mock('@/lib/auth/auth-services', () => ({
   authServices: {
     signIn: jest.fn(),
     signUp: jest.fn(),
@@ -24,7 +24,7 @@ jest.mock('@/app/api/auth/auth-services', () => ({
 }))
 
 import { AuthProvider, useAuth } from '@/components/auth/auth-provider'
-import { authServices } from '@/app/api/auth/auth-services'
+import { authServices } from '@/lib/auth/auth-services'
 
 function Consumer() {
   const { loading, signIn } = useAuth()

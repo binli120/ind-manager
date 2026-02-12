@@ -1,3 +1,9 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
+import { resolvePdfAnalysisApiBaseUrl } from "@/lib/common/pdfAnalysisApiBaseUrl";
+
 export type LabelCandidate = {
   section_number: string;
   section_title?: string;
@@ -13,21 +19,13 @@ export type LabelUploadResponse = {
   candidates?: LabelCandidate[];
 };
 
-/**
- * Call the local relabeling service running at http://localhost:8080/ncd/label-upload
- * with a multipart/form-data upload.
- */
 export async function labelUploadedDocument(
   file: File,
   options: { page_limit?: number; use_llm?: boolean; signal?: AbortSignal } = {}
 ): Promise<LabelUploadResponse> {
   const { page_limit = 5, use_llm = false, signal } = options;
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_ANALYSIS_API_URL ||
-    (process.env.NODE_ENV === "production"
-      ? "https://api.filynai.com"
-      : "http://localhost:8000");
+  const baseUrl = resolvePdfAnalysisApiBaseUrl();
 
   const form = new FormData();
   form.append("file", file);

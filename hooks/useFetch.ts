@@ -3,38 +3,43 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useAsyncTask } from "@/hooks/useAsyncTask";
+import type { AsyncStatus } from "@/lib/async/async-state";
 
 type FetchResult<T> = {
     data: T | null;
     loading: boolean;
     error: Error | null;
+    status: AsyncStatus;
 };
 
 export function useFetch<T>(url: string): FetchResult<T> {
-    const [data, setData] = useState<T | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+  const fetchTask = useAsyncTask(
+        async (targetUrl: string) => {
+            const response = await fetch(targetUrl);
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+            return (await response.json()) as T;
+        },
+        null as T | null,
+    );
+  const { data, error, isLoading, status, reset, run } = fetchTask;
 
     useEffect(() => {
-        let isMounted = true; // cancel on unmount
-        setLoading(true);
-        fetch(url)
-            .then((res) => res.json())
-            .then((json) => {
-                if (isMounted) setData(json);
-            })
-            .catch((err) => {
-                if (isMounted) setError(err);
-            })
-            .finally(() => {
-                if (isMounted) setLoading(false);
-            });
+        if (!url) {
+            reset(null);
+            return;
+        }
 
-        return () => {
-            isMounted = false;
-        };
-    }, [url]);
+        void run(url);
+    }, [reset, run, url]);
 
-    return { data, loading, error };
+    return {
+        data,
+        loading: isLoading,
+        error: error ? new Error(error) : null,
+        status,
+    };
 }
