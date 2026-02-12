@@ -233,6 +233,22 @@ export function ProjectsView() {
       pre_ind_meeting_date: proj.preIndMeetingDate,
       target_ind_submission_date: proj.targetIndSubmissionDate,
       additional_notes: proj.additionalNotes,
+      cmc_lead: proj.cmcLead,
+      clinical_lead: proj.clinicalLead,
+      preclinical_lead: proj.preclinicalLead,
+      regulatory_owner: proj.regulatoryOwner,
+      publisher: proj.publisher,
+      metadata:
+        proj.techWriter || proj.indWriter
+          ? {
+              team_assignments: {
+                ...(proj.techWriter ? { tech_writer: proj.techWriter } : {}),
+                ...(proj.indWriter
+                  ? { ind_writer: proj.indWriter, inc_writer: proj.indWriter }
+                  : {}),
+              },
+            }
+          : undefined,
     });
   };
 

@@ -30,8 +30,10 @@ import {
   ProjectCreation,
 } from "@/lib/store/slices/projectsSlice";
 import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTenant } from "@/hooks/useTenant";
+import { useAppSelector } from "@/lib/store";
+import { createClient } from "@/lib/supabase/client";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "Low" },
@@ -40,6 +42,31 @@ const PRIORITY_OPTIONS = [
   { value: "critical", label: "Critical" },
 ] as const;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const TEAM_ROLE_OWNER = "owner";
+const TEAM_ROLE_OPTIONS = [
+  { value: "cmc_lead", label: "CMC Leader" },
+  { value: "clinical_lead", label: "Clinical Lead" },
+  { value: "preclinical_lead", label: "Preclinical Lead" },
+  { value: "regulatory_owner", label: "Regulatory Owner" },
+  { value: "publisher", label: "Publisher" },
+  { value: "tech_writer", label: "Tech Writer" },
+  { value: "ind_writer", label: "IND Writer" },
+] as const;
+
+type TeamAssignableRole = (typeof TEAM_ROLE_OPTIONS)[number]["value"];
+
+type TeamMemberRow = {
+  id: string;
+  userId: string;
+  role: TeamAssignableRole | typeof TEAM_ROLE_OWNER | "";
+};
+
+type TenantUserOption = {
+  id: string;
+  name: string;
+  email: string;
+};
 
 interface ProjectFormProps {
   initialData?: ProjectCreation;
@@ -50,6 +77,36 @@ interface ProjectFormProps {
   submitError?: string | null;
 }
 
+const createRowId = () =>
+  `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+const parseTeamAssignmentsFromMetadata = (
+  metadata: unknown,
+): { tech_writer?: string; ind_writer?: string; inc_writer?: string } => {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return {};
+  }
+  const teamAssignments = (
+    metadata as { team_assignments?: unknown }
+  ).team_assignments;
+  if (
+    !teamAssignments ||
+    typeof teamAssignments !== "object" ||
+    Array.isArray(teamAssignments)
+  ) {
+    return {};
+  }
+  const source = teamAssignments as Record<string, unknown>;
+  return {
+    tech_writer:
+      typeof source.tech_writer === "string" ? source.tech_writer : undefined,
+    ind_writer:
+      typeof source.ind_writer === "string" ? source.ind_writer : undefined,
+    inc_writer:
+      typeof source.inc_writer === "string" ? source.inc_writer : undefined,
+  };
+};
+
 export const ProjectForm: React.FC<ProjectFormProps> = ({
   initialData,
   onSubmit,
@@ -58,14 +115,122 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   isSubmitting = false,
   submitError,
 }) => {
+  const { user } = useAppSelector((state) => state.auth);
   const { currentTenant, selectedTenantId } = useTenant();
   const defaultTenantId = selectedTenantId ?? currentTenant?.id ?? "demo-tenant";
+  const ownerUserId = user?.id ?? "";
+  const ownerDisplayName = user?.name?.trim() || user?.email || "Current User";
+
+  const buildTeamRows = (source?: ProjectCreation): TeamMemberRow[] => {
+    const rows: TeamMemberRow[] = [
+      {
+        id: createRowId(),
+        userId: ownerUserId,
+        role: TEAM_ROLE_OWNER,
+      },
+    ];
+
+    const knownRoleKeys: TeamAssignableRole[] = [
+      "cmc_lead",
+      "clinical_lead",
+      "preclinical_lead",
+      "regulatory_owner",
+      "publisher",
+    ];
+
+    knownRoleKeys.forEach((role) => {
+      const assignedUserId = source?.[role];
+      if (typeof assignedUserId === "string" && assignedUserId.trim()) {
+        rows.push({
+          id: createRowId(),
+          userId: assignedUserId,
+          role,
+        });
+      }
+    });
+
+    const metadataAssignments = parseTeamAssignmentsFromMetadata(source?.metadata);
+    const techWriterUserId = metadataAssignments.tech_writer;
+    if (techWriterUserId) {
+      rows.push({
+        id: createRowId(),
+        userId: techWriterUserId,
+        role: "tech_writer",
+      });
+    }
+
+    const indWriterUserId =
+      metadataAssignments.ind_writer || metadataAssignments.inc_writer;
+    if (indWriterUserId) {
+      rows.push({
+        id: createRowId(),
+        userId: indWriterUserId,
+        role: "ind_writer",
+      });
+    }
+
+    return rows;
+  };
+
   const [currentStep, setCurrentStep] = useState(1);
   const [projectData, setProjectData] = useState<ProjectCreation>(() => {
     const base = initialData || getDefaultProjectData();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return { ...base, tenantid: (base as any).tenantid || defaultTenantId };
   });
+  const [teamRows, setTeamRows] = useState<TeamMemberRow[]>(() =>
+    buildTeamRows(initialData),
+  );
+  const [tenantUsers, setTenantUsers] = useState<TenantUserOption[]>([]);
+  const [usersLoadError, setUsersLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+    const tenantId = defaultTenantId;
+    if (!tenantId) return () => {
+      isActive = false;
+    };
+
+    const supabase = createClient();
+    const loadUsers = async () => {
+      setUsersLoadError(null);
+      const { data, error } = await supabase
+        .from("users")
+        .select("id,name,email")
+        .eq("tenantid", tenantId)
+        .order("name", { ascending: true });
+
+      if (!isActive) return;
+      if (error) {
+        setUsersLoadError(error.message || "Failed to load tenant users");
+        setTenantUsers([]);
+        return;
+      }
+
+      const mappedUsers = (data ?? []).map((row) => ({
+        id: row.id,
+        name: row.name || row.email,
+        email: row.email,
+      }));
+      setTenantUsers(mappedUsers);
+    };
+
+    void loadUsers();
+
+    return () => {
+      isActive = false;
+    };
+  }, [defaultTenantId]);
+
+  useEffect(() => {
+    setTeamRows((prevRows) => {
+      if (!prevRows.length) {
+        return [{ id: createRowId(), userId: ownerUserId, role: TEAM_ROLE_OWNER }];
+      }
+      const [ownerRow, ...rest] = prevRows;
+      return [{ ...ownerRow, userId: ownerUserId, role: TEAM_ROLE_OWNER }, ...rest];
+    });
+  }, [ownerUserId]);
 
   const progress = (currentStep / PROJECT_CREATION_STEPS.length) * 100;
 
@@ -91,12 +256,53 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       : "";
   const sponsorEmailValid = EMAIL_REGEX.test(sponsorEmail);
   const fdaEmailValid = !fdaEmail || EMAIL_REGEX.test(fdaEmail);
+  const isTeamStepValid = teamRows.every((row) => {
+    if (row.role === TEAM_ROLE_OWNER) return true;
+    return Boolean(row.userId && row.role);
+  });
 
   const isStepValid = () => {
     const baseStepValid = validateProjectStep(currentStep, projectData);
     if (!baseStepValid) return false;
+    if (currentStep === 4) return isTeamStepValid;
     if (currentStep !== 2) return true;
-    return sponsorEmailValid && fdaEmailValid;
+    if (!sponsorEmailValid || !fdaEmailValid) return false;
+    return true;
+  };
+
+  const addTeamRow = () => {
+    setTeamRows((prevRows) => [
+      ...prevRows,
+      { id: createRowId(), userId: "", role: "" },
+    ]);
+  };
+
+  const removeTeamRow = (rowId: string) => {
+    setTeamRows((prevRows) =>
+      prevRows.filter((row) => row.id !== rowId || row.role === TEAM_ROLE_OWNER),
+    );
+  };
+
+  const updateTeamRow = (
+    rowId: string,
+    updates: Partial<Pick<TeamMemberRow, "userId" | "role">>,
+  ) => {
+    setTeamRows((prevRows) =>
+      prevRows.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              ...updates,
+            }
+          : row,
+      ),
+    );
+  };
+
+  const getAssignedUserByRole = (role: TeamAssignableRole) => {
+    const row = teamRows.find((memberRow) => memberRow.role === role);
+    if (!row?.userId.trim()) return null;
+    return row.userId.trim();
   };
 
   const handleSubmit = async () => {
@@ -132,12 +338,45 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
             : nextData.fda_contact_email,
     };
 
+    const techWriterUserId = getAssignedUserByRole("tech_writer");
+    const indWriterUserId = getAssignedUserByRole("ind_writer");
+    const normalizedMetadata =
+      normalizedData.metadata &&
+      typeof normalizedData.metadata === "object" &&
+      !Array.isArray(normalizedData.metadata)
+        ? (normalizedData.metadata as Record<string, unknown>)
+        : {};
+    const existingTeamAssignments = parseTeamAssignmentsFromMetadata(
+      normalizedMetadata,
+    );
+    const mergedTeamAssignments = {
+      ...existingTeamAssignments,
+      ...(techWriterUserId ? { tech_writer: techWriterUserId } : {}),
+      ...(indWriterUserId
+        ? { ind_writer: indWriterUserId, inc_writer: indWriterUserId }
+        : {}),
+    };
+
+    const submissionData: ProjectCreation = {
+      ...normalizedData,
+      cmc_lead: getAssignedUserByRole("cmc_lead"),
+      clinical_lead: getAssignedUserByRole("clinical_lead"),
+      preclinical_lead: getAssignedUserByRole("preclinical_lead"),
+      regulatory_owner: getAssignedUserByRole("regulatory_owner"),
+      publisher: getAssignedUserByRole("publisher"),
+      metadata: {
+        ...normalizedMetadata,
+        team_assignments: mergedTeamAssignments,
+      },
+    };
+
     try {
-      await onSubmit(normalizedData);
+      await onSubmit(submissionData);
       setProjectData({
         ...(initialData || getDefaultProjectData()),
         tenantid: defaultTenantId,
       });
+      setTeamRows(buildTeamRows(initialData));
       setCurrentStep(1);
     } catch {
       // Keep form state when submit fails so user can retry.
@@ -359,6 +598,107 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       case 4:
         return (
           <div className='space-y-4'>
+            <div className='space-y-3'>
+              {teamRows.map((row, index) => {
+                const isOwnerRow = row.role === TEAM_ROLE_OWNER;
+                const isLastRow = index === teamRows.length - 1;
+                const isInvalidRow =
+                  !isOwnerRow && (!row.userId.trim() || !row.role);
+
+                return (
+                  <div key={row.id} className='space-y-2'>
+                    <div className='grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_auto]'>
+                      {isOwnerRow ? (
+                        <div>
+                          <Label>Owner</Label>
+                          <Input value={ownerDisplayName} disabled />
+                        </div>
+                      ) : (
+                        <div>
+                          <Label>User</Label>
+                          <Select
+                            value={row.userId || undefined}
+                            onValueChange={(value) =>
+                              updateTeamRow(row.id, { userId: value })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select user' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {tenantUsers.map((tenantUser) => (
+                                <SelectItem key={tenantUser.id} value={tenantUser.id}>
+                                  {tenantUser.name} ({tenantUser.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      <div>
+                        <Label>Type</Label>
+                        {isOwnerRow ? (
+                          <Input value='Owner' disabled />
+                        ) : (
+                          <Select
+                            value={row.role || undefined}
+                            onValueChange={(value) =>
+                              updateTeamRow(row.id, {
+                                role: value as TeamAssignableRole,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select type' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {TEAM_ROLE_OPTIONS.map((roleOption) => (
+                                <SelectItem
+                                  key={roleOption.value}
+                                  value={roleOption.value}
+                                >
+                                  {roleOption.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                      <div className='flex items-end gap-2'>
+                        {isLastRow && (
+                          <Button type='button' variant='outline' size='icon' onClick={addTeamRow}>
+                            +
+                          </Button>
+                        )}
+                        {!isOwnerRow && (
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='icon'
+                            onClick={() => removeTeamRow(row.id)}
+                          >
+                            -
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    {isInvalidRow && (
+                      <p className='text-xs text-red-500'>
+                        Both user and type are required.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {usersLoadError && (
+              <p className='text-xs text-red-500'>{usersLoadError}</p>
+            )}
+          </div>
+        );
+      case 5:
+        return (
+          <div className='space-y-4'>
             <div className='grid gap-4'>
               <div className='space-y-2'>
                 <Label>Project Summary</Label>
@@ -441,7 +781,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               <span className='text-sm italic text-red-500'>* required</span>
             </div>
             <Progress value={progress} className='mb-4' />
-            <div className='grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 sm:text-sm'>
+            <div className='grid grid-cols-2 gap-2 text-xs sm:grid-cols-5 sm:text-sm'>
               {PROJECT_CREATION_STEPS.map((step) => (
                 <div
                   key={step.id}
@@ -514,8 +854,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                       : "Creating..."
                     : isEditing
                       ? "Update"
-                      : "Create"}{" "}
-                  Project
+                      : "Create Project"}
                 </Button>
               ) : (
                 <Button

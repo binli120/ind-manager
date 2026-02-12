@@ -62,6 +62,11 @@ export interface Project {
     indication?: string;
     studyType?: string;
     regulatoryPath?: string;
+    team_assignments?: {
+      tech_writer?: string;
+      ind_writer?: string;
+      inc_writer?: string;
+    };
   };
   targetIndSubmissionDate: string;
   preIndMeetingDate: string | null;
@@ -70,6 +75,13 @@ export interface Project {
   sponsorContactEmail: string;
   additionalNotes: string | null;
   productType: string;
+  cmcLead?: string | null;
+  clinicalLead?: string | null;
+  preclinicalLead?: string | null;
+  regulatoryOwner?: string | null;
+  publisher?: string | null;
+  techWriter?: string | null;
+  indWriter?: string | null;
   userRole?: Database["public"]["Enums"]["user_roles"] | null;
 }
 
@@ -128,6 +140,35 @@ const getTenantNameFromMetadata = (metadata: unknown): string | null => {
   return typeof tenantName === "string" && tenantName.trim()
     ? tenantName.trim()
     : null;
+};
+
+const getWriterAssignmentsFromMetadata = (metadata: unknown) => {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return { techWriter: null, indWriter: null };
+  }
+
+  const teamAssignments = (
+    metadata as { team_assignments?: unknown }
+  ).team_assignments;
+  if (
+    !teamAssignments ||
+    typeof teamAssignments !== "object" ||
+    Array.isArray(teamAssignments)
+  ) {
+    return { techWriter: null, indWriter: null };
+  }
+
+  const source = teamAssignments as Record<string, unknown>;
+  const techWriter =
+    typeof source.tech_writer === "string" ? source.tech_writer : null;
+  const indWriter =
+    typeof source.ind_writer === "string"
+      ? source.ind_writer
+      : typeof source.inc_writer === "string"
+        ? source.inc_writer
+        : null;
+
+  return { techWriter, indWriter };
 };
 
 const createProjectFolderStructure = async ({
@@ -232,38 +273,50 @@ export const fetchProjects = createAsyncThunk(
       const rows = (projects ?? []) as Database["public"]["Tables"]["projects"]["Row"][];
 
       const transformedProjects: Project[] =
-        rows.map((project) => ({
-          id: project.id,
-          title: project.ind_title,
-          code: project.ind_number || "",
-          description: project.description || "No description available",
-          status: project.status as Project["status"],
-          priority: project.priority as Project["priority"],
-          progress: project.progress || 0,
-          sponsor: project.sponsor_name || "",
-          drug: project.drug_name || "",
-          targetDate: project.target_ind_submission_date || "",
-          tenantId: project.tenantid ?? userData?.tenantid ?? "",
-          ownerId: project.project_creator_id ?? "",
-          teamSize: 0,
-          teamMembers: [],
-          createdAt: project.created_at,
-          updatedAt: project.updated_at,
-          settings:{
-            isPublic: false,
-            allowCollaboration: true,
-          },
-          metadata: project.metadata as Project["metadata"],
-          targetIndSubmissionDate: project.target_ind_submission_date ?? "",
-          preIndMeetingDate: project.pre_ind_meeting_date,
-          projectStartDate: project.project_start_date ?? "",
-          fdaContactEmail: project.fda_contact_email,
-          sponsorContactEmail: project.sponsor_contact_email,
-          additionalNotes: project.additional_notes,
-          productType: project.product_type,
-          userRole: assignmentRows.find((a) => a.project_id === project.id)
-            ?.role ?? null,
-        })) || [];
+        rows.map((project) => {
+          const { techWriter, indWriter } = getWriterAssignmentsFromMetadata(
+            project.metadata,
+          );
+          return {
+            id: project.id,
+            title: project.ind_title,
+            code: project.ind_number || "",
+            description: project.description || "No description available",
+            status: project.status as Project["status"],
+            priority: project.priority as Project["priority"],
+            progress: project.progress || 0,
+            sponsor: project.sponsor_name || "",
+            drug: project.drug_name || "",
+            targetDate: project.target_ind_submission_date || "",
+            tenantId: project.tenantid ?? userData?.tenantid ?? "",
+            ownerId: project.project_creator_id ?? "",
+            teamSize: 0,
+            teamMembers: [],
+            createdAt: project.created_at,
+            updatedAt: project.updated_at,
+            settings:{
+              isPublic: false,
+              allowCollaboration: true,
+            },
+            metadata: project.metadata as Project["metadata"],
+            targetIndSubmissionDate: project.target_ind_submission_date ?? "",
+            preIndMeetingDate: project.pre_ind_meeting_date,
+            projectStartDate: project.project_start_date ?? "",
+            fdaContactEmail: project.fda_contact_email,
+            sponsorContactEmail: project.sponsor_contact_email,
+            additionalNotes: project.additional_notes,
+            productType: project.product_type,
+            cmcLead: project.cmc_lead,
+            clinicalLead: project.clinical_lead,
+            preclinicalLead: project.preclinical_lead,
+            regulatoryOwner: project.regulatory_owner,
+            publisher: project.publisher,
+            techWriter,
+            indWriter,
+            userRole: assignmentRows.find((a) => a.project_id === project.id)
+              ?.role ?? null,
+          };
+        }) || [];
 
       return transformedProjects;
     } catch (error: unknown) {
@@ -323,38 +376,50 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
 
       const rows = (projects ?? []) as Database["public"]["Tables"]["projects"]["Row"][];
       const transformedProjects: Project[] =
-        rows.map((project) => ({
-          id: project.id,
-          title: project.ind_title,
-          code: project.ind_number || "",
-          description: project.description || "No description available",
-          status: project.status as Project["status"],
-          priority: project.priority as Project["priority"],
-          progress: project.progress || 0,
-          sponsor: project.sponsor_name || "",
-          drug: project.drug_name || "",
-          targetDate: project.target_ind_submission_date || "",
-          tenantId: project.tenantid ?? userData?.tenantid ?? "",
-          ownerId: project.project_creator_id ?? "",
-          teamSize: 0,
-          teamMembers: [],
-          createdAt: project.created_at,
-          updatedAt: project.updated_at,
-          settings: {
-            isPublic: false,
-            allowCollaboration: true,
-          },
-          metadata: {},
-          targetIndSubmissionDate: project.target_ind_submission_date ?? "",
-          preIndMeetingDate: project.pre_ind_meeting_date,
-          projectStartDate: project.project_start_date ?? "",
-          fdaContactEmail: project.fda_contact_email,
-          sponsorContactEmail: project.sponsor_contact_email,
-          additionalNotes: project.additional_notes,
-          productType: project.product_type,
-          userRole: assignmentRows.find((a) => a.project_id === project.id)
-            ?.role as Project["userRole"],
-        })) || [];
+        rows.map((project) => {
+          const { techWriter, indWriter } = getWriterAssignmentsFromMetadata(
+            project.metadata,
+          );
+          return {
+            id: project.id,
+            title: project.ind_title,
+            code: project.ind_number || "",
+            description: project.description || "No description available",
+            status: project.status as Project["status"],
+            priority: project.priority as Project["priority"],
+            progress: project.progress || 0,
+            sponsor: project.sponsor_name || "",
+            drug: project.drug_name || "",
+            targetDate: project.target_ind_submission_date || "",
+            tenantId: project.tenantid ?? userData?.tenantid ?? "",
+            ownerId: project.project_creator_id ?? "",
+            teamSize: 0,
+            teamMembers: [],
+            createdAt: project.created_at,
+            updatedAt: project.updated_at,
+            settings: {
+              isPublic: false,
+              allowCollaboration: true,
+            },
+            metadata: project.metadata as Project["metadata"],
+            targetIndSubmissionDate: project.target_ind_submission_date ?? "",
+            preIndMeetingDate: project.pre_ind_meeting_date,
+            projectStartDate: project.project_start_date ?? "",
+            fdaContactEmail: project.fda_contact_email,
+            sponsorContactEmail: project.sponsor_contact_email,
+            additionalNotes: project.additional_notes,
+            productType: project.product_type,
+            cmcLead: project.cmc_lead,
+            clinicalLead: project.clinical_lead,
+            preclinicalLead: project.preclinical_lead,
+            regulatoryOwner: project.regulatory_owner,
+            publisher: project.publisher,
+            techWriter,
+            indWriter,
+            userRole: assignmentRows.find((a) => a.project_id === project.id)
+              ?.role as Project["userRole"],
+          };
+        }) || [];
 
       return transformedProjects;
     } catch (error: unknown) {
@@ -379,7 +444,9 @@ export const fetchProjectDetails = createAsyncThunk(
         .single();
 
       if (error) throw error;
-      
+      const { techWriter, indWriter } = getWriterAssignmentsFromMetadata(
+        project.metadata,
+      );
 
       const transformedProject: Project = {
         id: project.id,
@@ -414,6 +481,13 @@ export const fetchProjectDetails = createAsyncThunk(
         sponsorContactEmail: project.sponsor_contact_email,
         additionalNotes: project.additional_notes,
         productType: project.product_type,
+        cmcLead: project.cmc_lead,
+        clinicalLead: project.clinical_lead,
+        preclinicalLead: project.preclinical_lead,
+        regulatoryOwner: project.regulatory_owner,
+        publisher: project.publisher,
+        techWriter,
+        indWriter,
       };
 
       return transformedProject;
@@ -504,6 +578,33 @@ export const createProject = createAsyncThunk(
         throw assignmentError;
       }
 
+      const writerAssignments = getWriterAssignmentsFromMetadata(
+        normalizedProjectData.metadata,
+      );
+      const writerColumnsPayload: Record<string, unknown> = {};
+      if (writerAssignments.techWriter) {
+        writerColumnsPayload.tech_writer = writerAssignments.techWriter;
+      }
+      if (writerAssignments.indWriter) {
+        writerColumnsPayload.ind_writer = writerAssignments.indWriter;
+        writerColumnsPayload.inc_writer = writerAssignments.indWriter;
+      }
+      if (Object.keys(writerColumnsPayload).length > 0) {
+        // Best-effort backfill in case DB has writer columns not reflected in generated types.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const projectsTable = supabase.from("projects") as any;
+        const { error: writerColumnsError } = await projectsTable
+          .update(writerColumnsPayload)
+          .eq("id", newProject.id);
+
+        if (writerColumnsError) {
+          console.warn("Writer columns update skipped", {
+            projectId: newProject.id,
+            writerColumnsError,
+          });
+        }
+      }
+
       return newProject;
     } catch (error: unknown) {
       return rejectWithValue(
@@ -532,6 +633,33 @@ export const updateProject = createAsyncThunk(
         .single();
 
       if (error) throw error;
+
+      const writerAssignments = getWriterAssignmentsFromMetadata(
+        updates.metadata,
+      );
+      const writerColumnsPayload: Record<string, unknown> = {};
+      if (writerAssignments.techWriter) {
+        writerColumnsPayload.tech_writer = writerAssignments.techWriter;
+      }
+      if (writerAssignments.indWriter) {
+        writerColumnsPayload.ind_writer = writerAssignments.indWriter;
+        writerColumnsPayload.inc_writer = writerAssignments.indWriter;
+      }
+      if (Object.keys(writerColumnsPayload).length > 0) {
+        // Best-effort backfill in case DB has writer columns not reflected in generated types.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const projectsTable = supabase.from("projects") as any;
+        const { error: writerColumnsError } = await projectsTable
+          .update(writerColumnsPayload)
+          .eq("id", projectId);
+
+        if (writerColumnsError) {
+          console.warn("Writer columns update skipped", {
+            projectId,
+            writerColumnsError,
+          });
+        }
+      }
 
       return data;
     } catch (error: unknown) {
@@ -896,10 +1024,13 @@ const projectsSlice = createSlice({
 const dbToClientProject = (
   project: ProjectCreation & { id: string },
 ): Project => {
+  const { techWriter, indWriter } = getWriterAssignmentsFromMetadata(
+    project.metadata,
+  );
   return {
     ...project,
     description: project.description ?? "",
-    tenantId: "",
+    tenantId: project.tenantid ?? "",
     title: project.ind_title,
     code: project.ind_number ?? "",
     sponsor: project.sponsor_name ?? "",
@@ -925,6 +1056,13 @@ const dbToClientProject = (
     productType: project.product_type ?? "",
     sponsorContactEmail: project.sponsor_contact_email ?? "",
     targetIndSubmissionDate: project.target_ind_submission_date ?? "",
+    cmcLead: project.cmc_lead ?? null,
+    clinicalLead: project.clinical_lead ?? null,
+    preclinicalLead: project.preclinical_lead ?? null,
+    regulatoryOwner: project.regulatory_owner ?? null,
+    publisher: project.publisher ?? null,
+    techWriter,
+    indWriter,
   };
 };
 

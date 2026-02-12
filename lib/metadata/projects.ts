@@ -68,6 +68,12 @@ export const PROJECT_CREATION_STEPS = [
   },
   {
     id: 4,
+    title: "Team",
+    description: "Assign project team members and roles",
+    requiredFields: [],
+  },
+  {
+    id: 5,
     title: "Review & Create",
     description: "Review and finalize project setup",
     requiredFields: [],
