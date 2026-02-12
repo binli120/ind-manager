@@ -1,4 +1,5 @@
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { z } from "zod";
 
 export type AuthUser = {
   id: string;
@@ -17,6 +18,12 @@ export type AuthProfileRow = {
   avatar_url?: string | null;
   submission_role?: string | null;
 };
+
+export const authProfileRowSchema: z.ZodType<AuthProfileRow> = z.object({
+  name: z.string().nullable().optional(),
+  avatar_url: z.string().nullable().optional(),
+  submission_role: z.string().nullable().optional(),
+});
 
 export const mapSupabaseUserToAuthUser = ({
   authUser,

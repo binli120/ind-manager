@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import {
   mapTenantRowToTenant,
   mapTenantRowsToTenants,
+  tenantRowSchema,
+  tenantRowsSchema,
   type Tenant,
 } from "@/lib/store/mappers/tenantMapper";
 
@@ -52,7 +54,8 @@ export const fetchUserTenants = createAsyncThunk<
 
   if (error) return rejectWithValue(error.message);
 
-  return mapTenantRowsToTenants(tenants ?? []);
+  const parsedRows = tenantRowsSchema.parse(tenants ?? []);
+  return mapTenantRowsToTenants(parsedRows);
 });
 
 export const fetchTenantDetails = createAsyncThunk<
@@ -70,7 +73,7 @@ export const fetchTenantDetails = createAsyncThunk<
     .single();
 
   if (error) return rejectWithValue(error.message);
-  return mapTenantRowToTenant(data);
+  return mapTenantRowToTenant(tenantRowSchema.parse(data));
 });
 
 const tenantsSlice = createSlice({

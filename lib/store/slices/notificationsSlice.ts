@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   countUnreadNotifications,
   mapNotificationRecipientsToItems,
+  parseNotificationRecipients,
   type NotificationEvent,
   type NotificationRecipient,
 } from "@/lib/store/mappers/notificationMapper";
@@ -79,9 +80,7 @@ export const fetchNotifications = createAsyncThunk<
 
   if (error) return rejectWithValue(error.message);
 
-  const items = mapNotificationRecipientsToItems(
-    (data ?? []) as NotificationRecipient[],
-  );
+  const items = mapNotificationRecipientsToItems(parseNotificationRecipients(data ?? []));
   const unread = countUnreadNotifications(items);
   return { items, unread };
 });

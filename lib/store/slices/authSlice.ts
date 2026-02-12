@@ -11,8 +11,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 import { auth_text } from "@/utils/constants";
 import {
+  authProfileRowSchema,
   mapSupabaseUserToAuthUser,
-  type AuthProfileRow,
   type AuthUser as User,
 } from "@/lib/store/mappers/authUserMapper";
 
@@ -69,7 +69,7 @@ export const loginUser = createAsyncThunk(
 
         const user = mapSupabaseUserToAuthUser({
           authUser: data.user,
-          profile: (profile as AuthProfileRow | null) ?? null,
+          profile: profile ? authProfileRowSchema.parse(profile) : null,
         });
 
         return { user, session: data.session };
@@ -167,7 +167,7 @@ export const getCurrentUser = createAsyncThunk(
 
         const userData = mapSupabaseUserToAuthUser({
           authUser: user,
-          profile: (profile as AuthProfileRow | null) ?? null,
+          profile: profile ? authProfileRowSchema.parse(profile) : null,
         });
 
         return { user: userData, session };

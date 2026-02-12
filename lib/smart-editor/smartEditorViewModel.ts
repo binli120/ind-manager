@@ -2,7 +2,8 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 
-import type { Section } from "@/types/section";
+import type { Section, SubsectionContent } from "@/types/section";
+import { z } from "zod";
 
 type ProjectLike = {
   metadata?: unknown;
@@ -106,10 +107,15 @@ export const loadCachedTree = (key: string) => {
   try {
     const raw = sessionStorage.getItem(key);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { ts: number; sections: Section[] };
+    const parsed = z
+      .object({
+        ts: z.number(),
+        sections: z.array(z.unknown()),
+      })
+      .parse(JSON.parse(raw));
     const tenMinutes = 10 * 60 * 1000;
     if (Date.now() - parsed.ts > tenMinutes) return null;
-    return parsed.sections;
+    return sectionRowsSchema.parse(parsed.sections) as Section[];
   } catch {
     return null;
   }
@@ -152,8 +158,8 @@ export const fetchSectionTree = async ({
     );
   }
 
-  const payload = await response.json();
-  return (payload?.sections ?? []) as Section[];
+  const payload = sectionTreePayloadSchema.parse(await response.json());
+  return payload.sections;
 };
 
 export const fetchSignedProjectAsset = async <T>({
@@ -173,5 +179,51 @@ export const fetchSignedProjectAsset = async <T>({
   if (!response.ok) {
     throw new Error(`asset api failed ${response.status}`);
   }
-  return (await response.json()) as T;
+  const payload = await response.json();
+  if (format === "url") {
+    return signedAssetUrlPayloadSchema.parse(payload) as T;
+  }
+  return signedAssetTextPayloadSchema.parse(payload) as T;
 };
+
+const subsectionRowSchema: z.ZodType<SubsectionContent> = z.lazy(() =>
+  z.object({
+    id: z.string(),
+    subsectionNumber: z.string(),
+    title: z.string(),
+    header: z.string(),
+    content: z.string(),
+    isRequired: z.boolean(),
+    status: z.enum(["draft", "accepted"]),
+    isCategory: z.boolean().optional(),
+    subsections: z.array(subsectionRowSchema).optional(),
+    isUserAdded: z.boolean().optional(),
+    fullPath: z.string().optional(),
+  }),
+);
+
+const sectionRowSchema: z.ZodType<Section> = z.object({
+  id: z.string(),
+  number: z.string(),
+  title: z.string(),
+  parentSection: z.string(),
+  isRequired: z.boolean(),
+  status: z.enum(["draft", "accepted", "in-review", "approved"]),
+  isCategory: z.boolean().optional(),
+  isUserAdded: z.boolean().optional(),
+  subsections: z.array(subsectionRowSchema).optional(),
+});
+
+const sectionRowsSchema = z.array(sectionRowSchema);
+
+const sectionTreePayloadSchema = z.object({
+  sections: sectionRowsSchema,
+});
+
+const signedAssetUrlPayloadSchema = z.object({
+  url: z.string().url(),
+});
+
+const signedAssetTextPayloadSchema = z.object({
+  text: z.string().optional(),
+});

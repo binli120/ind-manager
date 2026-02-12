@@ -5,6 +5,15 @@
 import { createBrowserClient } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/schema";
+import { z } from "zod";
+import {
+  authGetUserResponseSchema,
+  projectFolderResponseSchema,
+  projectRowSchema,
+  projectRowsSchema,
+  userProjectAssignmentRowSchema,
+  userTenantAndEmailRowSchema,
+} from "@/lib/projects/projects.schemas";
 
 const DEFAULT_DOC_REPOSITORY_BUCKET = "doc-repository-dev";
 
@@ -66,10 +75,15 @@ export const createProjectFolderStructure = async ({
     payload = raw;
   }
 
+  const parsedPayload =
+    payload && typeof payload === "object"
+      ? projectFolderResponseSchema.parse(payload)
+      : payload;
+
   if (!response.ok) {
     const message =
-      (payload as { error?: string; message?: string })?.error ||
-      (payload as { error?: string; message?: string })?.message ||
+      (parsedPayload as { error?: string; message?: string })?.error ||
+      (parsedPayload as { error?: string; message?: string })?.message ||
       "Failed to create S3 project folders";
     throw new Error(message);
   }
@@ -87,9 +101,10 @@ export const fetchUserTenantAndEmail = async (userId: string) => {
     throw error;
   }
 
+  const parsed = userTenantAndEmailRowSchema.parse(data ?? {});
   return {
-    tenantid: typeof data?.tenantid === "string" ? data.tenantid : undefined,
-    email: typeof data?.email === "string" ? data.email : undefined,
+    tenantid: parsed.tenantid ?? undefined,
+    email: parsed.email ?? undefined,
   };
 };
 
@@ -105,7 +120,8 @@ export const fetchUserTenantId = async (userId: string) => {
     throw error;
   }
 
-  return typeof data?.tenantid === "string" ? data.tenantid : null;
+  const parsed = userTenantAndEmailRowSchema.parse(data ?? {});
+  return parsed.tenantid ?? null;
 };
 
 export const fetchUserProjectAssignments = async (
@@ -121,7 +137,8 @@ export const fetchUserProjectAssignments = async (
     throw error;
   }
 
-  return (data ?? []).flatMap((assignment) =>
+  const parsedAssignments = z.array(userProjectAssignmentRowSchema).parse(data ?? []);
+  return parsedAssignments.flatMap((assignment) =>
     assignment.project_id
       ? [
           {
@@ -153,7 +170,7 @@ export const fetchProjectRows = async ({
     throw error;
   }
 
-  return data ?? [];
+  return projectRowsSchema.parse(data ?? []) as ProjectRow[];
 };
 
 export const fetchCurrentAuthenticatedUserId = async (): Promise<string | null> => {
@@ -167,7 +184,11 @@ export const fetchCurrentAuthenticatedUserId = async (): Promise<string | null> 
     throw error;
   }
 
-  return user?.id ?? null;
+  const parsedAuth = authGetUserResponseSchema.parse({
+    data: { user: user ?? null },
+    error: error ?? null,
+  });
+  return parsedAuth.data.user?.id ?? null;
 };
 
 export const fetchProjectById = async (projectId: string): Promise<ProjectRow> => {
@@ -182,7 +203,7 @@ export const fetchProjectById = async (projectId: string): Promise<ProjectRow> =
     throw error;
   }
 
-  return data;
+  return projectRowSchema.parse(data) as ProjectRow;
 };
 
 export const insertProjectRow = async (project: ProjectInsert): Promise<ProjectRow> => {
@@ -197,7 +218,7 @@ export const insertProjectRow = async (project: ProjectInsert): Promise<ProjectR
     throw error;
   }
 
-  return data;
+  return projectRowSchema.parse(data) as ProjectRow;
 };
 
 export const insertUserProjectAssignment = async (
@@ -230,7 +251,7 @@ export const updateProjectRow = async ({
     throw error;
   }
 
-  return data;
+  return projectRowSchema.parse(data) as ProjectRow;
 };
 
 export const deleteProjectRow = async (projectId: string): Promise<void> => {

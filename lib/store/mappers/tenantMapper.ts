@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type TenantRow = {
   id: string;
   name: string;
@@ -40,3 +42,19 @@ export const mapTenantRowToTenant = (row: TenantRow): Tenant => ({
 
 export const mapTenantRowsToTenants = (rows: TenantRow[]) =>
   rows.map(mapTenantRowToTenant);
+
+export const tenantRowSchema: z.ZodType<TenantRow> = z.object({
+  id: z.string(),
+  name: z.string(),
+  address: z.string().nullable().optional(),
+  contact_person: z.string().nullable().optional(),
+  contact_email: z.string().nullable().optional(),
+  contact_number: z.string().nullable().optional(),
+  owner_user_id: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  created_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
+  metadata: z.unknown().optional(),
+});
+
+export const tenantRowsSchema = z.array(tenantRowSchema);

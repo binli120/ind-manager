@@ -1,4 +1,5 @@
 import type { NotificationItem } from "@/lib/store/slices/notificationsSlice";
+import { z } from "zod";
 
 export type NotificationEvent = {
   id: string;
@@ -24,6 +25,41 @@ export type NotificationRecipient = {
   notification?: NotificationEvent | null;
 };
 
+export const notificationEventSchema: z.ZodType<NotificationEvent> = z
+  .object({
+    id: z.string(),
+    type: z.string().nullable().optional(),
+    title: z.string().nullable().optional(),
+    body: z.string().nullable().optional(),
+    resource_type: z.string().nullable().optional(),
+    resource_id: z.string().nullable().optional(),
+    action_url: z.string().nullable().optional(),
+    severity: z.string().nullable().optional(),
+    created_at: z.string().nullable().optional(),
+    creator: z
+      .object({
+        name: z.string().nullable().optional(),
+      })
+      .nullable()
+      .optional(),
+  })
+  .passthrough();
+
+export const notificationRecipientSchema: z.ZodType<NotificationRecipient> = z
+  .object({
+    id: z.string(),
+    user_id: z.string(),
+    notification_id: z.string().nullable().optional(),
+    is_read: z.boolean(),
+    is_dismissed: z.boolean().optional(),
+    created_at: z.string().nullable().optional(),
+    read_at: z.string().nullable().optional(),
+    notification: notificationEventSchema.nullable().optional(),
+  })
+  .passthrough();
+
+export const notificationRecipientsSchema = z.array(notificationRecipientSchema);
+
 export const mapNotificationRecipientToItem = (
   row: NotificationRecipient,
 ): NotificationItem => ({
@@ -47,6 +83,9 @@ export const mapNotificationRecipientToItem = (
 export const mapNotificationRecipientsToItems = (
   rows: NotificationRecipient[],
 ): NotificationItem[] => rows.map(mapNotificationRecipientToItem);
+
+export const parseNotificationRecipients = (value: unknown) =>
+  notificationRecipientsSchema.parse(value);
 
 export const countUnreadNotifications = (items: NotificationItem[]) =>
   items.filter((item) => !item.is_read).length;

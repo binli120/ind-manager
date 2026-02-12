@@ -1,5 +1,10 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/schema";
+import {
+  userProjectIdRowsSchema,
+  userSelectRowSchema,
+  userSelectRowsSchema,
+} from "@/lib/users/users.schemas";
 
 export type UserSelectRow = {
   id: string;
@@ -32,7 +37,7 @@ export const fetchUserRows = async (tenantId?: string): Promise<UserSelectRow[]>
     throw new Error(error.message || "Failed to fetch users");
   }
 
-  return (data ?? []) as UserSelectRow[];
+  return userSelectRowsSchema.parse(data ?? []) as UserSelectRow[];
 };
 
 export const updateUserStatusRow = async ({
@@ -55,7 +60,7 @@ export const updateUserStatusRow = async ({
     throw new Error(error.message || "Failed to update user status");
   }
 
-  return data as UserSelectRow;
+  return userSelectRowSchema.parse(data) as UserSelectRow;
 };
 
 export const insertUserRow = async (user: {
@@ -86,7 +91,7 @@ export const insertUserRow = async (user: {
     throw new Error(error.message || "Failed to create user");
   }
 
-  return data as UserSelectRow;
+  return userSelectRowSchema.parse(data) as UserSelectRow;
 };
 
 export const fetchUserRowById = async (id: string): Promise<UserSelectRow | null> => {
@@ -102,7 +107,7 @@ export const fetchUserRowById = async (id: string): Promise<UserSelectRow | null
     throw new Error(error.message || "Failed to fetch current user");
   }
 
-  return data ? (data as UserSelectRow) : null;
+  return data ? (userSelectRowSchema.parse(data) as UserSelectRow) : null;
 };
 
 export const fetchAssignedProjectIds = async (userId: string): Promise<string[]> => {
@@ -117,7 +122,8 @@ export const fetchAssignedProjectIds = async (userId: string): Promise<string[]>
     throw new Error(error.message || "Failed to fetch assignments");
   }
 
-  return (data ?? [])
+  return userProjectIdRowsSchema
+    .parse(data ?? [])
     .map((row) => row.project_id)
     .filter((projectId): projectId is string => Boolean(projectId));
 };

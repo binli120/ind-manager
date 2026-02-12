@@ -5,11 +5,23 @@
 import {
   buildTreeCacheKey,
   deriveSmartEditorContext,
+  fetchSectionTree,
+  fetchSignedProjectAsset,
   markdownToHtml,
   toSectionNumber,
 } from "../smartEditorViewModel";
 
 describe("lib/smart-editor/smartEditorViewModel", () => {
+  const fetchMock = jest.fn();
+
+  beforeAll(() => {
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+  });
+
   it("derives context using metadata when available", () => {
     const context = deriveSmartEditorContext({
       currentProject: {
@@ -60,5 +72,61 @@ describe("lib/smart-editor/smartEditorViewModel", () => {
     expect(
       buildTreeCacheKey("project-1", "s3/key", "Acme", "Program"),
     ).toBe("sectionTree:project-1:s3/key:Acme:Program");
+  });
+
+  it("validates section tree payload from API", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        sections: [
+          {
+            id: "s1",
+            number: "2",
+            title: "Section 2",
+            parentSection: "",
+            isRequired: false,
+            status: "draft",
+          },
+        ],
+      }),
+    });
+
+    const sections = await fetchSectionTree({
+      projectId: "p1",
+      company: "Acme",
+      projectName: "Program",
+    });
+
+    expect(sections).toHaveLength(1);
+    expect(sections[0].id).toBe("s1");
+  });
+
+  it("throws when section tree payload is invalid", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ sections: [{ id: 1 }] }),
+    });
+
+    await expect(
+      fetchSectionTree({
+        projectId: "p1",
+        company: "Acme",
+        projectName: "Program",
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("validates signed asset payload by format", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ url: "https://example.com/file.pdf" }),
+    });
+
+    const urlPayload = await fetchSignedProjectAsset<{ url: string }>({
+      projectId: "p1",
+      key: "file.pdf",
+      format: "url",
+    });
+    expect(urlPayload.url).toBe("https://example.com/file.pdf");
   });
 });

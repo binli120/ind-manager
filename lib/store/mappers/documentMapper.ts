@@ -2,6 +2,7 @@ import type {
   Document,
   DocumentComment,
 } from "@/lib/store/slices/documentsSlice";
+import { z } from "zod";
 
 export type SupabaseProfileRow = {
   name?: string | null;
@@ -12,7 +13,7 @@ export type SupabaseDocumentCommentRow = {
   id: string;
   section_id?: string | null;
   user_id: string;
-  content: string;
+  content: string | null;
   position?: DocumentComment["position"] | null;
   is_resolved?: boolean | null;
   parent_id?: string | null;
@@ -39,6 +40,60 @@ export type SupabaseDocumentRow = {
   profiles?: SupabaseProfileRow | null;
   metadata?: Document["metadata"] | null;
 };
+
+const supabaseProfileRowSchema: z.ZodType<SupabaseProfileRow> = z.object({
+  name: z.string().nullable().optional(),
+  avatar_url: z.string().nullable().optional(),
+});
+
+export const supabaseDocumentCommentRowSchema: z.ZodType<SupabaseDocumentCommentRow> =
+  z.object({
+    id: z.string(),
+    section_id: z.string().nullable().optional(),
+    user_id: z.string(),
+    content: z.string().nullable(),
+    position: z
+      .object({
+        x: z.number(),
+        y: z.number(),
+      })
+      .nullable()
+      .optional(),
+    is_resolved: z.boolean().nullable().optional(),
+    parent_id: z.string().nullable().optional(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    profiles: supabaseProfileRowSchema.nullable().optional(),
+    document_id: z.string().nullable().optional(),
+  });
+
+export const supabaseDocumentRowSchema: z.ZodType<SupabaseDocumentRow> = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullable().optional(),
+  project_id: z.string(),
+  team_id: z.string(),
+  owner_id: z.string(),
+  status: z.enum(["draft", "review", "approved", "published"]),
+  type: z.enum(["ind", "protocol", "report", "other"]),
+  due_date: z.string().nullable().optional(),
+  updated_at: z.string(),
+  active_users: z.number().nullable().optional(),
+  version: z.number().nullable().optional(),
+  is_template: z.boolean().nullable().optional(),
+  profiles: supabaseProfileRowSchema.nullable().optional(),
+  metadata: z
+    .object({
+      wordCount: z.number().optional(),
+      pageCount: z.number().optional(),
+      language: z.string().optional(),
+      tags: z.array(z.string()).optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
+export const supabaseDocumentRowsSchema = z.array(supabaseDocumentRowSchema);
 
 const DOCUMENT_DEFAULT_PERMISSIONS: Document["permissions"] = {
   canEdit: true,
@@ -74,6 +129,12 @@ export const mapSupabaseDocumentRowsToDocuments = (
   rows: SupabaseDocumentRow[],
 ) => rows.map(mapSupabaseDocumentRowToDocument);
 
+export const parseSupabaseDocumentRow = (value: unknown): SupabaseDocumentRow =>
+  supabaseDocumentRowSchema.parse(value);
+
+export const parseSupabaseDocumentRows = (value: unknown): SupabaseDocumentRow[] =>
+  supabaseDocumentRowsSchema.parse(value);
+
 export const mapSupabaseCommentRowToDocumentComment = (
   row: SupabaseDocumentCommentRow,
 ): DocumentComment => ({
@@ -90,3 +151,7 @@ export const mapSupabaseCommentRowToDocumentComment = (
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
+
+export const parseSupabaseDocumentCommentRow = (
+  value: unknown,
+): SupabaseDocumentCommentRow => supabaseDocumentCommentRowSchema.parse(value);

@@ -8,8 +8,9 @@ import {
   mapSupabaseCommentRowToDocumentComment,
   mapSupabaseDocumentRowToDocument,
   mapSupabaseDocumentRowsToDocuments,
-  type SupabaseDocumentCommentRow,
-  type SupabaseDocumentRow,
+  parseSupabaseDocumentCommentRow,
+  parseSupabaseDocumentRow,
+  parseSupabaseDocumentRows,
 } from "@/lib/store/mappers/documentMapper"
 
 export interface DocumentSection {
@@ -137,7 +138,7 @@ export const fetchDocuments = createAsyncThunk(
       if (projectId) query = query.eq("project_id", projectId)
       const { data, error } = await query.order("updated_at", { ascending: false })
       if (error) throw error
-      const rawDocuments = (data ?? []) as SupabaseDocumentRow[]
+      const rawDocuments = parseSupabaseDocumentRows(data ?? [])
       return mapSupabaseDocumentRowsToDocuments(rawDocuments)
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to fetch documents")
@@ -160,7 +161,9 @@ export const fetchDocumentDetails = createAsyncThunk(
         .eq("id", documentId)
         .single()
       if (error) throw error
-      return mapSupabaseDocumentRowToDocument(data as SupabaseDocumentRow)
+      return mapSupabaseDocumentRowToDocument(
+        parseSupabaseDocumentRow(data),
+      )
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to fetch document details")
     }
@@ -240,7 +243,7 @@ export const addComment = createAsyncThunk(
       if (error) throw error
 
       return mapSupabaseCommentRowToDocumentComment(
-        data as SupabaseDocumentCommentRow,
+        parseSupabaseDocumentCommentRow(data),
       )
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to add comment")
@@ -301,7 +304,7 @@ export const fetchUserDocuments = createAsyncThunk(
 
       if (error) throw error
 
-      const rawDocuments = (documents ?? []) as SupabaseDocumentRow[]
+      const rawDocuments = parseSupabaseDocumentRows(documents ?? [])
       return mapSupabaseDocumentRowsToDocuments(rawDocuments)
     } catch (error: unknown) {
       return rejectWithValue(getErrorMessage(error) || "Failed to fetch user documents")
