@@ -1,4 +1,4 @@
-import type { ProjectCreation } from "@/lib/store/slices/projectsSlice";
+import type { ProjectCreation } from "@/lib/projects/types";
 
 export const TEAM_ROLE_OWNER = "owner";
 export const TEAM_ROLE_OPTIONS = [

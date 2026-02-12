@@ -39,7 +39,7 @@ import {
   TeamMemberRow,
 } from '@/lib/projects/projectFormModel';
 import { useAppSelector } from '@/lib/store';
-import { ProjectCreation } from '@/lib/store/slices/projectsSlice';
+import { ProjectCreation } from '@/lib/projects/types';
 import { Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

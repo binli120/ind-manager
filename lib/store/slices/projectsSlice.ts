@@ -2,93 +2,28 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 
-import { createBrowserClient } from "@/lib/supabase";
 import {
   createAsyncThunk,
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { createClient } from "@/lib/supabase/client";
-import { Database } from "@/lib/supabase/schema";
-import { getErrorMessage, isAdminEmail } from "@/lib/utils";
+import type { Project, ProjectCreation, ProjectMember, ProjectUpdate } from "@/lib/projects/types";
+import {
+  dbToClientProject,
+  mapProjectRowsToProjects,
+} from "@/lib/projects/projectMapper";
+import {
+  createProjectRowWithOwnerAssignment,
+  deleteProjectById,
+  fetchProjectRowById,
+  fetchVisibleProjectRowsForUser,
+  getCurrentAuthenticatedUserId,
+  updateProjectRowById,
+} from "@/lib/projects/projectService";
+import { getErrorMessage } from "@/lib/utils";
 import { logoutUser } from "./authSlice";
 
-export interface ProjectMember {
-  id: string;
-  userId: string;
-  projectId: string;
-  name: string;
-  avatar?: string | null;
-  initials: string;
-  role: "lead" | "member" | "viewer";
-  joinedAt: string;
-}
-
-export interface Project {
-  id: string;
-  title: string;
-  code: string;
-  description: string;
-  //IM-61 add more status
-  status:
-    | "draft"
-    | "pre-ind-meeting-requested"
-    | "pre-ind-meeting-completed"
-    | "submitted"
-    | "under-review"
-    | "active"
-    | "clinical-hold-complete"
-    | "clinical-hold-partial"
-    | "inactive"
-    | "withdrawn"
-    | "terminated";
-  priority: "low" | "medium" | "high" | "critical";
-  progress: number;
-  sponsor: string;
-  drug: string;
-  targetDate: string;
-  tenantId: string;
-  ownerId: string;
-  teamSize: number;
-  teamMembers: ProjectMember[];
-  createdAt: string;
-  updatedAt: string;
-  settings: {
-    isPublic: boolean;
-    allowCollaboration: boolean;
-  };
-  metadata?: {
-    phase?: string;
-    indication?: string;
-    studyType?: string;
-    regulatoryPath?: string;
-    team_assignments?: {
-      tech_writer?: string;
-      ind_writer?: string;
-      inc_writer?: string;
-    };
-  };
-  targetIndSubmissionDate: string;
-  preIndMeetingDate: string | null;
-  projectStartDate: string;
-  fdaContactEmail: string | null;
-  sponsorContactEmail: string;
-  additionalNotes: string | null;
-  productType: string;
-  cmcLead?: string | null;
-  clinicalLead?: string | null;
-  preclinicalLead?: string | null;
-  regulatoryOwner?: string | null;
-  publisher?: string | null;
-  techWriter?: string | null;
-  indWriter?: string | null;
-  userRole?: Database["public"]["Enums"]["user_roles"] | null;
-}
-
-export type ProjectCreation =
-  Database["public"]["Tables"]["projects"]["Insert"];
-
-export type ProjectUpdate = Database["public"]["Tables"]["projects"]["Update"];
+export type { Project, ProjectCreation, ProjectMember, ProjectUpdate } from "@/lib/projects/types";
 
 
 interface ProjectFilters {
@@ -124,93 +59,6 @@ const initialState: ProjectsState = {
   selectedProjectId: null,
 };
 
-const DEFAULT_DOC_REPOSITORY_BUCKET = "doc-repository-dev";
-
-const getTenantNameFromMetadata = (metadata: unknown): string | null => {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-    return null;
-  }
-
-  const tenant = (metadata as { tenant?: unknown }).tenant;
-  if (!tenant || typeof tenant !== "object" || Array.isArray(tenant)) {
-    return null;
-  }
-
-  const tenantName = (tenant as { name?: unknown }).name;
-  return typeof tenantName === "string" && tenantName.trim()
-    ? tenantName.trim()
-    : null;
-};
-
-const getWriterAssignmentsFromMetadata = (metadata: unknown) => {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-    return { techWriter: null, indWriter: null };
-  }
-
-  const teamAssignments = (
-    metadata as { team_assignments?: unknown }
-  ).team_assignments;
-  if (
-    !teamAssignments ||
-    typeof teamAssignments !== "object" ||
-    Array.isArray(teamAssignments)
-  ) {
-    return { techWriter: null, indWriter: null };
-  }
-
-  const source = teamAssignments as Record<string, unknown>;
-  const techWriter =
-    typeof source.tech_writer === "string" ? source.tech_writer : null;
-  const indWriter =
-    typeof source.ind_writer === "string"
-      ? source.ind_writer
-      : typeof source.inc_writer === "string"
-        ? source.inc_writer
-        : null;
-
-  return { techWriter, indWriter };
-};
-
-const createProjectFolderStructure = async ({
-  tenantName,
-  projectName,
-}: {
-  tenantName: string;
-  projectName: string;
-}) => {
-  const response = await fetch("/api/s3/new-project", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      bucket:
-        process.env.NEXT_PUBLIC_DOC_REPOSITORY_BUCKET ||
-        DEFAULT_DOC_REPOSITORY_BUCKET,
-      tenant_name: tenantName,
-      project_name: projectName,
-    }),
-  });
-
-  const raw = await response.text();
-  let payload: unknown = null;
-  try {
-    payload = raw ? JSON.parse(raw) : null;
-  } catch {
-    payload = raw;
-  }
-
-  if (!response.ok) {
-    const message =
-      (payload as { error?: string; message?: string })?.error ||
-      (payload as { error?: string; message?: string })?.message ||
-      "Failed to create S3 project folders";
-    throw new Error(message);
-  }
-};
-
-
 // MOCK: Remove mock mode when Supabase projects are live.
 //const useMockProjects = true;
 //const MOCK_TENANT_ID = "demo-tenant";
@@ -219,106 +67,17 @@ export const fetchProjects = createAsyncThunk(
   "projects/fetchProjects",
   async ({ userId }: { userId: string }, { rejectWithValue }) => {
     try {
-      // MOCK: update if you keep mock mode
-      /*
-      if (useMockProjects && tenantId === MOCK_TEAM_ID) {
-        const response = await fetch(
-          `/api/mock/projects${tenantId ? `?tenantId=${tenantId}` : ""}`,
-          { cache: "no-store" },
-        );
-        if (!response.ok) throw new Error("Failed to load mock projects");
-        const { data } = await response.json();
-        return data as Project[];
-      }
-      */
-      const supabase = createClient();
+      const { rows, assignmentRows, fallbackTenantId } =
+        await fetchVisibleProjectRowsForUser({
+          userId,
+          requireAssignmentsForNonAdmin: false,
+        });
 
-      const { data: userRow, error: userError } = await supabase
-        .from("users")
-        .select("tenantid,email")
-        .eq("id", userId)
-        .single();
-
-      if (userError) throw userError;
-      const userData = userRow as { email?: string; tenantid?: string };
-      const isAdmin = isAdminEmail(userData?.email);
-      if (!isAdmin && !userData?.tenantid) return [];
-
-      // fetch assignments & roles from user_project
-      const { data: assignments, error: assignError } = await supabase
-        .from("user_project")
-        .select("project_id, role")
-        .eq("user_id", userId);
-      if (assignError) throw assignError;
-      const assignmentRows =
-        (assignments ?? []) as {
-          project_id: string;
-          role?: Database["public"]["Enums"]["user_roles"] | null;
-        }[];
-      const assignedIds = assignmentRows.map((a) => a.project_id);
-
-      let query = supabase
-        .from("projects")
-        .select("*")
-        .order("updated_at", { ascending: false });
-
-      if (!isAdmin && assignedIds.length > 0) {
-        query = query.in("id", assignedIds);
-      }
-
-      const { data: projects, error } = await query;
-
-      if (error) throw error;
-      
-      const rows = (projects ?? []) as Database["public"]["Tables"]["projects"]["Row"][];
-
-      const transformedProjects: Project[] =
-        rows.map((project) => {
-          const { techWriter, indWriter } = getWriterAssignmentsFromMetadata(
-            project.metadata,
-          );
-          return {
-            id: project.id,
-            title: project.ind_title,
-            code: project.ind_number || "",
-            description: project.description || "No description available",
-            status: project.status as Project["status"],
-            priority: project.priority as Project["priority"],
-            progress: project.progress || 0,
-            sponsor: project.sponsor_name || "",
-            drug: project.drug_name || "",
-            targetDate: project.target_ind_submission_date || "",
-            tenantId: project.tenantid ?? userData?.tenantid ?? "",
-            ownerId: project.project_creator_id ?? "",
-            teamSize: 0,
-            teamMembers: [],
-            createdAt: project.created_at,
-            updatedAt: project.updated_at,
-            settings:{
-              isPublic: false,
-              allowCollaboration: true,
-            },
-            metadata: project.metadata as Project["metadata"],
-            targetIndSubmissionDate: project.target_ind_submission_date ?? "",
-            preIndMeetingDate: project.pre_ind_meeting_date,
-            projectStartDate: project.project_start_date ?? "",
-            fdaContactEmail: project.fda_contact_email,
-            sponsorContactEmail: project.sponsor_contact_email,
-            additionalNotes: project.additional_notes,
-            productType: project.product_type,
-            cmcLead: project.cmc_lead,
-            clinicalLead: project.clinical_lead,
-            preclinicalLead: project.preclinical_lead,
-            regulatoryOwner: project.regulatory_owner,
-            publisher: project.publisher,
-            techWriter,
-            indWriter,
-            userRole: assignmentRows.find((a) => a.project_id === project.id)
-              ?.role ?? null,
-          };
-        }) || [];
-
-      return transformedProjects;
+      return mapProjectRowsToProjects({
+        rows,
+        assignmentRows,
+        fallbackTenantId,
+      });
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to fetch projects",
@@ -331,97 +90,22 @@ export const fetchProjectsForCurrentUser = createAsyncThunk(
   "projects/fetchProjectsForCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
-      if (authError) throw authError;
-      if (!user?.id) return [];
-
-      const { data: userRow, error: userError } = await supabase
-        .from("users")
-        .select("tenantid,email")
-        .eq("id", user.id)
-        .single();
-
-      if (userError) throw userError;
-      const userData = userRow as { email?: string; tenantid?: string };
-      const isAdmin = isAdminEmail(userData?.email);
-      if (!isAdmin && !userData?.tenantid) return [];
-
-      const { data: assignments, error: assignError } = await supabase
-        .from("user_project")
-        .select("project_id, role")
-        .eq("user_id", user.id);
-      if (assignError) throw assignError;
-      const assignmentRows =
-        (assignments ?? []) as { project_id: string; role?: string | null }[];
-      const assignedIds = assignmentRows.map((a) => a.project_id);
-
-      if (!isAdmin && assignedIds.length === 0) return [];
-
-      let query = supabase
-        .from("projects")
-        .select("*")
-        .order("updated_at", { ascending: false });
-
-      if (!isAdmin) {
-        query = query.in("id", assignedIds);
+      const userId = await getCurrentAuthenticatedUserId();
+      if (!userId) {
+        return [];
       }
 
-      const { data: projects, error } = await query;
-      if (error) throw error;
+      const { rows, assignmentRows, fallbackTenantId } =
+        await fetchVisibleProjectRowsForUser({
+          userId,
+          requireAssignmentsForNonAdmin: true,
+        });
 
-      const rows = (projects ?? []) as Database["public"]["Tables"]["projects"]["Row"][];
-      const transformedProjects: Project[] =
-        rows.map((project) => {
-          const { techWriter, indWriter } = getWriterAssignmentsFromMetadata(
-            project.metadata,
-          );
-          return {
-            id: project.id,
-            title: project.ind_title,
-            code: project.ind_number || "",
-            description: project.description || "No description available",
-            status: project.status as Project["status"],
-            priority: project.priority as Project["priority"],
-            progress: project.progress || 0,
-            sponsor: project.sponsor_name || "",
-            drug: project.drug_name || "",
-            targetDate: project.target_ind_submission_date || "",
-            tenantId: project.tenantid ?? userData?.tenantid ?? "",
-            ownerId: project.project_creator_id ?? "",
-            teamSize: 0,
-            teamMembers: [],
-            createdAt: project.created_at,
-            updatedAt: project.updated_at,
-            settings: {
-              isPublic: false,
-              allowCollaboration: true,
-            },
-            metadata: project.metadata as Project["metadata"],
-            targetIndSubmissionDate: project.target_ind_submission_date ?? "",
-            preIndMeetingDate: project.pre_ind_meeting_date,
-            projectStartDate: project.project_start_date ?? "",
-            fdaContactEmail: project.fda_contact_email,
-            sponsorContactEmail: project.sponsor_contact_email,
-            additionalNotes: project.additional_notes,
-            productType: project.product_type,
-            cmcLead: project.cmc_lead,
-            clinicalLead: project.clinical_lead,
-            preclinicalLead: project.preclinical_lead,
-            regulatoryOwner: project.regulatory_owner,
-            publisher: project.publisher,
-            techWriter,
-            indWriter,
-            userRole: assignmentRows.find((a) => a.project_id === project.id)
-              ?.role as Project["userRole"],
-          };
-        }) || [];
-
-      return transformedProjects;
+      return mapProjectRowsToProjects({
+        rows,
+        assignmentRows,
+        fallbackTenantId,
+      });
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to fetch projects for current user",
@@ -435,62 +119,11 @@ export const fetchProjectDetails = createAsyncThunk(
   "projects/fetchProjectDetails",
   async (projectId: string, { rejectWithValue }) => {
     try {
-      const supabase = createBrowserClient();
-
-      const { data: project, error } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("id", projectId)
-        .single();
-
-      if (error) throw error;
-      const { techWriter, indWriter } = getWriterAssignmentsFromMetadata(
-        project.metadata,
-      );
-
-      const transformedProject: Project = {
-        id: project.id,
-        title: project.ind_title,
-        code: project.ind_number || "",
-        description: project.description || "No description available",
-        status: project.status as Project["status"],
-        priority: project.priority as Project["priority"],
-        progress: project.progress || 0,
-        sponsor: project.sponsor_name || "",
-        drug: project.drug_name || "",
-        targetDate: project.target_ind_submission_date || "",
-        tenantId: project.tenantid ?? "",
-        ownerId: project.project_creator_id ?? "",
-        teamSize: 0,
-        teamMembers: [],
-        createdAt: project.created_at,
-        updatedAt: project.updated_at,
-        settings: {
-          isPublic:
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (project as any).settings?.isPublic ?? false,
-          allowCollaboration:
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (project as any).settings?.allowCollaboration ?? true,
-        },
-        metadata: (project.metadata as Project["metadata"]) ?? {},
-        targetIndSubmissionDate: project.target_ind_submission_date ?? "",
-        preIndMeetingDate: project.pre_ind_meeting_date,
-        projectStartDate: project.project_start_date ?? "",
-        fdaContactEmail: project.fda_contact_email,
-        sponsorContactEmail: project.sponsor_contact_email,
-        additionalNotes: project.additional_notes,
-        productType: project.product_type,
-        cmcLead: project.cmc_lead,
-        clinicalLead: project.clinical_lead,
-        preclinicalLead: project.preclinical_lead,
-        regulatoryOwner: project.regulatory_owner,
-        publisher: project.publisher,
-        techWriter,
-        indWriter,
-      };
-
-      return transformedProject;
+      const project = await fetchProjectRowById(projectId);
+      return dbToClientProject({
+        project,
+        preferStoredSettings: true,
+      });
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to fetch project details",
@@ -503,109 +136,21 @@ export const createProject = createAsyncThunk(
   "projects/createProject",
   async (projectData: ProjectCreation, { rejectWithValue, getState }) => {
     try {
-      const supabase = createBrowserClient();
       const state = getState() as {
         auth: { user: { id: string } | null };
       };
       const userId = state.auth.user?.id;
 
-      if (!userId) throw new Error("User not authenticated");
-      if (!projectData.ind_title) throw new Error("Project title required");
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
 
-      const { data: userRow, error: userError } = await supabase
-        .from("users")
-        .select("tenantid")
-        .eq("id", userId)
-        .single();
-
-      if (userError) throw userError;
-      const userData = userRow as { tenantid?: string };
-      if (!userData?.tenantid) throw new Error("User has no tenant");
-
-      const normalizedProjectData: ProjectCreation = {
-        ...projectData,
-        fda_contact_email:
-          typeof projectData.fda_contact_email === "string" &&
-            !projectData.fda_contact_email.trim()
-            ? null
-            : projectData.fda_contact_email,
-      };
-
-      const tenantName =
-        getTenantNameFromMetadata(normalizedProjectData.metadata) ||
-        userData.tenantid;
-
-      await createProjectFolderStructure({
-        tenantName,
-        projectName: normalizedProjectData.ind_title,
+      const newProject = await createProjectRowWithOwnerAssignment({
+        projectData,
+        userId,
       });
 
-      const { data: newProject, error } = await supabase
-        .from("projects")
-        .insert({
-          ...normalizedProjectData,
-          project_creator_id: userId,
-          tenantid: userData.tenantid,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (!newProject?.id) throw new Error("Failed to create project");
-
-      const { error: assignmentError } = await supabase
-        .from("user_project")
-        .insert({
-          project_id: newProject.id,
-          user_id: userId,
-          created_by: userId,
-          role: "admin",
-        });
-
-      if (assignmentError) {
-        const { error: rollbackError } = await supabase
-          .from("projects")
-          .delete()
-          .eq("id", newProject.id);
-
-        if (rollbackError) {
-          console.error("Failed to rollback project after assignment error", {
-            projectId: newProject.id,
-            rollbackError,
-            assignmentError,
-          });
-        }
-        throw assignmentError;
-      }
-
-      const writerAssignments = getWriterAssignmentsFromMetadata(
-        normalizedProjectData.metadata,
-      );
-      const writerColumnsPayload: Record<string, unknown> = {};
-      if (writerAssignments.techWriter) {
-        writerColumnsPayload.tech_writer = writerAssignments.techWriter;
-      }
-      if (writerAssignments.indWriter) {
-        writerColumnsPayload.ind_writer = writerAssignments.indWriter;
-        writerColumnsPayload.inc_writer = writerAssignments.indWriter;
-      }
-      if (Object.keys(writerColumnsPayload).length > 0) {
-        // Best-effort backfill in case DB has writer columns not reflected in generated types.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const projectsTable = supabase.from("projects") as any;
-        const { error: writerColumnsError } = await projectsTable
-          .update(writerColumnsPayload)
-          .eq("id", newProject.id);
-
-        if (writerColumnsError) {
-          console.warn("Writer columns update skipped", {
-            projectId: newProject.id,
-            writerColumnsError,
-          });
-        }
-      }
-
-      return newProject;
+      return dbToClientProject({ project: newProject });
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to create project",
@@ -622,46 +167,12 @@ export const updateProject = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createBrowserClient();
-      console.log("updating: ", projectId, updates);
+      const updated = await updateProjectRowById({
+        projectId,
+        updates,
+      });
 
-      const { data, error } = await supabase
-        .from("projects")
-        .update(updates)
-        .eq("id", projectId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const writerAssignments = getWriterAssignmentsFromMetadata(
-        updates.metadata,
-      );
-      const writerColumnsPayload: Record<string, unknown> = {};
-      if (writerAssignments.techWriter) {
-        writerColumnsPayload.tech_writer = writerAssignments.techWriter;
-      }
-      if (writerAssignments.indWriter) {
-        writerColumnsPayload.ind_writer = writerAssignments.indWriter;
-        writerColumnsPayload.inc_writer = writerAssignments.indWriter;
-      }
-      if (Object.keys(writerColumnsPayload).length > 0) {
-        // Best-effort backfill in case DB has writer columns not reflected in generated types.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const projectsTable = supabase.from("projects") as any;
-        const { error: writerColumnsError } = await projectsTable
-          .update(writerColumnsPayload)
-          .eq("id", projectId);
-
-        if (writerColumnsError) {
-          console.warn("Writer columns update skipped", {
-            projectId,
-            writerColumnsError,
-          });
-        }
-      }
-
-      return data;
+      return dbToClientProject({ project: updated });
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to update project",
@@ -674,15 +185,7 @@ export const deleteProject = createAsyncThunk(
   "projects/deleteProject",
   async (projectId: string, { rejectWithValue }) => {
     try {
-      const supabase = createBrowserClient();
-
-      const { error } = await supabase
-        .from("projects")
-        .delete()
-        .eq("id", projectId);
-
-      if (error) throw error;
-
+      await deleteProjectById(projectId);
       return projectId;
     } catch (error: unknown) {
       return rejectWithValue(
@@ -912,8 +415,7 @@ const projectsSlice = createSlice({
       })
       // Create project
       .addCase(createProject.fulfilled, (state, action) => {
-        const proj = action.payload;
-        const newProject: Project = dbToClientProject(proj);
+        const newProject = action.payload;
         state.projects.unshift(newProject);
         state.currentProject = newProject;
         state.selectedProjectId = newProject.id;
@@ -923,17 +425,20 @@ const projectsSlice = createSlice({
       })
       // Update project
       .addCase(updateProject.fulfilled, (state, action) => {
+        const updatedProject = action.payload;
         const index = state.projects.findIndex(
-          (project) => project.id === action.payload.id,
+          (project) => project.id === updatedProject.id,
         );
         if (index !== -1) {
           state.projects[index] = {
-            ...dbToClientProject(action.payload),
+            ...updatedProject,
+            userRole: state.projects[index].userRole ?? updatedProject.userRole ?? null,
           };
         }
-        if (state.currentProject?.id === action.payload.id) {
+        if (state.currentProject?.id === updatedProject.id) {
           state.currentProject = {
-            ...dbToClientProject(action.payload),
+            ...updatedProject,
+            userRole: state.currentProject.userRole ?? updatedProject.userRole ?? null,
           };
         }
       })
@@ -1020,51 +525,6 @@ const projectsSlice = createSlice({
       });
   },
 });
-
-const dbToClientProject = (
-  project: ProjectCreation & { id: string },
-): Project => {
-  const { techWriter, indWriter } = getWriterAssignmentsFromMetadata(
-    project.metadata,
-  );
-  return {
-    ...project,
-    description: project.description ?? "",
-    tenantId: project.tenantid ?? "",
-    title: project.ind_title,
-    code: project.ind_number ?? "",
-    sponsor: project.sponsor_name ?? "",
-    ownerId: project.project_creator_id ?? "",
-    targetDate: project.target_ind_submission_date ?? "",
-    drug: project.drug_name ?? "",
-    createdAt: project.created_at ?? "",
-    updatedAt: project.updated_at ?? "",
-    teamMembers: [],
-    teamSize: 0,
-    status: (project.status ?? "draft") as Project["status"],
-    priority: (project.priority ?? "low") as Project["priority"],
-    progress: project.progress ?? 0,
-    metadata: (project.metadata as Project["metadata"]) ?? {},
-        settings: {
-          allowCollaboration: false,
-          isPublic: false,
-        },
-    projectStartDate: project.project_start_date ?? "",
-    fdaContactEmail: project.fda_contact_email ?? null,
-    additionalNotes: project.additional_notes ?? null,
-    preIndMeetingDate: project.pre_ind_meeting_date ?? null,
-    productType: project.product_type ?? "",
-    sponsorContactEmail: project.sponsor_contact_email ?? "",
-    targetIndSubmissionDate: project.target_ind_submission_date ?? "",
-    cmcLead: project.cmc_lead ?? null,
-    clinicalLead: project.clinical_lead ?? null,
-    preclinicalLead: project.preclinical_lead ?? null,
-    regulatoryOwner: project.regulatory_owner ?? null,
-    publisher: project.publisher ?? null,
-    techWriter,
-    indWriter,
-  };
-};
 
 export const {
   setCurrentProject,

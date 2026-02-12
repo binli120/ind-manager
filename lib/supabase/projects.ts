@@ -1,4 +1,4 @@
-import type { Project } from "@/lib/store/slices/projectsSlice";
+import type { Project } from "@/lib/projects/types";
 
 interface DbProject {
   id: string;
