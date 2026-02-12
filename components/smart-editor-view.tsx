@@ -20,10 +20,20 @@ import {
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useProject } from '@/hooks/useProject';
 import { useTenant } from '@/hooks/useTenant';
+import {
+  buildTreeCacheKey,
+  deriveSmartEditorContext,
+  fetchSectionTree,
+  fetchSignedProjectAsset,
+  loadCachedTree,
+  markdownToHtml,
+  saveTreeCache,
+  toSectionNumber,
+} from '@/lib/smart-editor/smartEditorViewModel';
 import { upsertSectionPath } from '@/lib/section-tree';
 import type { Section, SubsectionContent } from '@/types/section';
 import { HelpCircle, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 // Default empty template; actual sections are fetched from S3.
 // No hardcoded template; always load from S3
@@ -53,90 +63,15 @@ export function SmartEditorView() {
   const [usedCachedTree, setUsedCachedTree] = useState(false);
   const [treeCacheKey, setTreeCacheKey] = useState<string | null>(null);
 
-  const deriveCompany = () => {
-    let companyValue: string | undefined;
-    if (
-      currentProject?.metadata &&
-      typeof currentProject.metadata === 'object' &&
-      currentProject.metadata !== null
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const m = currentProject.metadata as any;
-      if (m.company) companyValue = String(m.company);
-    }
-    const tenantEntry = tenants.find((t) => t.id === selectedTenantId);
-    if (!companyValue) {
-      companyValue =
-        tenantEntry?.name ||
-        currentProject?.tenantId ||
-        selectedTenantId ||
-        'unknown-company';
-    }
-    return companyValue;
-  };
-
-  const deriveProjectName = () => {
-    let projectNameValue: string | undefined;
-    if (
-      currentProject?.metadata &&
-      typeof currentProject.metadata === 'object' &&
-      currentProject.metadata !== null
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const m = currentProject.metadata as any;
-      if (m.ind_title) projectNameValue = String(m.ind_title);
-    }
-    if (!projectNameValue) {
-      projectNameValue =
-        currentProject?.title ||
-        currentProject?.code ||
-        currentProject?.id ||
-        'unknown-project';
-    }
-    return projectNameValue;
-  };
-
-  const companyValue = deriveCompany();
-  const projectNameValue = deriveProjectName();
-  const derivePrimaryS3Key = () => {
-    if (
-      currentProject?.metadata &&
-      typeof currentProject.metadata === 'object' &&
-      currentProject.metadata !== null &&
-      'primaryDocumentS3Key' in currentProject.metadata
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const m = currentProject.metadata as any;
-      if (m.primaryDocumentS3Key) return String(m.primaryDocumentS3Key);
-    }
-    return undefined;
-  };
-  const primaryS3Key = derivePrimaryS3Key();
-
-  const markdownToHtml = (md: string) => {
-    const escapeHtml = (str: string) =>
-      str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-
-    const escaped = escapeHtml(md);
-    const blocks = escaped
-      .replace(/\r\n/g, '\n')
-      .split(/\n{2,}/)
-      .map((block) => `<p>${block.replace(/\n/g, '<br />')}</p>`)
-      .join('');
-
-    return blocks || '<p></p>';
-  };
-
-  const toSectionNumber = (value?: string | null) => {
-    if (!value) return null;
-    const match = value.match(/^(\d+(?:\.\d+)*)(?:[^\d.]|$)/);
-    return match ? match[1] : null;
-  };
+  const { companyValue, projectNameValue, primaryS3Key } = useMemo(
+    () =>
+      deriveSmartEditorContext({
+        currentProject,
+        tenants,
+        selectedTenantId,
+      }),
+    [currentProject, tenants, selectedTenantId],
+  );
 
   useEffect(() => {
     if (!hasSeenTour) {
@@ -165,42 +100,6 @@ export function SmartEditorView() {
   }, [sectionData, selectedSection]);
 
   // Load section tree from S3 based on the selected project
-  const buildTreeCacheKey = (
-    projectId: string,
-    s3Key?: string,
-    company?: string,
-    projectName?: string,
-  ) =>
-    [
-      'sectionTree',
-      projectId || 'no-project',
-      s3Key || 'no-s3key',
-      company || 'no-company',
-      projectName || 'no-projectName',
-    ].join(':');
-
-  const loadCachedTree = (key: string) => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const raw = sessionStorage.getItem(key);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as { ts: number; sections: Section[] };
-      const tenMinutes = 10 * 60 * 1000;
-      if (Date.now() - parsed.ts > tenMinutes) return null;
-      return parsed.sections;
-    } catch {
-      return null;
-    }
-  };
-
-  const saveTreeCache = (key: string, sections: Section[]) => {
-    if (typeof window === 'undefined') return;
-    try {
-      sessionStorage.setItem(key, JSON.stringify({ ts: Date.now(), sections }));
-    } catch {
-      // ignore quota errors
-    }
-  };
 
   useEffect(() => {
     const loadTree = async () => {
@@ -218,60 +117,11 @@ export function SmartEditorView() {
       setTreeError(null);
 
       try {
-        const s3Key =
-          typeof currentProject?.metadata === 'object' &&
-          currentProject?.metadata !== null &&
-          'primaryDocumentS3Key' in currentProject.metadata
-            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (currentProject.metadata as any).primaryDocumentS3Key
-            : undefined;
-
-        const url = new URL(
-          `/api/projects/${selectedProjectId}/sections`,
-          window.location.origin,
-        );
-        if (s3Key) {
-          url.searchParams.set('s3Key', s3Key);
-        }
-        let companyValue: string | undefined;
-        let projectNameValue: string | undefined;
-
-        if (
-          currentProject?.metadata &&
-          typeof currentProject.metadata === 'object' &&
-          currentProject.metadata !== null
-        ) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const m = currentProject.metadata as any;
-          if (m.company) companyValue = String(m.company);
-          if (m.ind_title) projectNameValue = String(m.ind_title);
-        }
-
-        const tenantEntry = tenants.find((t) => t.id === selectedTenantId);
-        if (!companyValue) {
-          companyValue =
-            tenantEntry?.name ||
-            currentProject?.tenantId ||
-            selectedTenantId ||
-            'unknown-company';
-        }
-
-        if (!projectNameValue) {
-          projectNameValue =
-            currentProject?.title ||
-            currentProject?.code ||
-            currentProject?.id ||
-            'unknown-project';
-        }
-
-        url.searchParams.set('company', companyValue);
-        url.searchParams.set('projectName', projectNameValue);
-
         const abort = new AbortController();
         abortTimer = setTimeout(() => abort.abort(), 30000);
         const cacheKey = buildTreeCacheKey(
           selectedProjectId,
-          s3Key || undefined,
+          primaryS3Key || undefined,
           companyValue,
           projectNameValue,
         );
@@ -286,18 +136,13 @@ export function SmartEditorView() {
           setIsLoadingTree(false);
         }
 
-        const res = await fetch(url.toString(), { signal: abort.signal });
-        if (!res.ok) {
-          const errPayload = await res.json().catch(() => null);
-          throw new Error(
-            errPayload?.message ||
-              errPayload?.error ||
-              'Failed to load section tree',
-          );
-        }
-
-        const payload = await res.json();
-        const fetchedSections = (payload?.sections ?? []) as Section[];
+        const fetchedSections = await fetchSectionTree({
+          projectId: selectedProjectId,
+          s3Key: primaryS3Key || undefined,
+          company: companyValue,
+          projectName: projectNameValue,
+          signal: abort.signal,
+        });
 
         setSectionData(fetchedSections);
         setSelectedSection(fetchedSections[0] ?? null);
@@ -327,16 +172,16 @@ export function SmartEditorView() {
     loadTree();
   }, [
     selectedProjectId,
-    currentProject,
-    selectedTenantId,
-    tenants,
+    primaryS3Key,
+    companyValue,
+    projectNameValue,
     treeRetryKey,
   ]);
 
   // Load file content (md or pdf) when a file subsection is selected
   useEffect(() => {
     const loadFile = async () => {
-      if (!selectedSubsection || selectedSubsection.isCategory) {
+      if (!selectedSubsection || selectedSubsection.isCategory || !selectedProjectId) {
         setFileMode(null);
         setFileUrl(null);
         setFileText(null);
@@ -363,32 +208,14 @@ export function SmartEditorView() {
 
       const mdKey = `${fullPath}.extracted.md`;
 
-      const fetchSigned = async (
-        key: string,
-        format: 'url' | 'text' = 'url',
-      ) => {
-        console.info(
-          '[SmartEditor] signing url for key',
-          key,
-          'format',
-          format,
-        );
-        const url = new URL(
-          `/api/projects/${selectedProjectId}/asset`,
-          window.location.origin,
-        );
-        url.searchParams.set('key', key);
-        url.searchParams.set('format', format);
-        const res = await fetch(url.toString());
-        if (!res.ok) throw new Error(`asset api failed ${res.status}`);
-        const payload = await res.json();
-        return payload;
-      };
-
       try {
         // Try markdown sidecar first
-        const mdPayload = await fetchSigned(mdKey, 'text');
-        const mdText = (mdPayload as { text?: string }).text;
+        const mdPayload = await fetchSignedProjectAsset<{ text?: string }>({
+          projectId: selectedProjectId,
+          key: mdKey,
+          format: 'text',
+        });
+        const mdText = mdPayload.text;
         if (!mdText) {
           throw new Error('md sidecar empty');
         }
@@ -401,8 +228,12 @@ export function SmartEditorView() {
       } catch (mdError) {
         console.warn('[SmartEditor] markdown sidecar missing', mdKey, mdError);
         try {
-          const pdfPayload = await fetchSigned(fullPath, 'url');
-          setFileUrl((pdfPayload as { url: string }).url);
+          const pdfPayload = await fetchSignedProjectAsset<{ url: string }>({
+            projectId: selectedProjectId,
+            key: fullPath,
+            format: 'url',
+          });
+          setFileUrl(pdfPayload.url);
           setFileMode('pdf');
         } catch (pdfError) {
           setFileError(
@@ -467,9 +298,6 @@ export function SmartEditorView() {
     let shouldUpdateSelection = false;
     let newParentSubsection: SubsectionContent | null = null;
 
-    if (!selectedSection) return;
-    if (!selectedSection) return;
-    if (!selectedSection) return;
     if (!selectedSection) return;
     setSectionData((prevSections) =>
       prevSections.map((section) => {

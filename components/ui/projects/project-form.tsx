@@ -20,53 +20,36 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useTenant } from '@/hooks/useTenant';
+import { useTenantUsers } from '@/hooks/useTenantUsers';
 import {
   getDefaultProjectData,
   PRODUCT_TYPES,
   PROJECT_CREATION_STEPS,
   validateProjectStep,
-} from "@/lib/metadata/projects";
+} from '@/lib/metadata/projects';
 import {
-  ProjectCreation,
-} from "@/lib/store/slices/projectsSlice";
-import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useTenant } from "@/hooks/useTenant";
-import { useAppSelector } from "@/lib/store";
-import { createClient } from "@/lib/supabase/client";
+  buildTeamRows,
+  createTeamRowId,
+  isTeamRowsValid,
+  normalizeProjectSubmissionData,
+  TEAM_ROLE_OPTIONS,
+  TEAM_ROLE_OWNER,
+  TeamAssignableRole,
+  TeamMemberRow,
+} from '@/lib/projects/projectFormModel';
+import { useAppSelector } from '@/lib/store';
+import { ProjectCreation } from '@/lib/store/slices/projectsSlice';
+import { Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const PRIORITY_OPTIONS = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "critical", label: "Critical" },
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+  { value: 'critical', label: 'Critical' },
 ] as const;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const TEAM_ROLE_OWNER = "owner";
-const TEAM_ROLE_OPTIONS = [
-  { value: "cmc_lead", label: "CMC Leader" },
-  { value: "clinical_lead", label: "Clinical Lead" },
-  { value: "preclinical_lead", label: "Preclinical Lead" },
-  { value: "regulatory_owner", label: "Regulatory Owner" },
-  { value: "publisher", label: "Publisher" },
-  { value: "tech_writer", label: "Tech Writer" },
-  { value: "ind_writer", label: "IND Writer" },
-] as const;
-
-type TeamAssignableRole = (typeof TEAM_ROLE_OPTIONS)[number]["value"];
-
-type TeamMemberRow = {
-  id: string;
-  userId: string;
-  role: TeamAssignableRole | typeof TEAM_ROLE_OWNER | "";
-};
-
-type TenantUserOption = {
-  id: string;
-  name: string;
-  email: string;
-};
 
 interface ProjectFormProps {
   initialData?: ProjectCreation;
@@ -76,36 +59,6 @@ interface ProjectFormProps {
   isSubmitting?: boolean;
   submitError?: string | null;
 }
-
-const createRowId = () =>
-  `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-const parseTeamAssignmentsFromMetadata = (
-  metadata: unknown,
-): { tech_writer?: string; ind_writer?: string; inc_writer?: string } => {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-    return {};
-  }
-  const teamAssignments = (
-    metadata as { team_assignments?: unknown }
-  ).team_assignments;
-  if (
-    !teamAssignments ||
-    typeof teamAssignments !== "object" ||
-    Array.isArray(teamAssignments)
-  ) {
-    return {};
-  }
-  const source = teamAssignments as Record<string, unknown>;
-  return {
-    tech_writer:
-      typeof source.tech_writer === "string" ? source.tech_writer : undefined,
-    ind_writer:
-      typeof source.ind_writer === "string" ? source.ind_writer : undefined,
-    inc_writer:
-      typeof source.inc_writer === "string" ? source.inc_writer : undefined,
-  };
-};
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({
   initialData,
@@ -117,60 +70,10 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
 }) => {
   const { user } = useAppSelector((state) => state.auth);
   const { currentTenant, selectedTenantId } = useTenant();
-  const defaultTenantId = selectedTenantId ?? currentTenant?.id ?? "demo-tenant";
-  const ownerUserId = user?.id ?? "";
-  const ownerDisplayName = user?.name?.trim() || user?.email || "Current User";
-
-  const buildTeamRows = (source?: ProjectCreation): TeamMemberRow[] => {
-    const rows: TeamMemberRow[] = [
-      {
-        id: createRowId(),
-        userId: ownerUserId,
-        role: TEAM_ROLE_OWNER,
-      },
-    ];
-
-    const knownRoleKeys = [
-      "cmc_lead",
-      "clinical_lead",
-      "preclinical_lead",
-      "regulatory_owner",
-      "publisher",
-    ] as const satisfies ReadonlyArray<keyof ProjectCreation>;
-
-    knownRoleKeys.forEach((role) => {
-      const assignedUserId = source?.[role];
-      if (typeof assignedUserId === "string" && assignedUserId.trim()) {
-        rows.push({
-          id: createRowId(),
-          userId: assignedUserId,
-          role,
-        });
-      }
-    });
-
-    const metadataAssignments = parseTeamAssignmentsFromMetadata(source?.metadata);
-    const techWriterUserId = metadataAssignments.tech_writer;
-    if (techWriterUserId) {
-      rows.push({
-        id: createRowId(),
-        userId: techWriterUserId,
-        role: "tech_writer",
-      });
-    }
-
-    const indWriterUserId =
-      metadataAssignments.ind_writer || metadataAssignments.inc_writer;
-    if (indWriterUserId) {
-      rows.push({
-        id: createRowId(),
-        userId: indWriterUserId,
-        role: "ind_writer",
-      });
-    }
-
-    return rows;
-  };
+  const defaultTenantId =
+    selectedTenantId ?? currentTenant?.id ?? 'demo-tenant';
+  const ownerUserId = user?.id ?? '';
+  const ownerDisplayName = user?.name?.trim() || user?.email || 'Current User';
 
   const [currentStep, setCurrentStep] = useState(1);
   const [projectData, setProjectData] = useState<ProjectCreation>(() => {
@@ -179,56 +82,27 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     return { ...base, tenantid: (base as any).tenantid || defaultTenantId };
   });
   const [teamRows, setTeamRows] = useState<TeamMemberRow[]>(() =>
-    buildTeamRows(initialData),
+    buildTeamRows(initialData, ownerUserId),
   );
-  const [tenantUsers, setTenantUsers] = useState<TenantUserOption[]>([]);
-  const [usersLoadError, setUsersLoadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isActive = true;
-    const tenantId = defaultTenantId;
-    if (!tenantId) return () => {
-      isActive = false;
-    };
-
-    const supabase = createClient();
-    const loadUsers = async () => {
-      setUsersLoadError(null);
-      const { data, error } = await supabase
-        .from("users")
-        .select("id,name,email")
-        .eq("tenantid", tenantId)
-        .order("name", { ascending: true });
-
-      if (!isActive) return;
-      if (error) {
-        setUsersLoadError(error.message || "Failed to load tenant users");
-        setTenantUsers([]);
-        return;
-      }
-
-      const mappedUsers = (data ?? []).map((row) => ({
-        id: row.id,
-        name: row.name || row.email,
-        email: row.email,
-      }));
-      setTenantUsers(mappedUsers);
-    };
-
-    void loadUsers();
-
-    return () => {
-      isActive = false;
-    };
-  }, [defaultTenantId]);
+  const { users: tenantUsers, error: usersLoadError } =
+    useTenantUsers(defaultTenantId);
 
   useEffect(() => {
     setTeamRows((prevRows) => {
       if (!prevRows.length) {
-        return [{ id: createRowId(), userId: ownerUserId, role: TEAM_ROLE_OWNER }];
+        return [
+          {
+            id: createTeamRowId(),
+            userId: ownerUserId,
+            role: TEAM_ROLE_OWNER,
+          },
+        ];
       }
       const [ownerRow, ...rest] = prevRows;
-      return [{ ...ownerRow, userId: ownerUserId, role: TEAM_ROLE_OWNER }, ...rest];
+      return [
+        { ...ownerRow, userId: ownerUserId, role: TEAM_ROLE_OWNER },
+        ...rest,
+      ];
     });
   }, [ownerUserId]);
 
@@ -247,19 +121,16 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   };
 
   const sponsorEmail =
-    typeof projectData.sponsor_contact_email === "string"
+    typeof projectData.sponsor_contact_email === 'string'
       ? projectData.sponsor_contact_email.trim()
-      : "";
+      : '';
   const fdaEmail =
-    typeof projectData.fda_contact_email === "string"
+    typeof projectData.fda_contact_email === 'string'
       ? projectData.fda_contact_email.trim()
-      : "";
+      : '';
   const sponsorEmailValid = EMAIL_REGEX.test(sponsorEmail);
   const fdaEmailValid = !fdaEmail || EMAIL_REGEX.test(fdaEmail);
-  const isTeamStepValid = teamRows.every((row) => {
-    if (row.role === TEAM_ROLE_OWNER) return true;
-    return Boolean(row.userId && row.role);
-  });
+  const isTeamStepValid = isTeamRowsValid(teamRows);
 
   const isStepValid = () => {
     const baseStepValid = validateProjectStep(currentStep, projectData);
@@ -273,19 +144,21 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   const addTeamRow = () => {
     setTeamRows((prevRows) => [
       ...prevRows,
-      { id: createRowId(), userId: "", role: "" },
+      { id: createTeamRowId(), userId: '', role: '' },
     ]);
   };
 
   const removeTeamRow = (rowId: string) => {
     setTeamRows((prevRows) =>
-      prevRows.filter((row) => row.id !== rowId || row.role === TEAM_ROLE_OWNER),
+      prevRows.filter(
+        (row) => row.id !== rowId || row.role === TEAM_ROLE_OWNER,
+      ),
     );
   };
 
   const updateTeamRow = (
     rowId: string,
-    updates: Partial<Pick<TeamMemberRow, "userId" | "role">>,
+    updates: Partial<Pick<TeamMemberRow, 'userId' | 'role'>>,
   ) => {
     setTeamRows((prevRows) =>
       prevRows.map((row) =>
@@ -299,12 +172,6 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     );
   };
 
-  const getAssignedUserByRole = (role: TeamAssignableRole) => {
-    const row = teamRows.find((memberRow) => memberRow.role === role);
-    if (!row?.userId.trim()) return null;
-    return row.userId.trim();
-  };
-
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
@@ -313,62 +180,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       : selectedTenantId
         ? { id: selectedTenantId }
         : null;
-    const baseMetadata =
-      projectData.metadata &&
-      typeof projectData.metadata === "object" &&
-      !Array.isArray(projectData.metadata)
-        ? (projectData.metadata as Record<string, unknown>)
-        : {};
-    const nextData = tenantMeta
-      ? { ...projectData, metadata: { ...baseMetadata, tenant: tenantMeta } }
-      : projectData;
-
-    const normalizedData = {
-      ...nextData,
-      sponsor_contact_email:
-        typeof nextData.sponsor_contact_email === "string"
-          ? nextData.sponsor_contact_email.trim()
-          : nextData.sponsor_contact_email,
-      fda_contact_email:
-        typeof nextData.fda_contact_email === "string" &&
-          !nextData.fda_contact_email.trim()
-          ? null
-          : typeof nextData.fda_contact_email === "string"
-            ? nextData.fda_contact_email.trim()
-            : nextData.fda_contact_email,
-    };
-
-    const techWriterUserId = getAssignedUserByRole("tech_writer");
-    const indWriterUserId = getAssignedUserByRole("ind_writer");
-    const normalizedMetadata =
-      normalizedData.metadata &&
-      typeof normalizedData.metadata === "object" &&
-      !Array.isArray(normalizedData.metadata)
-        ? (normalizedData.metadata as Record<string, unknown>)
-        : {};
-    const existingTeamAssignments = parseTeamAssignmentsFromMetadata(
-      normalizedMetadata,
-    );
-    const mergedTeamAssignments = {
-      ...existingTeamAssignments,
-      ...(techWriterUserId ? { tech_writer: techWriterUserId } : {}),
-      ...(indWriterUserId
-        ? { ind_writer: indWriterUserId, inc_writer: indWriterUserId }
-        : {}),
-    };
-
-    const submissionData: ProjectCreation = {
-      ...normalizedData,
-      cmc_lead: getAssignedUserByRole("cmc_lead"),
-      clinical_lead: getAssignedUserByRole("clinical_lead"),
-      preclinical_lead: getAssignedUserByRole("preclinical_lead"),
-      regulatory_owner: getAssignedUserByRole("regulatory_owner"),
-      publisher: getAssignedUserByRole("publisher"),
-      metadata: {
-        ...normalizedMetadata,
-        team_assignments: mergedTeamAssignments,
-      },
-    };
+    const submissionData = normalizeProjectSubmissionData({
+      projectData,
+      tenantMeta,
+      teamRows,
+    });
 
     try {
       await onSubmit(submissionData);
@@ -376,7 +192,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         ...(initialData || getDefaultProjectData()),
         tenantid: defaultTenantId,
       });
-      setTeamRows(buildTeamRows(initialData));
+      setTeamRows(buildTeamRows(initialData, ownerUserId));
       setCurrentStep(1);
     } catch {
       // Keep form state when submit fails so user can retry.
@@ -385,7 +201,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
 
   const updateProjectData = <T extends keyof ProjectCreation>(
     field: T,
-    value: ProjectCreation[T]
+    value: ProjectCreation[T],
   ) => {
     setProjectData((prev) => ({ ...prev, [field]: value }));
   };
@@ -394,43 +210,43 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
-            <div className="grid gap-4">
+          <div className='space-y-4'>
+            <div className='grid gap-4'>
               <div>
-                <Label htmlFor="ind_title">IND Title *</Label>
+                <Label htmlFor='ind_title'>IND Title *</Label>
                 <Input
-                  id="ind_title"
-                  value={(projectData.ind_title as string) || ""}
+                  id='ind_title'
+                  value={(projectData.ind_title as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("ind_title", e.target.value)
+                    updateProjectData('ind_title', e.target.value)
                   }
-                  placeholder="e.g., Phase 1 Study of XYZ-123 in Oncology"
+                  placeholder='e.g., Phase 1 Study of XYZ-123 in Oncology'
                 />
               </div>
               <div>
-                <Label htmlFor="ind_number">Drug / Asset Code *</Label>
+                <Label htmlFor='ind_number'>Drug / Asset Code *</Label>
                 <Input
-                  id="ind_number"
-                  value={(projectData.ind_number as string) || ""}
+                  id='ind_number'
+                  value={(projectData.ind_number as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("ind_number", e.target.value)
+                    updateProjectData('ind_number', e.target.value)
                   }
-                  placeholder="e.g., ABC-001"
+                  placeholder='e.g., ABC-001'
                 />
               </div>
               <div>
-                <Label htmlFor="drug_name">Drug Name *</Label>
+                <Label htmlFor='drug_name'>Drug Name *</Label>
                 <Input
-                  id="drug_name"
-                  value={(projectData.drug_name as string) || ""}
+                  id='drug_name'
+                  value={(projectData.drug_name as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("drug_name", e.target.value)
+                    updateProjectData('drug_name', e.target.value)
                   }
-                  placeholder="e.g., XYZ-123"
+                  placeholder='e.g., XYZ-123'
                 />
               </div>
               <div>
-                <Label htmlFor="product_type">Product Type *</Label>
+                <Label htmlFor='product_type'>Product Type *</Label>
                 <Select
                   value={(projectData.product_type as string) || ''}
                   onValueChange={(value) =>
@@ -450,13 +266,15 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="priority">Priority</Label>
+                <Label htmlFor='priority'>Priority</Label>
                 <Select
-                  value={(projectData.priority as string) || "medium"}
-                  onValueChange={(value) => updateProjectData("priority", value)}
+                  value={(projectData.priority as string) || 'medium'}
+                  onValueChange={(value) =>
+                    updateProjectData('priority', value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
+                    <SelectValue placeholder='Select priority' />
                   </SelectTrigger>
                   <SelectContent>
                     {PRIORITY_OPTIONS.map((opt) => (
@@ -468,23 +286,25 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor='description'>Description</Label>
                 <Textarea
-                  id="description"
-                  value={(projectData.description as string) || ""}
+                  id='description'
+                  value={(projectData.description as string) || ''}
                   onChange={(e) =>
-                    updateProjectData("description", e.target.value)
+                    updateProjectData('description', e.target.value)
                   }
-                  placeholder="Brief description of the program"
+                  placeholder='Brief description of the program'
                 />
               </div>
               <div>
-                <Label htmlFor="tenant_name">Tenant</Label>
+                <Label htmlFor='tenant_name'>Tenant</Label>
                 <Input
-                  id="tenant_name"
+                  id='tenant_name'
                   value={
                     currentTenant?.name ??
-                    (selectedTenantId ? "Tenant selected" : "No tenant selected")
+                    (selectedTenantId
+                      ? 'Tenant selected'
+                      : 'No tenant selected')
                   }
                   disabled
                 />
@@ -587,7 +407,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                   onChange={(e) =>
                     updateProjectData(
                       'target_ind_submission_date',
-                      e.target.value
+                      e.target.value,
                     )
                   }
                 />
@@ -627,7 +447,10 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                             </SelectTrigger>
                             <SelectContent>
                               {tenantUsers.map((tenantUser) => (
-                                <SelectItem key={tenantUser.id} value={tenantUser.id}>
+                                <SelectItem
+                                  key={tenantUser.id}
+                                  value={tenantUser.id}
+                                >
                                   {tenantUser.name} ({tenantUser.email})
                                 </SelectItem>
                               ))}
@@ -666,7 +489,12 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                       </div>
                       <div className='flex items-end gap-2'>
                         {isLastRow && (
-                          <Button type='button' variant='outline' size='icon' onClick={addTeamRow}>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            size='icon'
+                            onClick={addTeamRow}
+                          >
                             +
                           </Button>
                         )}
@@ -702,43 +530,43 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
             <div className='grid gap-4'>
               <div className='space-y-2'>
                 <Label>Project Summary</Label>
-                <div className="p-4 border rounded-lg bg-muted/20 space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="font-medium">IND Title:</span>
+                <div className='p-4 border rounded-lg bg-muted/20 space-y-2 text-sm'>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>IND Title:</span>
                     <span>
-                  {(projectData.ind_title as string) || "Not specified"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Drug / Asset Code:</span>
-                <span>
-                  {(projectData.ind_number as string) || "Not specified"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Drug Name:</span>
-                <span>
-                  {(projectData.drug_name as string) || "Not specified"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Product Type:</span>
-                <span>
-                  {(projectData.product_type as string) || "Not specified"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Sponsor:</span>
-                <span>
-                  {(projectData.sponsor_name as string) || "Not specified"}
-                </span>
-              </div>
+                      {(projectData.ind_title as string) || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>Drug / Asset Code:</span>
+                    <span>
+                      {(projectData.ind_number as string) || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>Drug Name:</span>
+                    <span>
+                      {(projectData.drug_name as string) || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>Product Type:</span>
+                    <span>
+                      {(projectData.product_type as string) || 'Not specified'}
+                    </span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span className='font-medium'>Sponsor:</span>
+                    <span>
+                      {(projectData.sponsor_name as string) || 'Not specified'}
+                    </span>
+                  </div>
                   {(projectData.target_ind_submission_date as string) && (
                     <div className='flex justify-between'>
                       <span className='font-medium'>Target Date:</span>
                       <span>
                         {new Date(
-                          projectData.target_ind_submission_date as string
+                          projectData.target_ind_submission_date as string,
                         ).toLocaleDateString()}
                       </span>
                     </div>
@@ -789,8 +617,8 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                     step.id === currentStep
                       ? 'text-primary font-medium'
                       : step.id < currentStep
-                      ? 'text-green-600'
-                      : 'text-muted-foreground'
+                        ? 'text-green-600'
+                        : 'text-muted-foreground'
                   }`}
                 >
                   {step.title}
@@ -800,7 +628,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
           </div>
         </div>
 
-          {/* Step Content */}
+        {/* Step Content */}
         <div className='min-h-0 flex-1 px-6'>
           <Card className='card-dark-border flex h-full min-h-0 flex-col'>
             <CardHeader>
@@ -817,60 +645,60 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
           </Card>
         </div>
 
-          {/* Navigation */}
+        {/* Navigation */}
         <div className='mt-4 flex shrink-0 justify-between p-6 pt-0'>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={prevStep}
+            disabled={currentStep === 1 || isSubmitting}
+          >
+            <ChevronLeft className='h-4 w-4 mr-2' />
+            Previous
+          </Button>
+          <div className='flex gap-2'>
             <Button
               type='button'
               variant='outline'
-              onClick={prevStep}
-              disabled={currentStep === 1 || isSubmitting}
+              onClick={onCancel}
+              disabled={isSubmitting}
             >
-              <ChevronLeft className='h-4 w-4 mr-2' />
-              Previous
+              Cancel
             </Button>
-            <div className='flex gap-2'>
+            {currentStep === PROJECT_CREATION_STEPS.length ? (
               <Button
                 type='button'
-                variant='outline'
-                onClick={onCancel}
-                disabled={isSubmitting}
+                onClick={handleSubmit}
+                disabled={!isStepValid() || isSubmitting}
               >
-                Cancel
+                {isSubmitting ? (
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
+                ) : (
+                  <Check className='h-4 w-4 mr-2' />
+                )}
+                {isSubmitting
+                  ? isEditing
+                    ? 'Updating...'
+                    : 'Creating...'
+                  : isEditing
+                    ? 'Update'
+                    : 'Create Project'}
               </Button>
-              {currentStep === PROJECT_CREATION_STEPS.length ? (
-                <Button
-                  type='button'
-                  onClick={handleSubmit}
-                  disabled={!isStepValid() || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <Loader2 className='h-4 w-4 mr-2 animate-spin' />
-                  ) : (
-                    <Check className='h-4 w-4 mr-2' />
-                  )}
-                  {isSubmitting
-                    ? isEditing
-                      ? "Updating..."
-                      : "Creating..."
-                    : isEditing
-                      ? "Update"
-                      : "Create Project"}
-                </Button>
-              ) : (
-                <Button
-                  type='button'
-                  onClick={nextStep}
-                  disabled={!isStepValid() || isSubmitting}
-                >
-                  Next
-                  <ChevronRight className='h-4 w-4 ml-2' />
-                </Button>
-              )}
-            </div>
+            ) : (
+              <Button
+                type='button'
+                onClick={nextStep}
+                disabled={!isStepValid() || isSubmitting}
+              >
+                Next
+                <ChevronRight className='h-4 w-4 ml-2' />
+              </Button>
+            )}
           </div>
-          {submitError && (
-            <p className='px-6 pb-4 text-sm text-red-500'>{submitError}</p>
-          )}
+        </div>
+        {submitError && (
+          <p className='px-6 pb-4 text-sm text-red-500'>{submitError}</p>
+        )}
       </div>
     </div>
   );
