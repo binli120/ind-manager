@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import type { User } from "@/lib/store/slices";
 import { isAdminEmail } from "@/lib/utils";
 

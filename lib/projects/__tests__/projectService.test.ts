@@ -1,31 +1,76 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import type { Database } from "@/lib/supabase/schema";
 import type { ProjectCreation } from "@/lib/projects/types";
-import { createBrowserClient } from "@/lib/supabase";
-import { createClient } from "@/lib/supabase/client";
 import { isAdminEmail } from "@/lib/utils";
+import {
+  createProjectFolderStructure,
+  deleteProjectRow,
+  fetchCurrentAuthenticatedUserId as fetchCurrentAuthenticatedUserIdFromRepository,
+  fetchProjectRows,
+  fetchUserProjectAssignments,
+  fetchUserTenantAndEmail,
+  fetchUserTenantId,
+  insertProjectRow,
+  insertUserProjectAssignment,
+} from "@/lib/projects/projects.repository";
 import {
   createProjectRowWithOwnerAssignment,
   fetchVisibleProjectRowsForUser,
   getCurrentAuthenticatedUserId,
 } from "../projectService";
 
-jest.mock("@/lib/supabase", () => ({
-  createBrowserClient: jest.fn(),
-}));
-
-jest.mock("@/lib/supabase/client", () => ({
-  createClient: jest.fn(),
+jest.mock("@/lib/projects/projects.repository", () => ({
+  createProjectFolderStructure: jest.fn(),
+  deleteProjectRow: jest.fn(),
+  fetchCurrentAuthenticatedUserId: jest.fn(),
+  fetchProjectRows: jest.fn(),
+  fetchUserProjectAssignments: jest.fn(),
+  fetchUserTenantAndEmail: jest.fn(),
+  fetchUserTenantId: jest.fn(),
+  insertProjectRow: jest.fn(),
+  insertUserProjectAssignment: jest.fn(),
+  updateProjectRow: jest.fn(),
+  fetchProjectById: jest.fn(),
 }));
 
 jest.mock("@/lib/utils", () => ({
   isAdminEmail: jest.fn(),
 }));
 
-const mockedCreateBrowserClient = createBrowserClient as jest.MockedFunction<
-  typeof createBrowserClient
->;
-const mockedCreateClient = createClient as jest.MockedFunction<typeof createClient>;
 const mockedIsAdminEmail = isAdminEmail as jest.MockedFunction<typeof isAdminEmail>;
+const mockedCreateProjectFolderStructure =
+  createProjectFolderStructure as jest.MockedFunction<
+    typeof createProjectFolderStructure
+  >;
+const mockedDeleteProjectRow = deleteProjectRow as jest.MockedFunction<
+  typeof deleteProjectRow
+>;
+const mockedFetchCurrentAuthenticatedUserIdFromRepository =
+  fetchCurrentAuthenticatedUserIdFromRepository as jest.MockedFunction<
+    typeof fetchCurrentAuthenticatedUserIdFromRepository
+  >;
+const mockedFetchProjectRows = fetchProjectRows as jest.MockedFunction<
+  typeof fetchProjectRows
+>;
+const mockedFetchUserProjectAssignments =
+  fetchUserProjectAssignments as jest.MockedFunction<
+    typeof fetchUserProjectAssignments
+  >;
+const mockedFetchUserTenantAndEmail =
+  fetchUserTenantAndEmail as jest.MockedFunction<typeof fetchUserTenantAndEmail>;
+const mockedFetchUserTenantId = fetchUserTenantId as jest.MockedFunction<
+  typeof fetchUserTenantId
+>;
+const mockedInsertProjectRow = insertProjectRow as jest.MockedFunction<
+  typeof insertProjectRow
+>;
+const mockedInsertUserProjectAssignment =
+  insertUserProjectAssignment as jest.MockedFunction<
+    typeof insertUserProjectAssignment
+  >;
 
 const baseProjectRow: Database["public"]["Tables"]["projects"]["Row"] = {
   additional_notes: null,
@@ -57,78 +102,16 @@ const baseProjectRow: Database["public"]["Tables"]["projects"]["Row"] = {
 };
 
 describe("lib/projects/projectService", () => {
-  const fetchMock = jest.fn();
-
-  beforeAll(() => {
-    global.fetch = fetchMock as unknown as typeof fetch;
-  });
-
   beforeEach(() => {
     jest.clearAllMocks();
-    fetchMock.mockReset();
     mockedIsAdminEmail.mockReturnValue(false);
   });
 
   it("creates folder + project + owner assignment", async () => {
-    const usersSingle = jest.fn().mockResolvedValue({
-      data: { tenantid: "tenant-1" },
-      error: null,
-    });
-    const projectsInsert = jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        single: jest.fn().mockResolvedValue({
-          data: {
-            ...baseProjectRow,
-            metadata: {
-              team_assignments: {
-                tech_writer: "writer-tech",
-                ind_writer: "writer-ind",
-              },
-            },
-          },
-          error: null,
-        }),
-      }),
-    });
-    const userProjectInsert = jest.fn().mockResolvedValue({ error: null });
-
-    const supabaseMock = {
-      from: jest.fn((table: string) => {
-        if (table === "users") {
-          return {
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: usersSingle,
-              }),
-            }),
-          };
-        }
-
-        if (table === "projects") {
-          return {
-            insert: projectsInsert,
-            delete: jest.fn().mockReturnValue({ eq: jest.fn() }),
-          };
-        }
-
-        if (table === "user_project") {
-          return {
-            insert: userProjectInsert,
-          };
-        }
-
-        throw new Error(`Unexpected table ${table}`);
-      }),
-    };
-
-    mockedCreateBrowserClient.mockReturnValue(
-      supabaseMock as unknown as ReturnType<typeof createBrowserClient>,
-    );
-
-    fetchMock.mockResolvedValue({
-      ok: true,
-      text: async () => JSON.stringify({ ok: true }),
-    });
+    mockedFetchUserTenantId.mockResolvedValue("tenant-1");
+    mockedCreateProjectFolderStructure.mockResolvedValue(undefined);
+    mockedInsertProjectRow.mockResolvedValue(baseProjectRow);
+    mockedInsertUserProjectAssignment.mockResolvedValue(undefined);
 
     const projectData: ProjectCreation = {
       ind_title: "Lpathomab IND",
@@ -152,20 +135,12 @@ describe("lib/projects/projectService", () => {
       userId: "user-1",
     });
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/s3/new-project",
-      expect.objectContaining({ method: "POST" }),
-    );
-    const fetchBody = JSON.parse(
-      (fetchMock.mock.calls[0][1] as RequestInit).body as string,
-    );
-    expect(fetchBody).toMatchObject({
-      tenant_name: "filynai.com",
-      project_name: "Lpathomab IND",
-      bucket: "doc-repository-dev",
+    expect(mockedCreateProjectFolderStructure).toHaveBeenCalledWith({
+      tenantName: "filynai.com",
+      projectName: "Lpathomab IND",
     });
 
-    expect(projectsInsert).toHaveBeenCalledWith(
+    expect(mockedInsertProjectRow).toHaveBeenCalledWith(
       expect.objectContaining({
         project_creator_id: "user-1",
         tenantid: "tenant-1",
@@ -173,7 +148,7 @@ describe("lib/projects/projectService", () => {
       }),
     );
 
-    expect(userProjectInsert).toHaveBeenCalledWith(
+    expect(mockedInsertUserProjectAssignment).toHaveBeenCalledWith(
       expect.objectContaining({
         project_id: "proj-1",
         user_id: "user-1",
@@ -185,57 +160,13 @@ describe("lib/projects/projectService", () => {
   });
 
   it("rolls back project when user_project insert fails", async () => {
-    const assignmentError = { message: "insert failed" };
-    const rollbackEq = jest.fn().mockResolvedValue({ error: null });
-    const projectsDelete = jest.fn().mockReturnValue({ eq: rollbackEq });
+    const assignmentError = new Error("insert failed");
 
-    const supabaseMock = {
-      from: jest.fn((table: string) => {
-        if (table === "users") {
-          return {
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
-                  data: { tenantid: "tenant-1" },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-
-        if (table === "projects") {
-          return {
-            insert: jest.fn().mockReturnValue({
-              select: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
-                  data: baseProjectRow,
-                  error: null,
-                }),
-              }),
-            }),
-            delete: projectsDelete,
-          };
-        }
-
-        if (table === "user_project") {
-          return {
-            insert: jest.fn().mockResolvedValue({ error: assignmentError }),
-          };
-        }
-
-        throw new Error(`Unexpected table ${table}`);
-      }),
-    };
-
-    mockedCreateBrowserClient.mockReturnValue(
-      supabaseMock as unknown as ReturnType<typeof createBrowserClient>,
-    );
-
-    fetchMock.mockResolvedValue({
-      ok: true,
-      text: async () => JSON.stringify({ ok: true }),
-    });
+    mockedFetchUserTenantId.mockResolvedValue("tenant-1");
+    mockedCreateProjectFolderStructure.mockResolvedValue(undefined);
+    mockedInsertProjectRow.mockResolvedValue(baseProjectRow);
+    mockedInsertUserProjectAssignment.mockRejectedValue(assignmentError);
+    mockedDeleteProjectRow.mockResolvedValue(undefined);
 
     const projectData: ProjectCreation = {
       ind_title: "Lpathomab IND",
@@ -246,61 +177,22 @@ describe("lib/projects/projectService", () => {
 
     await expect(
       createProjectRowWithOwnerAssignment({ projectData, userId: "user-1" }),
-    ).rejects.toEqual(assignmentError);
+    ).rejects.toBe(assignmentError);
 
-    expect(projectsDelete).toHaveBeenCalled();
-    expect(rollbackEq).toHaveBeenCalledWith("id", "proj-1");
+    expect(mockedDeleteProjectRow).toHaveBeenCalledWith("proj-1");
   });
 
   it("fetches visible rows for non-admin user from user_project assignments", async () => {
     const projectRows = [{ ...baseProjectRow, id: "proj-visible" }];
 
-    const supabaseMock = {
-      from: jest.fn((table: string) => {
-        if (table === "users") {
-          return {
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockResolvedValue({
-                  data: { tenantid: "tenant-1", email: "user@example.com" },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-
-        if (table === "user_project") {
-          return {
-            select: jest.fn().mockReturnValue({
-              eq: jest.fn().mockResolvedValue({
-                data: [{ project_id: "proj-visible", role: "viewer" }],
-                error: null,
-              }),
-            }),
-          };
-        }
-
-        if (table === "projects") {
-          return {
-            select: jest.fn().mockReturnValue({
-              order: jest.fn().mockReturnValue({
-                in: jest.fn().mockResolvedValue({
-                  data: projectRows,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-
-        throw new Error(`Unexpected table ${table}`);
-      }),
-    };
-
-    mockedCreateClient.mockReturnValue(
-      supabaseMock as unknown as ReturnType<typeof createClient>,
-    );
+    mockedFetchUserTenantAndEmail.mockResolvedValue({
+      tenantid: "tenant-1",
+      email: "user@example.com",
+    });
+    mockedFetchUserProjectAssignments.mockResolvedValue([
+      { project_id: "proj-visible", role: "viewer" },
+    ]);
+    mockedFetchProjectRows.mockResolvedValue(projectRows);
 
     const result = await fetchVisibleProjectRowsForUser({
       userId: "user-1",
@@ -313,17 +205,15 @@ describe("lib/projects/projectService", () => {
     ]);
     expect(result.fallbackTenantId).toBe("tenant-1");
     expect(mockedIsAdminEmail).toHaveBeenCalledWith("user@example.com");
+    expect(mockedFetchProjectRows).toHaveBeenCalledWith({
+      projectIds: ["proj-visible"],
+    });
   });
 
   it("returns current authenticated user id", async () => {
-    mockedCreateClient.mockReturnValue({
-      auth: {
-        getUser: jest.fn().mockResolvedValue({
-          data: { user: { id: "user-123" } },
-          error: null,
-        }),
-      },
-    } as unknown as ReturnType<typeof createClient>);
+    mockedFetchCurrentAuthenticatedUserIdFromRepository.mockResolvedValue(
+      "user-123",
+    );
 
     await expect(getCurrentAuthenticatedUserId()).resolves.toBe("user-123");
   });

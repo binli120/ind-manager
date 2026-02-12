@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { Tenant } from "@/components/ui/tenants/tenants-page";
 
 type TenantRow = {

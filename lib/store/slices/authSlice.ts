@@ -10,18 +10,11 @@ import { createBrowserClient } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 import { auth_text } from "@/utils/constants";
-
-export interface User {
-  id: string;
-  email: string;
-  name?: string | null;
-  avatar?: string | null;
-  role?: string | null; // submission/project role
-  privilege?: string | null; // system-level privilege
-  permissions?: string[] | null;
-  createdAt: string;
-  lastLoginAt?: string;
-}
+import {
+  mapSupabaseUserToAuthUser,
+  type AuthProfileRow,
+  type AuthUser as User,
+} from "@/lib/store/mappers/authUserMapper";
 
 interface AuthState {
   user: User | null;
@@ -74,22 +67,10 @@ export const loginUser = createAsyncThunk(
           console.warn("Profile fetch error:", profileError);
         }
 
-        const user: User = {
-          id: data.user.id,
-          email: data.user.email!,
-          name: profile?.name || data.user.user_metadata?.name,
-          avatar: profile?.avatar_url,
-          privilege: (data.user.user_metadata?.privilege as string) ?? "user",
-          role:
-            ((profile as { submission_role?: string })?.submission_role as string) ??
-            (data.user.user_metadata?.role as string) ??
-            null,
-          // role: profile?.role || "user",
-          // permissions: profile?.permissions || [],
-          // teamId: profile?.team_id,
-          createdAt: data.user.created_at,
-          lastLoginAt: data.user.last_sign_in_at,
-        };
+        const user = mapSupabaseUserToAuthUser({
+          authUser: data.user,
+          profile: (profile as AuthProfileRow | null) ?? null,
+        });
 
         return { user, session: data.session };
       }
@@ -184,22 +165,10 @@ export const getCurrentUser = createAsyncThunk(
           console.warn("Profile fetch error:", profileError);
         }
 
-        const userData: User = {
-          id: user.id,
-          email: user.email!,
-          name: profile?.name || user.user_metadata?.name,
-          avatar: profile?.avatar_url,
-          privilege: (user.user_metadata?.privilege as string) ?? "user",
-          role:
-            ((profile as { submission_role?: string })?.submission_role as string) ??
-            (user.user_metadata?.role as string) ??
-            null,
-          // role: profile?.role || "user",
-          // permissions: profile?.permissions || [],
-          // teamId: profile?.team_id,
-          createdAt: user.created_at,
-          lastLoginAt: user.last_sign_in_at,
-        };
+        const userData = mapSupabaseUserToAuthUser({
+          authUser: user,
+          profile: (profile as AuthProfileRow | null) ?? null,
+        });
 
         return { user: userData, session };
       }
@@ -347,4 +316,5 @@ const authSlice = createSlice({
 });
 
 export const { clearError, setUser, setLoading, setSession, clearAuth } = authSlice.actions;
+export type { User };
 export default authSlice.reducer;

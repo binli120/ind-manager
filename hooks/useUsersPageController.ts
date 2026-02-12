@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { authServices } from "@/app/api/auth/auth-services";
 import { fetchProjects } from "@/lib/supabase/projects";
 import { createUser, fetchTenants, fetchUsers, updateUserStatus } from "@/lib/supabase";

@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 'use client';
 
 import { Badge } from '@/components/ui/badge';

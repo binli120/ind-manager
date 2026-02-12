@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import {
   addUserToProject,
   createUser,
@@ -7,13 +11,48 @@ import {
   removeUserFromProject,
   updateUserStatus,
 } from "../users";
-import { createClient } from "@/lib/supabase/client";
+import {
+  deleteUserProjectAssignment,
+  fetchAssignedProjectIds,
+  fetchUserRowById,
+  fetchUserRows,
+  insertUserProjectAssignment,
+  insertUserRow,
+  updateUserStatusRow,
+} from "@/lib/users/users.repository";
 
-jest.mock("@/lib/supabase/client", () => ({
-  createClient: jest.fn(),
+jest.mock("@/lib/users/users.repository", () => ({
+  deleteUserProjectAssignment: jest.fn(),
+  fetchAssignedProjectIds: jest.fn(),
+  fetchUserRowById: jest.fn(),
+  fetchUserRows: jest.fn(),
+  insertUserProjectAssignment: jest.fn(),
+  insertUserRow: jest.fn(),
+  updateUserStatusRow: jest.fn(),
 }));
 
-const mockedCreateClient = createClient as jest.MockedFunction<typeof createClient>;
+const mockedDeleteUserProjectAssignment =
+  deleteUserProjectAssignment as jest.MockedFunction<
+    typeof deleteUserProjectAssignment
+  >;
+const mockedFetchAssignedProjectIds =
+  fetchAssignedProjectIds as jest.MockedFunction<typeof fetchAssignedProjectIds>;
+const mockedFetchUserRowById = fetchUserRowById as jest.MockedFunction<
+  typeof fetchUserRowById
+>;
+const mockedFetchUserRows = fetchUserRows as jest.MockedFunction<
+  typeof fetchUserRows
+>;
+const mockedInsertUserProjectAssignment =
+  insertUserProjectAssignment as jest.MockedFunction<
+    typeof insertUserProjectAssignment
+  >;
+const mockedInsertUserRow = insertUserRow as jest.MockedFunction<
+  typeof insertUserRow
+>;
+const mockedUpdateUserStatusRow = updateUserStatusRow as jest.MockedFunction<
+  typeof updateUserStatusRow
+>;
 
 describe("lib/supabase/users", () => {
   beforeEach(() => {
@@ -21,27 +60,18 @@ describe("lib/supabase/users", () => {
   });
 
   it("maps fetchUsers response", async () => {
-    const select = jest.fn().mockReturnValue({
-      order: jest.fn().mockResolvedValue({
-        data: [
-          {
-            id: "u1",
-            name: "Alice",
-            email: "alice@example.com",
-            phone: "123",
-            submission_role: "project_manager",
-            status: "active",
-            tenantid: "t1",
-            tenants: { name: "Acme" },
-          },
-        ],
-        error: null,
-      }),
-    });
-
-    mockedCreateClient.mockReturnValue({
-      from: jest.fn().mockReturnValue({ select }),
-    } as unknown as ReturnType<typeof createClient>);
+    mockedFetchUserRows.mockResolvedValue([
+      {
+        id: "u1",
+        name: "Alice",
+        email: "alice@example.com",
+        phone: "123",
+        submission_role: "project_manager",
+        status: "active",
+        tenantid: "t1",
+        tenants: { name: "Acme" },
+      },
+    ]);
 
     const users = await fetchUsers();
 
@@ -57,29 +87,16 @@ describe("lib/supabase/users", () => {
   });
 
   it("maps updateUserStatus response", async () => {
-    const single = jest.fn().mockResolvedValue({
-      data: {
-        id: "u1",
-        name: "Alice",
-        email: "alice@example.com",
-        phone: "123",
-        submission_role: "project_manager",
-        status: "inactive",
-        tenantid: "t1",
-        tenants: { name: "Acme" },
-      },
-      error: null,
+    mockedUpdateUserStatusRow.mockResolvedValue({
+      id: "u1",
+      name: "Alice",
+      email: "alice@example.com",
+      phone: "123",
+      submission_role: "project_manager",
+      status: "inactive",
+      tenantid: "t1",
+      tenants: { name: "Acme" },
     });
-
-    mockedCreateClient.mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            select: jest.fn().mockReturnValue({ single }),
-          }),
-        }),
-      }),
-    } as unknown as ReturnType<typeof createClient>);
 
     const user = await updateUserStatus("u1", "inactive");
     expect(user.status).toBe("inactive");
@@ -87,27 +104,16 @@ describe("lib/supabase/users", () => {
   });
 
   it("maps createUser response", async () => {
-    const single = jest.fn().mockResolvedValue({
-      data: {
-        id: "u1",
-        name: "Alice",
-        email: "alice@example.com",
-        phone: "123",
-        submission_role: "project_manager",
-        status: "pending",
-        tenantid: "t1",
-        tenants: { name: "Acme" },
-      },
-      error: null,
+    mockedInsertUserRow.mockResolvedValue({
+      id: "u1",
+      name: "Alice",
+      email: "alice@example.com",
+      phone: "123",
+      submission_role: "project_manager",
+      status: "pending",
+      tenantid: "t1",
+      tenants: { name: "Acme" },
     });
-
-    mockedCreateClient.mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        insert: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({ single }),
-        }),
-      }),
-    } as unknown as ReturnType<typeof createClient>);
 
     const user = await createUser({
       id: "u1",
@@ -123,27 +129,16 @@ describe("lib/supabase/users", () => {
   });
 
   it("returns current user", async () => {
-    const maybeSingle = jest.fn().mockResolvedValue({
-      data: {
-        id: "u1",
-        name: "Alice",
-        email: "alice@example.com",
-        phone: "123",
-        submission_role: "project_manager",
-        status: "active",
-        tenantid: "t1",
-        tenants: { name: "Acme" },
-      },
-      error: null,
+    mockedFetchUserRowById.mockResolvedValue({
+      id: "u1",
+      name: "Alice",
+      email: "alice@example.com",
+      phone: "123",
+      submission_role: "project_manager",
+      status: "active",
+      tenantid: "t1",
+      tenants: { name: "Acme" },
     });
-
-    mockedCreateClient.mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({ maybeSingle }),
-        }),
-      }),
-    } as unknown as ReturnType<typeof createClient>);
 
     const user = await fetchCurrentUser("u1");
     expect(user?.id).toBe("u1");
@@ -151,37 +146,26 @@ describe("lib/supabase/users", () => {
   });
 
   it("returns project ids from user_project", async () => {
-    mockedCreateClient.mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({
-            data: [{ project_id: "p1" }, { project_id: "p2" }],
-            error: null,
-          }),
-        }),
-      }),
-    } as unknown as ReturnType<typeof createClient>);
+    mockedFetchAssignedProjectIds.mockResolvedValue(["p1", "p2"]);
 
     await expect(fetchUserProjectIds("u1")).resolves.toEqual(["p1", "p2"]);
   });
 
   it("adds and removes user-project assignments", async () => {
-    const removeEqSecond = jest.fn().mockResolvedValue({ error: null });
-    const removeEqFirst = jest.fn().mockReturnValue({ eq: removeEqSecond });
-
-    mockedCreateClient.mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        insert: jest.fn().mockResolvedValue({ error: null }),
-        delete: jest.fn().mockReturnValue({
-          eq: removeEqFirst,
-        }),
-      }),
-    } as unknown as ReturnType<typeof createClient>);
+    mockedInsertUserProjectAssignment.mockResolvedValue(undefined);
+    mockedDeleteUserProjectAssignment.mockResolvedValue(undefined);
 
     await expect(addUserToProject("u1", "p1", "admin-1")).resolves.toBeUndefined();
     await expect(removeUserFromProject("u1", "p1")).resolves.toBeUndefined();
 
-    expect(removeEqFirst).toHaveBeenCalledWith("user_id", "u1");
-    expect(removeEqSecond).toHaveBeenCalledWith("project_id", "p1");
+    expect(mockedInsertUserProjectAssignment).toHaveBeenCalledWith({
+      userId: "u1",
+      projectId: "p1",
+      currentUserId: "admin-1",
+    });
+    expect(mockedDeleteUserProjectAssignment).toHaveBeenCalledWith({
+      userId: "u1",
+      projectId: "p1",
+    });
   });
 });

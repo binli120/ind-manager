@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { NextRequest, NextResponse } from "next/server";
 import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import type { Section, SubsectionContent } from "@/types/section";

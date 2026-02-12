@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { useEffect, useMemo, useState } from "react";
 import { useTenant } from "@/hooks/useTenant";
 import { useTenantUsers } from "@/hooks/useTenantUsers";
@@ -171,6 +175,8 @@ export function useProjectFormController({
   return {
     currentStep,
     projectData,
+    currentTenant,
+    selectedTenantId,
     teamRows,
     tenantUsers,
     usersLoadError,

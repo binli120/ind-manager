@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { APP_BUILD_NUMBER, APP_NAME } from '@/lib/app-info';
 import { cn } from '@/lib/utils';
 

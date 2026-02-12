@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { getDefaultProjectData } from "@/lib/metadata/projects";
 import {
   getContactEmailValidation,

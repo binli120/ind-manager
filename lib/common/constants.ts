@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 /**
 export const ALLOWED_VIEWS = new Set<ViewType>([
   'workspace', 'projects', ]);

@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import type { ProjectCreation } from "@/lib/projects/types";
 
 export const TEAM_ROLE_OWNER = "owner";

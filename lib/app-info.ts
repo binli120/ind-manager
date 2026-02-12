@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import buildNumber from '@/config/build-number.json';
 
 export const APP_NAME = 'Filynai IND Manager';

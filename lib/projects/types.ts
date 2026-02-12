@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import type { Database } from "@/lib/supabase/schema";
 
 export interface ProjectMember {

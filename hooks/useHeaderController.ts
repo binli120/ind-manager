@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { createBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { useEffect, useMemo, useState } from "react";

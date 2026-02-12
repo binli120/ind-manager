@@ -60,6 +60,8 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   const {
     currentStep,
     projectData,
+    currentTenant,
+    selectedTenantId,
     teamRows,
     tenantUsers,
     usersLoadError,

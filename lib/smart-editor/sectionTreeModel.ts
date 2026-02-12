@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import type { Section, SubsectionContent } from "@/types/section";
 
 const cloneSubsection = (subsection: SubsectionContent): SubsectionContent => ({

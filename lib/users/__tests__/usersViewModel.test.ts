@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import type { AddUserInput, User } from "@/lib/users/types";
 import {
   filterUsers,

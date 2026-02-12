@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import { authReducer, clearAuth, setUser, type User } from "../slices"
 
 describe("authSlice reducers", () => {

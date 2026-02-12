@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 export type UserRole =
   | "reg_affairs_manager_lead"
   | "regulatory_writer_medical_writer"

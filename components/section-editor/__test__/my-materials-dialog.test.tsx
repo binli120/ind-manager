@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 /* eslint-disable @next/next/no-img-element */
 import type React from "react"
 

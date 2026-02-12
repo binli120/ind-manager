@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 import {
   PROJECT_CREATION_STEPS,
   getDefaultProjectData,

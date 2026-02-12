@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 // Utility helpers for manipulating the section tree in-memory
 
 import type { Section, SubsectionContent } from "@/types/section"

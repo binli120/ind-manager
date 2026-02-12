@@ -7,7 +7,7 @@ import {
   createSlice,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import type { Project, ProjectCreation, ProjectMember, ProjectUpdate } from "@/lib/projects/types";
+import type { Project, ProjectCreation, ProjectUpdate } from "@/lib/projects/types";
 import {
   dbToClientProject,
   mapProjectRowsToProjects,
@@ -20,6 +20,10 @@ import {
   getCurrentAuthenticatedUserId,
   updateProjectRowById,
 } from "@/lib/projects/projectService";
+import {
+  mapProjectMemberPayloadToProjectMember,
+  type ProjectMemberPayload,
+} from "@/lib/store/mappers/projectMemberMapper";
 import { getErrorMessage } from "@/lib/utils";
 import { logoutUser } from "./authSlice";
 
@@ -220,33 +224,6 @@ export const addProjectMember = createAsyncThunk(
   ) => {
     try {
       throw new Error("Members management temporarily stopped");
-
-      /*
-      const supabase = createClient();
-
-      // TODO: Fix query, team member = project member?
-      const { data, error } = await supabase
-        .from("project_members")
-        .insert({
-          project_id: projectId,
-          user_id: userId,
-          role,
-        })
-        .select(
-          `
-          *,
-          profiles (
-            name,
-            avatar_url
-          )
-        `,
-        )
-        .single();
-
-      if (error) throw error;
-
-      return data;
-      */
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to add project member",
@@ -260,19 +237,6 @@ export const removeProjectMember = createAsyncThunk(
   async (memberId: string, { rejectWithValue }) => {
     try {
       throw new Error("Members management temporarily stopped");
-      /*
-      const supabase = createClient();
-
-      // TODO: Fix query, team member = project member?
-      const { error } = await supabase
-        .from("project_members")
-        .delete()
-        .eq("id", memberId);
-
-      if (error) throw error;
-
-      return memberId;
-      */
     } catch (error: unknown) {
       return rejectWithValue(
         getErrorMessage(error) || "Failed to remove project member",
@@ -483,28 +447,9 @@ const projectsSlice = createSlice({
       })
       // Add project member
       .addCase(addProjectMember.fulfilled, (state, action) => {
-        const payload = action.payload as {
-          id?: string
-          user_id?: string
-          project_id?: string
-          profiles?: { name?: string; avatar_url?: string }
-          role?: ProjectMember["role"]
-          created_at?: string
-        };
-        if (!payload?.id) return;
-        const member: ProjectMember = {
-          id: payload.id,
-          userId: payload.user_id ?? "",
-          projectId: payload.project_id ?? "",
-          name: payload.profiles?.name || "Unknown User",
-          avatar: payload.profiles?.avatar_url,
-          initials: payload.profiles?.name
-            ?.split(" ")
-            .map((n: string) => n[0])
-            .join("") || "U",
-          role: payload.role ?? "member",
-          joinedAt: payload.created_at ?? new Date().toISOString(),
-        };
+        const payload = action.payload as ProjectMemberPayload;
+        const member = mapProjectMemberPayloadToProjectMember(payload);
+        if (!member) return;
 
         // Update current project
         const current = state.currentProject;

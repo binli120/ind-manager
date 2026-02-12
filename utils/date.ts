@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 // src/utils/date.ts
 export const formatDate = (
     iso: string,

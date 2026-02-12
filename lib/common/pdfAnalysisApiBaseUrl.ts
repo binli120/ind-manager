@@ -1,3 +1,7 @@
+// Copyright@ filynai.com
+// Author: Bin Lee
+// Email: blee@filynai.com
+
 const LOCAL_PDF_ANALYSIS_API_BASE_URL = "http://localhost:8000";
 
 export interface ResolvePdfAnalysisApiBaseUrlOptions {
