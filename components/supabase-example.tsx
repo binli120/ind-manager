@@ -4,23 +4,19 @@
 "use client"
 
 import { useState } from "react"
-import { createBrowserClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { fetchSampleUsers } from "@/lib/examples/supabase-example-service"
 
 export function SupabaseExample() {
   const [data, setData] = useState<unknown[]>([])
   const [loading, setLoading] = useState(false)
-  const supabase = createBrowserClient()
 
   const fetchData = async () => {
     setLoading(true)
     try {
-      // Example query using the existing "users" table
-      const { data: result, error } = await supabase.from("users").select("*").limit(10)
-
-      if (error) throw error
-      setData(result || [])
+      const result = await fetchSampleUsers()
+      setData(result)
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {

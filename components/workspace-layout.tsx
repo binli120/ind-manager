@@ -17,9 +17,9 @@ import {
 } from '@/components/ui/dialog';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 import { setCommentsPanelOpen, setSidebarOpen } from '@/lib/store/slices/uiSlice';
+import { authServices } from '@/lib/auth/auth-services';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { authServices } from '@/app/api/auth/auth-services';
 import { isAdminEmail } from '@/lib/utils';
 
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {

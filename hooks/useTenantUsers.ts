@@ -4,7 +4,8 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAsyncTask } from "@/hooks/useAsyncTask";
+import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export type TenantUserOption = {
@@ -14,54 +15,42 @@ export type TenantUserOption = {
 };
 
 export function useTenantUsers(tenantId: string | null | undefined) {
-  const [users, setUsers] = useState<TenantUserOption[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isActive = true;
-
-    if (!tenantId) {
-      setUsers([]);
-      setError(null);
-      return () => {
-        isActive = false;
-      };
-    }
-
-    const supabase = createClient();
-    const loadUsers = async () => {
-      setError(null);
+  const loadUsersTask = useAsyncTask(
+    async (activeTenantId: string): Promise<TenantUserOption[]> => {
+      const supabase = createClient();
       const { data, error: fetchError } = await supabase
         .from("users")
         .select("id,name,email")
-        .eq("tenantid", tenantId)
+        .eq("tenantid", activeTenantId)
         .order("name", { ascending: true });
 
-      if (!isActive) return;
       if (fetchError) {
-        setError(fetchError.message || "Failed to load tenant users");
-        setUsers([]);
-        return;
+        throw new Error(fetchError.message || "Failed to load tenant users");
       }
 
-      setUsers(
-        (data ?? []).map((row) => ({
-          id: row.id,
-          name: row.name || row.email,
-          email: row.email,
-        })),
-      );
-    };
+      return (data ?? []).map((row) => ({
+        id: row.id,
+        name: row.name || row.email,
+        email: row.email,
+      }));
+    },
+    [] as TenantUserOption[],
+  );
+  const { data, error, status, isLoading, reset, run } = loadUsersTask;
 
-    void loadUsers();
+  useEffect(() => {
+    if (!tenantId) {
+      reset([]);
+      return;
+    }
 
-    return () => {
-      isActive = false;
-    };
-  }, [tenantId]);
+    void run(tenantId);
+  }, [reset, run, tenantId]);
 
   return {
-    users,
+    users: data,
     error,
+    status,
+    isLoading,
   };
 }

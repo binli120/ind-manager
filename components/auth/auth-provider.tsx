@@ -3,7 +3,7 @@
 // Email: blee@filynai.com
 'use client';
 
-import { authServices } from '@/app/api/auth/auth-services';
+import { authServices } from '@/lib/auth/auth-services';
 import { ErrorNullable } from '@/lib/common/types';
 import { useAppDispatch } from '@/lib/store';
 import {

@@ -5,17 +5,13 @@ import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-const signInWithPassword = jest.fn()
-const signUp = jest.fn()
 const refresh = jest.fn()
 
-jest.mock('@/lib/supabase', () => ({
-  createBrowserClient: () => ({
-    auth: {
-      signInWithPassword,
-      signUp,
-    },
-  }),
+jest.mock('@/lib/auth/auth-services', () => ({
+  authServices: {
+    signIn: jest.fn(),
+    signUp: jest.fn(),
+  },
 }))
 
 jest.mock('next/navigation', () => ({
@@ -23,17 +19,21 @@ jest.mock('next/navigation', () => ({
 }))
 
 import { LoginDialog } from '@/components/auth/login-dialog'
+import { authServices } from '@/lib/auth/auth-services'
+
+const signIn = authServices.signIn as jest.Mock
+const signUp = authServices.signUp as jest.Mock
 
 describe('LoginDialog', () => {
   beforeEach(() => {
-    signInWithPassword.mockReset()
+    signIn.mockReset()
     signUp.mockReset()
     refresh.mockReset()
   })
 
   it('logs in and reloads page', async () => {
     const user = userEvent.setup()
-    signInWithPassword.mockResolvedValue({ error: null })
+    signIn.mockResolvedValue({ error: null })
 
     render(<LoginDialog />)
 
@@ -44,7 +44,7 @@ describe('LoginDialog', () => {
     await user.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
-      expect(signInWithPassword).toHaveBeenCalledWith({ email: 'test@example.com', password: 'pw' })
+      expect(signIn).toHaveBeenCalledWith('test@example.com', 'pw')
     })
     await waitFor(() => {
       expect(refresh).toHaveBeenCalled()

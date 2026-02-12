@@ -5,8 +5,9 @@
 
 import type React from "react"
 
-import { createBrowserClient } from "@/lib/supabase"
 import { APP_BUILD_NUMBER, APP_NAME, COMPANY_CONTACT_EMAIL, COMPANY_NAME } from "@/lib/app-info"
+import { authServices } from "@/lib/auth/auth-services"
+import { useAsyncTask } from "@/hooks/useAsyncTask"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -32,60 +33,66 @@ export function LoginDialog({ children }: LoginDialogProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [repeatPassword, setRepeatPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [infoMessage, setInfoMessage] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("login")
+  const loginTask = useAsyncTask(
+    async ({ nextEmail, nextPassword }: { nextEmail: string; nextPassword: string }) => {
+      const { error } = await authServices.signIn(nextEmail, nextPassword)
+      if (error) throw error
+    },
+    undefined,
+  )
+  const signUpTask = useAsyncTask(
+    async ({
+      nextEmail,
+      nextPassword,
+      redirectTo,
+    }: {
+      nextEmail: string
+      nextPassword: string
+      redirectTo: string
+    }) => {
+      const { error } = await authServices.signUp(nextEmail, nextPassword, undefined, {
+        emailRedirectTo: redirectTo,
+      })
+      if (error) throw error
+    },
+    undefined,
+  )
+  const activeError = activeTab === "login" ? loginTask.error : signUpTask.error
+  const isSubmitting = loginTask.isLoading || signUpTask.isLoading
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createBrowserClient()
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      if (error) throw error
+    setInfoMessage(null)
+    signUpTask.reset()
+    const { error } = await loginTask.run({ nextEmail: email, nextPassword: password })
+    if (!error) {
       setIsOpen(false)
       // Refresh the page to update auth state
       router.refresh()
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
-    } finally {
-      setIsLoading(false)
     }
   }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createBrowserClient()
-    setIsLoading(true)
-    setError(null)
+    setInfoMessage(null)
+    loginTask.reset()
 
     if (password !== repeatPassword) {
-      setError("Passwords do not match")
-      setIsLoading(false)
+      signUpTask.setError("Passwords do not match")
       return
     }
 
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || window.location.origin,
-        },
-      })
-      if (error) throw error
-      setError("Check your email to confirm your account!")
+    const { error } = await signUpTask.run({
+      nextEmail: email,
+      nextPassword: password,
+      redirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || window.location.origin,
+    })
+    if (!error) {
+      setInfoMessage("Check your email to confirm your account!")
       setActiveTab("login")
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -93,8 +100,9 @@ export function LoginDialog({ children }: LoginDialogProps) {
     setEmail("")
     setPassword("")
     setRepeatPassword("")
-    setError(null)
-    setIsLoading(false)
+    setInfoMessage(null)
+    loginTask.reset()
+    signUpTask.reset()
   }
 
   return (
@@ -121,7 +129,16 @@ export function LoginDialog({ children }: LoginDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(nextValue) => {
+            setActiveTab(nextValue)
+            setInfoMessage(null)
+            loginTask.reset()
+            signUpTask.reset()
+          }}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -150,9 +167,10 @@ export function LoginDialog({ children }: LoginDialogProps) {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+              {activeError && <p className="text-sm text-red-500">{activeError}</p>}
+              {infoMessage && <p className="text-sm text-emerald-600">{infoMessage}</p>}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </TabsContent>
@@ -190,10 +208,11 @@ export function LoginDialog({ children }: LoginDialogProps) {
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              {activeError && <p className="text-sm text-red-500">{activeError}</p>}
+              {infoMessage && <p className="text-sm text-emerald-600">{infoMessage}</p>}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
                 <UserPlus className="w-4 h-4 mr-2" />
-                {isLoading ? "Creating account..." : "Create Account"}
+                {isSubmitting ? "Creating account..." : "Create Account"}
               </Button>
             </form>
           </TabsContent>

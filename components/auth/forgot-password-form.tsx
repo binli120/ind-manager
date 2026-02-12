@@ -10,33 +10,31 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useAsyncTask } from '@/hooks/useAsyncTask';
 import Link from 'next/link';
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const { resetPassword } = useAuth();
+  const resetPasswordTask = useAsyncTask(
+    async (targetEmail: string) => {
+      const { error } = await resetPassword(targetEmail);
+      if (error) {
+        throw error;
+      }
+    },
+    undefined,
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
     setMessage(null);
 
-    try {
-      const { error } = await resetPassword(email);
+    const result = await resetPasswordTask.run(email);
 
-      if (error) {
-        setError(error.message);
-      } else {
-        setMessage('Check your email for a password reset link!');
-      }
-    } catch {
-      setError('An unexpected error occurred');
-    } finally {
-      setLoading(false);
+    if (!result.error) {
+      setMessage('Check your email for a password reset link!');
     }
   };
 
@@ -50,9 +48,9 @@ export function ForgotPasswordForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
+          {resetPasswordTask.error && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{resetPasswordTask.error}</AlertDescription>
             </Alert>
           )}
 
@@ -74,8 +72,8 @@ export function ForgotPasswordForm() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Sending...' : 'Send Reset Link'}
+          <Button type="submit" className="w-full" disabled={resetPasswordTask.isLoading}>
+            {resetPasswordTask.isLoading ? 'Sending...' : 'Send Reset Link'}
           </Button>
         </form>
 

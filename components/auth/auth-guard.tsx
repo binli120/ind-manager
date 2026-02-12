@@ -13,9 +13,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { canAccessPath } from '@/lib/auth/access-control';
+import { authServices } from '@/lib/auth/auth-services';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 import { getCurrentUser, logoutUser } from '@/lib/store/slices';
-import { createBrowserClient } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { ThemedLoadingScreen } from '@/components/ui/themed-loading-screen';
 import { usePathname, useRouter } from 'next/navigation';
@@ -140,8 +140,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }, [resetTimers]);
 
   useEffect(() => {
-    const supabase = createBrowserClient();
-
     const getInitialSession = async () => {
       try {
         await dispatch(getCurrentUser());
@@ -154,9 +152,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
     let curSession: Session | null;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const subscription = authServices.onAuthStateChange(async (event, session) => {
       // Avoid reload on tab refocus
       if (curSession?.user?.id === session?.user?.id) {
         return;

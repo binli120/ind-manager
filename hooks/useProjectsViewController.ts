@@ -19,6 +19,7 @@ import {
   paginateProjects,
   toProjectSubmitError,
 } from "@/lib/projects/projectViewModel";
+import { useAsyncTask } from "@/hooks/useAsyncTask";
 
 const PAGE_SIZE = 6;
 const DELETE_PROJECT_MESSAGE =
@@ -32,11 +33,16 @@ export function useProjectsViewController() {
   const { user } = useAppSelector((state) => state.auth);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
-  const [createProjectError, setCreateProjectError] = useState<string | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editProject, setEditProject] = useState<ProjectCreation | null>(null);
   const [page, setPage] = useState(1);
+  const createProjectTask = useAsyncTask(
+    async (data: ProjectCreation) => {
+      await dispatch(createProject(data)).unwrap();
+    },
+    undefined,
+    { mapError: toProjectSubmitError },
+  );
 
   useEffect(() => {
     if (!user?.id) return;
@@ -75,29 +81,25 @@ export function useProjectsViewController() {
   };
 
   const openCreateDialog = () => {
-    setCreateProjectError(null);
+    createProjectTask.reset();
     setShowCreateDialog(true);
   };
 
   const closeCreateDialog = () => {
-    if (isCreatingProject) return;
-    setCreateProjectError(null);
+    if (createProjectTask.isLoading) return;
+    createProjectTask.reset();
     setShowCreateDialog(false);
   };
 
   const handleCreateProject = async (data: ProjectCreation) => {
-    setCreateProjectError(null);
-    setIsCreatingProject(true);
-    try {
-      await dispatch(createProject(data)).unwrap();
+    const result = await createProjectTask.run(data);
+    if (!result.error) {
       setShowCreateDialog(false);
       setPage(1);
-    } catch (error: unknown) {
-      setCreateProjectError(toProjectSubmitError(error));
-      throw error;
-    } finally {
-      setIsCreatingProject(false);
+      return;
     }
+
+    throw new Error(result.error);
   };
 
   const closeEditDialog = () => {
@@ -141,8 +143,8 @@ export function useProjectsViewController() {
     filters,
     isLoading,
     showCreateDialog,
-    isCreatingProject,
-    createProjectError,
+    isCreatingProject: createProjectTask.isLoading,
+    createProjectError: createProjectTask.error,
     showEditDialog,
     editProject,
     page,

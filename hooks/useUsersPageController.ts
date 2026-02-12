@@ -2,7 +2,7 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 
-import { authServices } from "@/app/api/auth/auth-services";
+import { authServices } from "@/lib/auth/auth-services";
 import { fetchProjects } from "@/lib/supabase/projects";
 import { createUser, fetchTenants, fetchUsers, updateUserStatus } from "@/lib/supabase";
 import type { Project } from "@/lib/projects/types";

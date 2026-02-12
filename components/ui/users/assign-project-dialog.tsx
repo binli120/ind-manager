@@ -34,6 +34,8 @@ export function AssignProjectDialog({
     assignedProjectIds,
     isLoading,
     isSaving,
+    loadError,
+    saveError,
     toggleProjectSelection,
     saveAssignments,
   } = useProjectAssignmentEditor({
@@ -54,6 +56,9 @@ export function AssignProjectDialog({
         
         <div className="py-4">
           <Label className="mb-2 block">Select Projects</Label>
+          {loadError && (
+            <p className="mb-2 text-sm text-red-500">{loadError}</p>
+          )}
           <ScrollArea className="h-[300px] border rounded-md p-4">
             {isLoading ? (
               <div className="text-center py-4 text-sm text-muted-foreground">Loading...</div>
@@ -86,6 +91,9 @@ export function AssignProjectDialog({
               </div>
             )}
           </ScrollArea>
+          {saveError && (
+            <p className="mt-2 text-sm text-red-500">{saveError}</p>
+          )}
         </div>
 
         <DialogFooter>

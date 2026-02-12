@@ -2,13 +2,14 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   addUserToProject,
   fetchUserProjectIds,
   removeUserFromProject,
 } from "@/lib/supabase/users";
 import { diffProjectAssignments } from "@/lib/users/projectAssignmentModel";
+import { useAsyncTask } from "@/hooks/useAsyncTask";
 
 export function useProjectAssignmentEditor({
   open,
@@ -19,41 +20,55 @@ export function useProjectAssignmentEditor({
   userId: string | null;
   onSaved: () => void;
 }) {
-  const [assignedProjectIds, setAssignedProjectIds] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const loadAssignmentsTask = useAsyncTask(
+    async (targetUserId: string) => fetchUserProjectIds(targetUserId),
+    [] as string[],
+  );
+  const saveAssignmentsTask = useAsyncTask(
+    async ({ targetUserId, selectedProjectIds }: { targetUserId: string; selectedProjectIds: string[] }) => {
+      const currentProjectIds = await fetchUserProjectIds(targetUserId);
+      const { toAdd, toRemove } = diffProjectAssignments({
+        currentProjectIds,
+        selectedProjectIds,
+      });
+
+      await Promise.all([
+        ...toAdd.map((projectId) => addUserToProject(targetUserId, projectId)),
+        ...toRemove.map((projectId) => removeUserFromProject(targetUserId, projectId)),
+      ]);
+    },
+    undefined,
+  );
+  const {
+    data: assignedProjectIds,
+    error: loadError,
+    status: loadStatus,
+    isLoading,
+    reset: resetAssignments,
+    run: loadAssignments,
+    setData: setAssignedProjectIds,
+  } = loadAssignmentsTask;
+  const {
+    error: saveError,
+    status: saveStatus,
+    isLoading: isSaving,
+    run: runSaveAssignments,
+  } = saveAssignmentsTask;
 
   useEffect(() => {
     if (!open || !userId) {
-      setAssignedProjectIds([]);
+      resetAssignments([]);
       return;
     }
 
-    let isActive = true;
-
-    const loadAssignments = async () => {
-      setIsLoading(true);
-      try {
-        const ids = await fetchUserProjectIds(userId);
-        if (!isActive) return;
-        setAssignedProjectIds(ids);
-      } catch (error) {
-        console.error("Failed to load assignments", error);
-      } finally {
-        if (isActive) setIsLoading(false);
-      }
-    };
-
-    void loadAssignments();
-
-    return () => {
-      isActive = false;
-    };
-  }, [open, userId]);
+    void loadAssignments(userId);
+  }, [resetAssignments, loadAssignments, open, userId]);
 
   const toggleProjectSelection = (projectId: string, checked: boolean) => {
     if (checked) {
-      setAssignedProjectIds((prev) => [...prev, projectId]);
+      setAssignedProjectIds((prev) =>
+        prev.includes(projectId) ? prev : [...prev, projectId],
+      );
       return;
     }
 
@@ -63,24 +78,12 @@ export function useProjectAssignmentEditor({
   const saveAssignments = async () => {
     if (!userId) return;
 
-    setIsSaving(true);
-    try {
-      const currentProjectIds = await fetchUserProjectIds(userId);
-      const { toAdd, toRemove } = diffProjectAssignments({
-        currentProjectIds,
-        selectedProjectIds: assignedProjectIds,
-      });
-
-      await Promise.all([
-        ...toAdd.map((projectId) => addUserToProject(userId, projectId)),
-        ...toRemove.map((projectId) => removeUserFromProject(userId, projectId)),
-      ]);
-
+    const result = await runSaveAssignments({
+      targetUserId: userId,
+      selectedProjectIds: assignedProjectIds,
+    });
+    if (!result.error) {
       onSaved();
-    } catch (error) {
-      console.error("Failed to save assignments", error);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -88,6 +91,12 @@ export function useProjectAssignmentEditor({
     assignedProjectIds,
     isLoading,
     isSaving,
+    loadError,
+    saveError,
+    status: {
+      load: loadStatus,
+      save: saveStatus,
+    },
     toggleProjectSelection,
     saveAssignments,
   };

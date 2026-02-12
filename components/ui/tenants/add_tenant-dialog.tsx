@@ -5,7 +5,7 @@
 
 import type React from 'react';
 
-import type { Tenant } from './tenants-page';
+import type { Tenant } from '@/lib/tenants/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

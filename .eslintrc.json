@@ -2,5 +2,37 @@
   "extends": [
     "next/core-web-vitals",
     "next/typescript"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "components/**/*.{ts,tsx}"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app/api/**",
+                  "**/app/api/**"
+                ],
+                "message": "Components must not import API route modules directly. Use hooks or services from lib/."
+              },
+              {
+                "group": [
+                  "@/lib/supabase",
+                  "@/lib/supabase/*",
+                  "**/lib/supabase",
+                  "**/lib/supabase/*"
+                ],
+                "message": "Components must not import Supabase modules directly. Use domain hooks/services instead."
+              }
+            ]
+          }
+        ]
+      }
+    }
   ]
 }

@@ -15,30 +15,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  createTenant,
+  fetchTenants,
+  updateTenantStatus,
+} from '@/lib/tenants/tenants-service';
+import type {
+  Tenant,
+  TenantCreateInput,
+} from '@/lib/tenants/types';
 import { Plus, SearchIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AddTenantDialog } from './add_tenant-dialog';
-import { fetchTenants, updateTenantStatus, createTenant } from "@/lib/supabase";
-
-export type Tenant = {
-  id: string;
-  name: string;
-  companyAddress: string | null;
-  contactPerson: string | null;
-  contactEmail: string | null;
-  contactPhone: string | number | null;
-  status: 'active' | 'inactive' | 'pending';
-};
-
-type TenantInput = {
-  id?: string;
-  name: string;
-  companyAddress?: string;
-  contactPerson: string;
-  contactEmail: string;
-  contactPhone: string;
-  status?: string;
-};
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -85,14 +73,12 @@ export default function TenantsPage() {
   };
 
   const handleAddTenant = async (newTenant: Omit<Tenant, "id" | "status">) => {
-    const payload: TenantInput = {
-      id: "",
+    const payload: TenantCreateInput = {
       name: newTenant.name,
       companyAddress: newTenant.companyAddress ?? "",
       contactPerson: newTenant.contactPerson ?? "",
       contactEmail: newTenant.contactEmail ?? "",
       contactPhone: (newTenant.contactPhone ?? "").toString(),
-      status: "pending",
     };
     const tenant = await createTenant(payload);
     const t = tenant as Partial<Tenant> & {
