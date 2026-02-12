@@ -45,6 +45,7 @@ describe("lib/users/usersViewModel", () => {
         users,
         searchQuery: "alice",
         statusFilter: "all",
+        tenantFilter: "all",
       }).map((user) => user.id),
     ).toEqual(["u1"]);
 
@@ -53,8 +54,20 @@ describe("lib/users/usersViewModel", () => {
         users,
         searchQuery: "",
         statusFilter: "inactive",
+        tenantFilter: "all",
       }).map((user) => user.id),
     ).toEqual(["u2"]);
+  });
+
+  it("filters users by tenant", () => {
+    expect(
+      filterUsers({
+        users,
+        searchQuery: "",
+        statusFilter: "all",
+        tenantFilter: "Acme",
+      }).map((user) => user.id),
+    ).toEqual(["u1"]);
   });
 
   it("toggles user status", () => {
@@ -67,7 +80,6 @@ describe("lib/users/usersViewModel", () => {
     const input: AddUserInput = {
       name: "Alice",
       email: "alice@example.com",
-      password: "pass",
       phone: "123",
       role: "project_manager",
       privilege: "user",

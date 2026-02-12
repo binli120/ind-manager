@@ -15,9 +15,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, SearchIcon, FolderGit2 } from 'lucide-react';
 import { AddUserDialog } from './add-user-dialog';
 import { AssignProjectDialog } from './assign-project-dialog';
+import { EditUserDialog } from './edit-user-dialog';
 import { useUsersPageController } from '@/hooks/useUsersPageController';
 import { roleLabels } from '@/lib/users/types';
 
@@ -28,6 +36,8 @@ export default function UsersPage() {
     setSearchQuery,
     statusFilter,
     setStatusFilter,
+    tenantFilter,
+    setTenantFilter,
     isAddDialogOpen,
     setIsAddDialogOpen,
     companies,
@@ -36,9 +46,15 @@ export default function UsersPage() {
     setIsAssignDialogOpen,
     selectedUserForAssignment,
     availableProjects,
+    isEditDialogOpen,
+    selectedUserForEdit,
+    isSavingUserEdit,
     handleToggleStatus,
     handleAddUser,
     handleAssignProjects,
+    handleOpenEditUser,
+    handleEditDialogOpenChange,
+    handleSaveEditedUser,
   } = useUsersPageController();
 
   return (
@@ -88,6 +104,19 @@ export default function UsersPage() {
                 <TabsTrigger value='pending'>Pending</TabsTrigger>
               </TabsList>
             </Tabs>
+            <Select value={tenantFilter} onValueChange={setTenantFilter}>
+              <SelectTrigger className='w-[220px] bg-background border-border shadow-sm'>
+                <SelectValue placeholder='Filter by tenant' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>All Tenants</SelectItem>
+                {companies.map((company) => (
+                  <SelectItem key={company} value={company}>
+                    {company}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -102,7 +131,7 @@ export default function UsersPage() {
                   Name
                 </TableHead>
                 <TableHead className='font-semibold text-foreground'>
-                  Company
+                  Tenant
                 </TableHead>
                 <TableHead className='font-semibold text-foreground'>
                   Email
@@ -132,9 +161,10 @@ export default function UsersPage() {
                 filteredUsers.map((user, index) => (
                   <TableRow
                     key={user.id}
-                    className={
+                    onClick={() => handleOpenEditUser(user)}
+                    className={`cursor-pointer ${
                       index % 2 === 0 ? 'bg-background' : 'bg-muted/30'
-                    }
+                    }`}
                   >
                     <TableCell className='font-medium'>{user.name}</TableCell>
                     <TableCell>{user.company}</TableCell>
@@ -162,7 +192,10 @@ export default function UsersPage() {
                           <Button
                             variant='ghost'
                             size='sm'
-                            onClick={() => handleAssignProjects(user)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleAssignProjects(user);
+                            }}
                             title="Assign Projects"
                           >
                             <FolderGit2 className="h-4 w-4" />
@@ -172,7 +205,10 @@ export default function UsersPage() {
                           <Button
                             variant='outline'
                             size='sm'
-                            onClick={() => handleToggleStatus(user.id)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleToggleStatus(user.id);
+                            }}
                           >
                             {user.status === 'active' ? 'Deactivate' : 'Activate'}
                           </Button>
@@ -181,7 +217,10 @@ export default function UsersPage() {
                           <Button
                             variant='outline'
                             size='sm'
-                            onClick={() => handleToggleStatus(user.id)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleToggleStatus(user.id);
+                            }}
                           >
                             Activate
                           </Button>
@@ -209,6 +248,15 @@ export default function UsersPage() {
         onOpenChange={setIsAssignDialogOpen}
         user={selectedUserForAssignment}
         projects={availableProjects}
+      />
+
+      <EditUserDialog
+        open={isEditDialogOpen}
+        onOpenChange={handleEditDialogOpenChange}
+        user={selectedUserForEdit}
+        companies={companies}
+        isSaving={isSavingUserEdit}
+        onSave={handleSaveEditedUser}
       />
     </div>
   );

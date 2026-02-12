@@ -36,10 +36,14 @@ export type Tenant = {
 
 export type UserStatusFilter = "all" | "active" | "inactive" | "pending";
 
-export type AddUserInput = Omit<User, "id" | "status"> & {
-  password: string;
+export type AddUserInput = Omit<User, "id" | "status" | "password"> & {
   privilege: UserPrivilege;
 };
+
+export type EditUserInput = Pick<
+  User,
+  "name" | "email" | "phone" | "role" | "company"
+>;
 
 export const roleLabels: Record<UserRole, string> = {
   reg_affairs_manager_lead: "Regulatory Affairs Manager/Lead",

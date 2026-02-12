@@ -33,6 +33,9 @@ export function useAsyncTask<TArgs extends unknown[], TData>(
 
   const mountedRef = useRef(true);
   const requestIdRef = useRef(0);
+  const taskRef = useRef(task);
+  const mapErrorRef = useRef(mapError);
+  const initialDataRef = useRef(initialData);
 
   useEffect(() => {
     return () => {
@@ -40,13 +43,25 @@ export function useAsyncTask<TArgs extends unknown[], TData>(
     };
   }, []);
 
+  useEffect(() => {
+    taskRef.current = task;
+  }, [task]);
+
+  useEffect(() => {
+    mapErrorRef.current = mapError;
+  }, [mapError]);
+
+  useEffect(() => {
+    initialDataRef.current = initialData;
+  }, [initialData]);
+
   const run = useCallback(
     async (...args: TArgs): Promise<AsyncTaskRunResult<TData>> => {
       const requestId = ++requestIdRef.current;
       setState((previousState) => toLoadingAsyncState(previousState));
 
       try {
-        const data = await task(...args);
+        const data = await taskRef.current(...args);
         if (!mountedRef.current || requestId !== requestIdRef.current) {
           return { data, error: null };
         }
@@ -54,8 +69,8 @@ export function useAsyncTask<TArgs extends unknown[], TData>(
         setState(toSuccessAsyncState(data));
         return { data, error: null };
       } catch (error: unknown) {
-        const errorMessage = mapError
-          ? mapError(error)
+        const errorMessage = mapErrorRef.current
+          ? mapErrorRef.current(error)
           : toAsyncErrorMessage(error);
 
         if (!mountedRef.current || requestId !== requestIdRef.current) {
@@ -66,15 +81,17 @@ export function useAsyncTask<TArgs extends unknown[], TData>(
         return { data: null, error: errorMessage };
       }
     },
-    [mapError, task],
+    [],
   );
 
   const reset = useCallback(
-    (nextData: TData = initialData) => {
+    (...args: [TData?]) => {
+      const nextData =
+        args.length > 0 ? (args[0] as TData) : initialDataRef.current;
       requestIdRef.current += 1;
       setState(createIdleAsyncState(nextData));
     },
-    [initialData],
+    [],
   );
 
   const setData = useCallback(

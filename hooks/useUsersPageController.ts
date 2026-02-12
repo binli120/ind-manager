@@ -4,17 +4,23 @@
 
 import { authServices } from "@/lib/auth/auth-services";
 import { fetchProjects } from "@/lib/supabase/projects";
-import { createUser, fetchTenants, fetchUsers, updateUserStatus } from "@/lib/supabase";
+import {
+  fetchTenants,
+  fetchUsers,
+  inviteUser,
+  updateUser,
+  updateUserStatus,
+} from "@/lib/supabase";
 import type { Project } from "@/lib/projects/types";
 import {
   filterUsers,
   findTenantByCompany,
   getToggledUserStatus,
-  normalizeCreatedUser,
   normalizeUserPrivilege,
 } from "@/lib/users/usersViewModel";
 import type {
   AddUserInput,
+  EditUserInput,
   Tenant,
   User,
   UserPrivilege,
@@ -26,6 +32,7 @@ export function useUsersPageController() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<UserStatusFilter>("all");
+  const [tenantFilter, setTenantFilter] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [companies, setCompanies] = useState<string[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -35,6 +42,11 @@ export function useUsersPageController() {
   const [selectedUserForAssignment, setSelectedUserForAssignment] =
     useState<User | null>(null);
   const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<User | null>(
+    null,
+  );
+  const [isSavingUserEdit, setIsSavingUserEdit] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -75,8 +87,9 @@ export function useUsersPageController() {
         users,
         searchQuery,
         statusFilter,
+        tenantFilter,
       }),
-    [users, searchQuery, statusFilter],
+    [users, searchQuery, statusFilter, tenantFilter],
   );
 
   const handleToggleStatus = async (userId: string) => {
@@ -101,51 +114,86 @@ export function useUsersPageController() {
   };
 
   const handleAddUser = async (formUser: AddUserInput) => {
-    const { error: authError } = await authServices.signUp(
-      formUser.email,
-      formUser.password,
-      {
-        name: formUser.name,
-        privilege: formUser.privilege,
-      },
-    );
-
-    if (authError) {
-      console.error("signup failed:", authError);
-      return;
+    const selectedTenant = formUser.company
+      ? findTenantByCompany({
+          tenants,
+          company: formUser.company,
+        })
+      : null;
+    if (formUser.privilege !== "system_admin" && !selectedTenant) {
+      throw new Error("Tenant is required for non-system-admin users");
     }
 
+    const createdUser = await inviteUser({
+      name: formUser.name,
+      email: formUser.email,
+      phone: formUser.phone,
+      role: formUser.role,
+      tenantId: selectedTenant?.id,
+      privilege: formUser.privilege,
+    });
+
+    setUsers((previousUsers) => [...previousUsers, createdUser]);
+  };
+
+  const handleAssignProjects = (user: User) => {
+    setSelectedUserForAssignment(user);
+    setIsAssignDialogOpen(true);
+  };
+
+  const handleOpenEditUser = (user: User) => {
+    setSelectedUserForEdit(user);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditDialogOpenChange = (open: boolean) => {
+    if (!open && isSavingUserEdit) return;
+    setIsEditDialogOpen(open);
+    if (!open) {
+      setSelectedUserForEdit(null);
+    }
+  };
+
+  const handleSaveEditedUser = async (editedUser: EditUserInput) => {
+    if (!selectedUserForEdit) return;
     const selectedTenant = findTenantByCompany({
       tenants,
-      company: formUser.company,
+      company: editedUser.company,
     });
     if (!selectedTenant) {
       console.error("Selected company not found in tenants list");
       return;
     }
 
-    const authUserId = `user-${Date.now()}`;
-    const createdUser = await createUser({
-      id: authUserId,
-      name: formUser.name,
-      email: formUser.email,
-      phone: formUser.phone,
-      role: formUser.role,
-      tenantId: selectedTenant.id,
-    });
+    setIsSavingUserEdit(true);
+    try {
+      const updated = await updateUser({
+        id: selectedUserForEdit.id,
+        name: editedUser.name,
+        email: editedUser.email,
+        phone: editedUser.phone,
+        role: editedUser.role,
+        tenantId: selectedTenant.id,
+      });
 
-    const normalizedUser = normalizeCreatedUser({
-      createdUser,
-      input: formUser,
-    });
-    setUsers((previousUsers) => [...previousUsers, normalizedUser]);
-
-    await authServices.resetPassword(formUser.email);
-  };
-
-  const handleAssignProjects = (user: User) => {
-    setSelectedUserForAssignment(user);
-    setIsAssignDialogOpen(true);
+      setUsers((previousUsers) =>
+        previousUsers.map((entry) =>
+          entry.id === selectedUserForEdit.id
+            ? {
+                ...entry,
+                ...updated,
+                company: editedUser.company,
+              }
+            : entry,
+        ),
+      );
+      setIsEditDialogOpen(false);
+      setSelectedUserForEdit(null);
+    } catch (error) {
+      console.error("Failed to update user:", error);
+    } finally {
+      setIsSavingUserEdit(false);
+    }
   };
 
   return {
@@ -155,6 +203,8 @@ export function useUsersPageController() {
     setSearchQuery,
     statusFilter,
     setStatusFilter,
+    tenantFilter,
+    setTenantFilter,
     isAddDialogOpen,
     setIsAddDialogOpen,
     companies,
@@ -163,8 +213,14 @@ export function useUsersPageController() {
     setIsAssignDialogOpen,
     selectedUserForAssignment,
     availableProjects,
+    isEditDialogOpen,
+    selectedUserForEdit,
+    isSavingUserEdit,
     handleToggleStatus,
     handleAddUser,
     handleAssignProjects,
+    handleOpenEditUser,
+    handleEditDialogOpenChange,
+    handleSaveEditedUser,
   };
 }

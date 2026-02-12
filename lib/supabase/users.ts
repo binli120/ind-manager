@@ -2,7 +2,7 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 
-import type { User, UserRole } from "@/lib/users/types";
+import type { User, UserPrivilege, UserRole } from "@/lib/users/types";
 import {
   deleteUserProjectAssignment,
   fetchAssignedProjectIds,
@@ -10,6 +10,7 @@ import {
   fetchUserRows,
   insertUserProjectAssignment,
   insertUserRow,
+  updateUserRow,
   updateUserStatusRow,
   type UserSelectRow,
 } from "@/lib/users/users.repository";
@@ -24,6 +25,19 @@ const mapUserRow = (row: UserSelectRow): User => ({
   company: row.tenants?.name ?? "",
   status: (row.status as User["status"]) ?? "pending",
 });
+
+const asJson = async <T>(response: Response) => {
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(
+      (payload as { error?: string; message?: string })?.error ||
+        (payload as { error?: string; message?: string })?.message ||
+        "Request failed",
+    );
+  }
+
+  return (await response.json()) as T;
+};
 
 export async function fetchUsers(tenantId?: string): Promise<User[]> {
   const rows = await fetchUserRows(tenantId);
@@ -48,10 +62,69 @@ export async function createUser(user: {
   email: string;
   phone: string;
   role: UserRole;
-  tenantId: string;
+  tenantId?: string;
 }) {
   const mapped = mapUserRow(
     await insertUserRow({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      tenantId: user.tenantId,
+    }),
+  );
+
+  return {
+    ...mapped,
+    phone: mapped.phone,
+    status: mapped.status,
+  };
+}
+
+export async function inviteUser(user: {
+  name: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+  tenantId?: string;
+  privilege: UserPrivilege;
+}) {
+  const response = await fetch("/api/admin/users/invite", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      submission_role: user.role,
+      tenantid: user.tenantId ?? null,
+      privilege: user.privilege,
+    }),
+  });
+
+  const payload = await asJson<{ user: UserSelectRow }>(response);
+  const mapped = mapUserRow(payload.user);
+
+  return {
+    ...mapped,
+    phone: mapped.phone,
+    status: mapped.status,
+  };
+}
+
+export async function updateUser(user: {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+  tenantId: string;
+}) {
+  const mapped = mapUserRow(
+    await updateUserRow({
       id: user.id,
       name: user.name,
       email: user.email,

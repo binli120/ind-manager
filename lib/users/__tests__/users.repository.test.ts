@@ -3,6 +3,7 @@ import {
   deleteUserProjectAssignment,
   fetchUserRows,
   insertUserProjectAssignment,
+  updateUserRow,
 } from "../users.repository";
 
 jest.mock("@/lib/supabase/client", () => ({
@@ -75,5 +76,44 @@ describe("lib/users/users.repository", () => {
 
     expect(removeEqFirst).toHaveBeenCalledWith("user_id", "u1");
     expect(removeEqSecond).toHaveBeenCalledWith("project_id", "p1");
+  });
+
+  it("updates a user row", async () => {
+    const singleMock = jest.fn().mockResolvedValue({
+      data: {
+        id: "u1",
+        name: "Alice Updated",
+        email: "alice.updated@example.com",
+        phone: "999",
+        submission_role: "project_manager",
+        status: "active",
+        tenantid: "t1",
+        tenants: { name: "Acme" },
+      },
+      error: null,
+    });
+    const selectMock = jest.fn().mockReturnValue({ single: singleMock });
+    const eqMock = jest.fn().mockReturnValue({ select: selectMock });
+
+    mockedCreateClient.mockReturnValue({
+      from: jest.fn().mockReturnValue({
+        update: jest.fn().mockReturnValue({
+          eq: eqMock,
+        }),
+      }),
+    } as unknown as ReturnType<typeof createClient>);
+
+    const row = await updateUserRow({
+      id: "u1",
+      name: "Alice Updated",
+      email: "alice.updated@example.com",
+      phone: "999",
+      role: "project_manager",
+      tenantId: "t1",
+    });
+
+    expect(eqMock).toHaveBeenCalledWith("id", "u1");
+    expect(row.name).toBe("Alice Updated");
+    expect(row.email).toBe("alice.updated@example.com");
   });
 });

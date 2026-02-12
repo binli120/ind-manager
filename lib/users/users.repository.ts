@@ -69,7 +69,7 @@ export const insertUserRow = async (user: {
   email: string;
   phone: string;
   role: Database["public"]["Enums"]["submission_role"];
-  tenantId: string;
+  tenantId?: string;
 }): Promise<UserSelectRow> => {
   const supabase = createClient();
 
@@ -81,7 +81,7 @@ export const insertUserRow = async (user: {
       email: user.email,
       phone: user.phone,
       submission_role: user.role,
-      tenantid: user.tenantId,
+      tenantid: user.tenantId ?? null,
       status: "pending",
     })
     .select(USER_SELECT_WITH_TENANT)
@@ -89,6 +89,43 @@ export const insertUserRow = async (user: {
 
   if (error) {
     throw new Error(error.message || "Failed to create user");
+  }
+
+  return userSelectRowSchema.parse(data) as UserSelectRow;
+};
+
+export const updateUserRow = async ({
+  id,
+  name,
+  email,
+  phone,
+  role,
+  tenantId,
+}: {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: Database["public"]["Enums"]["submission_role"];
+  tenantId: string;
+}): Promise<UserSelectRow> => {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .update({
+      name,
+      email,
+      phone,
+      submission_role: role,
+      tenantid: tenantId,
+    })
+    .eq("id", id)
+    .select(USER_SELECT_WITH_TENANT)
+    .single();
+
+  if (error) {
+    throw new Error(error.message || "Failed to update user");
   }
 
   return userSelectRowSchema.parse(data) as UserSelectRow;

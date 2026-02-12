@@ -22,10 +22,12 @@ export const filterUsers = ({
   users,
   searchQuery,
   statusFilter,
+  tenantFilter,
 }: {
   users: User[];
   searchQuery: string;
   statusFilter: UserStatusFilter;
+  tenantFilter: string;
 }) => {
   const normalizedSearch = searchQuery.trim().toLowerCase();
 
@@ -37,8 +39,10 @@ export const filterUsers = ({
       roleLabels[user.role].toLowerCase().includes(normalizedSearch);
 
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+    const matchesTenant =
+      tenantFilter === "all" || user.company === tenantFilter;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesTenant;
   });
 };
 
@@ -58,7 +62,6 @@ export const normalizeCreatedUser = ({
   phone: (createdUser.phone ?? "").toString(),
   role: createdUser.role ?? input.role,
   company: createdUser.company ?? input.company,
-  password: createdUser.password ?? input.password,
   privilege: createdUser.privilege ?? input.privilege,
   status:
     createdUser.status === "active" ||
