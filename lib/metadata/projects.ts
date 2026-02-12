@@ -29,6 +29,13 @@ export const PROJECT_PRIORITIES = {
 export type ProjectPriority =
   (typeof PROJECT_PRIORITIES)[keyof typeof PROJECT_PRIORITIES];
 
+export const PROJECT_PRIORITY_OPTIONS = [
+  { value: PROJECT_PRIORITIES.LOW, label: "Low" },
+  { value: PROJECT_PRIORITIES.MEDIUM, label: "Medium" },
+  { value: PROJECT_PRIORITIES.HIGH, label: "High" },
+  { value: PROJECT_PRIORITIES.CRITICAL, label: "Critical" },
+] as const;
+
 export const PRODUCT_TYPES = [
   { value: "small-molecule", label: "Small Molecule" },
   { value: "mab", label: "mAb" },

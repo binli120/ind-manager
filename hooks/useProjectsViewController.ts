@@ -5,6 +5,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import {
+  DELETE_PROJECT_CONFIRMATION_MESSAGE,
+  PROJECTS_PAGE_SIZE,
+} from "@/lib/projects/constants";
+import {
   createProject,
   deleteProject,
   fetchProjects,
@@ -20,10 +24,6 @@ import {
   toProjectSubmitError,
 } from "@/lib/projects/projectViewModel";
 import { useAsyncTask } from "@/hooks/useAsyncTask";
-
-const PAGE_SIZE = 6;
-const DELETE_PROJECT_MESSAGE =
-  "Are you sure you wish to delete this project? This action cannot be undone.";
 
 export function useProjectsViewController() {
   const dispatch = useAppDispatch();
@@ -58,9 +58,9 @@ export function useProjectsViewController() {
     [projects, filters],
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredProjects.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filteredProjects.length / PROJECTS_PAGE_SIZE));
   const pagedProjects = useMemo(
-    () => paginateProjects(filteredProjects, page, PAGE_SIZE),
+    () => paginateProjects(filteredProjects, page, PROJECTS_PAGE_SIZE),
     [filteredProjects, page],
   );
 
@@ -118,7 +118,7 @@ export function useProjectsViewController() {
   };
 
   const handleDeleteProject = (projectId: string) => {
-    if (!confirm(DELETE_PROJECT_MESSAGE)) return;
+    if (!confirm(DELETE_PROJECT_CONFIRMATION_MESSAGE)) return;
     void dispatch(deleteProject(projectId));
   };
 

@@ -37,6 +37,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { SMART_ASSISTANT_TRIGGER_KEYWORDS } from "@/lib/section-editor/constants"
 import { SmartAssistantBubble } from "@/components/section-editor/smart-assistant-bubble"
 import { CommentPopup } from "@/components/section-editor/comment-popup"
 import { TableInsertDialog } from "@/components/section-editor/table-insert-dialog"
@@ -119,7 +120,9 @@ export function TiptapEditor({
 
       if (!isReviewMode) {
         const text = editor.getText().toLowerCase()
-        const foundKeyword = TRIGGER_KEYWORDS.find((keyword) => text.includes(keyword))
+        const foundKeyword = SMART_ASSISTANT_TRIGGER_KEYWORDS.find((keyword) =>
+          text.includes(keyword),
+        )
 
         if (foundKeyword) {
           if (typingTimeoutRef.current) {
@@ -538,14 +541,3 @@ export function TiptapEditor({
     </>
   )
 }
-
-const TRIGGER_KEYWORDS = [
-  "pharmacology",
-  "pharmacokinetic",
-  "toxicology",
-  "nonclinical",
-  "kinase inhibitor",
-  "efficacy",
-  "safety",
-  "bioavailability",
-]

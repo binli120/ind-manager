@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { canAccessPath } from '@/lib/auth/access-control';
 import { authServices } from '@/lib/auth/auth-services';
+import { SESSION_TIMEOUT_CONFIG } from '@/lib/common/session-timeout';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 import { getCurrentUser, logoutUser } from '@/lib/store/slices';
 import { Session } from '@supabase/supabase-js';
@@ -21,28 +22,9 @@ import { ThemedLoadingScreen } from '@/components/ui/themed-loading-screen';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-const parseEnvNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-};
-
-const IDLE_TIMEOUT_MINUTES = parseEnvNumber(
-  process.env.NEXT_PUBLIC_SESSION_IDLE_TIMEOUT_MINUTES,
-  30
-);
-const IDLE_TIMEOUT_MS = IDLE_TIMEOUT_MINUTES * 60 * 1000;
-const RAW_WARNING_SECONDS = parseEnvNumber(
-  process.env.NEXT_PUBLIC_SESSION_WARNING_SECONDS,
-  60
-);
-const WARNING_SECONDS = Math.min(
-  RAW_WARNING_SECONDS,
-  Math.max(1, Math.floor(IDLE_TIMEOUT_MS / 1000))
-);
-const WARNING_TIMEOUT_MS = Math.max(
-  0,
-  IDLE_TIMEOUT_MS - WARNING_SECONDS * 1000
-);
+const IDLE_TIMEOUT_MS = SESSION_TIMEOUT_CONFIG.idleTimeoutMs;
+const WARNING_SECONDS = SESSION_TIMEOUT_CONFIG.warningSeconds;
+const WARNING_TIMEOUT_MS = SESSION_TIMEOUT_CONFIG.warningTimeoutMs;
 
 interface AuthGuardProps {
   children: React.ReactNode;

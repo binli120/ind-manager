@@ -13,6 +13,10 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 import {
+  MATERIALS_ASSET_SECTION_FALLBACK,
+  MATERIALS_DEFAULTS,
+} from "@/lib/section-editor/constants"
+import {
   AlertCircle,
   FileText,
   ImageIcon,
@@ -61,12 +65,6 @@ interface AssetsSectionResponse {
   metadata?: Record<string, unknown> | null
   source?: string
 }
-
-const DEFAULT_TENANT = "c38daae8-07a8-4da4-9a68-9a9955b09f70"
-const DEFAULT_PROJECT = "2b44ecab-45c8-4105-b4ae-e9b7080bb4d6"
-const DEFAULT_SECTION = "4"
-const DEFAULT_BUCKET = "doc-repository-dev"
-const DEFAULT_LIMIT = 500
 
 interface MaterialsDialogProps {
   open: boolean
@@ -303,11 +301,11 @@ export function MaterialsDialog({
   onMaterialsCountChange,
   materials,
   onMaterialsChange,
-  tenantId = DEFAULT_TENANT,
-  projectId = DEFAULT_PROJECT,
-  sectionNumber = DEFAULT_SECTION,
-  bucket = DEFAULT_BUCKET,
-  limit = DEFAULT_LIMIT,
+  tenantId = MATERIALS_DEFAULTS.tenantId,
+  projectId = MATERIALS_DEFAULTS.projectId,
+  sectionNumber = MATERIALS_DEFAULTS.sectionNumber,
+  bucket = MATERIALS_DEFAULTS.bucket,
+  limit = MATERIALS_DEFAULTS.limit,
 }: MaterialsDialogProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [documents, setDocuments] = useState<AssetsSectionDocument[]>([])
@@ -329,7 +327,7 @@ export function MaterialsDialog({
     setLoading(true)
     setError(null)
     try {
-      const hardcodedSection = "2.4.1"
+      const hardcodedSection = MATERIALS_ASSET_SECTION_FALLBACK
       const payload = await requestPdfAnalysisApi<AssetsSectionResponse, undefined, {
         tenant_id: string
         project_id: string

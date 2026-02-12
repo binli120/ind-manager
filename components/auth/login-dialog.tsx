@@ -6,6 +6,7 @@
 import type React from "react"
 
 import { APP_BUILD_NUMBER, APP_NAME, COMPANY_CONTACT_EMAIL, COMPANY_NAME } from "@/lib/app-info"
+import { resolveAuthEmailRedirectUrl } from "@/lib/auth/auth-redirect"
 import { authServices } from "@/lib/auth/auth-services"
 import { useAsyncTask } from "@/hooks/useAsyncTask"
 import { Button } from "@/components/ui/button"
@@ -88,7 +89,7 @@ export function LoginDialog({ children }: LoginDialogProps) {
     const { error } = await signUpTask.run({
       nextEmail: email,
       nextPassword: password,
-      redirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || window.location.origin,
+      redirectTo: resolveAuthEmailRedirectUrl(window.location.origin),
     })
     if (!error) {
       setInfoMessage("Check your email to confirm your account!")

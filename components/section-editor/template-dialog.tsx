@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Pencil, Save, X, Table, RotateCcw } from "lucide-react"
 import { TableEditorDialog } from "./table-editor-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { extractSectionNumber } from "@/lib/section-editor/section-number"
 import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 import { useAppSelector } from "@/lib/store"
 import { Loader2 } from "lucide-react"
@@ -238,12 +239,6 @@ type EditingField = {
   field: string
 }
 
-const toSectionNumber = (value?: string | null) => {
-  if (!value) return null
-  const match = value.match(/^(\d+(?:\.\d+)*)(?:[^\d.]|$)/)
-  return match ? match[1] : null
-}
-
 export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onAvailable }: TemplateDialogProps) {
   const userId = useAppSelector((s) => s.auth.user?.id)
 
@@ -272,7 +267,7 @@ export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onA
         onUnavailable?.()
         return
       }
-      const sectionParam = toSectionNumber(section.number) || section.number
+      const sectionParam = extractSectionNumber(section.number) || section.number
       const fetchKey = `${sectionParam}-${userId}`
       if (fetchKey === lastFetchKey) return
       setLastFetchKey(fetchKey)

@@ -22,6 +22,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useProjectFormController } from '@/hooks/useProjectFormController';
 import {
+  PROJECT_PRIORITY_OPTIONS,
   PRODUCT_TYPES,
   PROJECT_CREATION_STEPS,
 } from '@/lib/metadata/projects';
@@ -32,13 +33,6 @@ import {
 } from '@/lib/projects/projectFormModel';
 import { ProjectCreation } from '@/lib/projects/types';
 import { Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-
-const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-] as const;
 
 interface ProjectFormProps {
   initialData?: ProjectCreation;
@@ -156,7 +150,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                     <SelectValue placeholder='Select priority' />
                   </SelectTrigger>
                   <SelectContent>
-                    {PRIORITY_OPTIONS.map((opt) => (
+                    {PROJECT_PRIORITY_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>

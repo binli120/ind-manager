@@ -19,15 +19,10 @@ import { FileText, Save, CheckCircle2, Trash2, Loader2 } from "lucide-react"
 import type { Section, SubsectionContent } from "@/types/section"
 import type { ImageData, MaterialItem, TableData, TopicData } from "@/components/section-editor/my-materials-dialog"
 import { AddSectionDialog } from "@/components/section-editor/add-section-dialog"
+import { extractSectionNumber } from "@/lib/section-editor/section-number"
 import { useAppDispatch, useAppSelector } from "@/lib/store"
 import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 import { fetchSectionList } from "@/lib/store/slices/sectionListSlice"
-
-const toSectionNumber = (value?: string | null) => {
-  if (!value) return null
-  const match = value.match(/^(\d+(?:\.\d+)*)(?:[^\d.]|$)/)
-  return match ? match[1] : null
-}
 
 const escapeHtml = (value: string) =>
   value
@@ -146,9 +141,9 @@ function SubsectionEditor({
   total: number
 }) {
   const effectiveSectionNumber =
-    toSectionNumber(subsection.subsectionNumber) ||
-    toSectionNumber(subsection.title) ||
-    toSectionNumber(fallbackSectionNumber) ||
+    extractSectionNumber(subsection.subsectionNumber) ||
+    extractSectionNumber(subsection.title) ||
+    extractSectionNumber(fallbackSectionNumber) ||
     subsection.subsectionNumber
   const [content, setContent] = useState(subsection.content)
   const [showMaterialsDialog, setShowMaterialsDialog] = useState(false)
@@ -399,7 +394,7 @@ function SubsectionEditor({
       const label = text.includes("—") ? text.split("—").pop()?.trim() : text
       if (!title || !label) continue
       if (label.toLowerCase() === title || text.toLowerCase() === title || text.endsWith(subsection.title || "")) {
-        return value || toSectionNumber(text) || null
+        return value || extractSectionNumber(text) || null
       }
     }
     return null
