@@ -53,8 +53,53 @@ export const getWriterAssignmentsFromMetadata = (metadata: unknown) => {
   return { techWriter, indWriter };
 };
 
+const asString = (value: unknown) =>
+  typeof value === "string" && value.trim() ? value : undefined;
+
+const toProjectMetadata = (metadata: unknown): Project["metadata"] => {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return {};
+  }
+
+  const source = metadata as Record<string, unknown>;
+  const teamSource =
+    source.team_assignments &&
+    typeof source.team_assignments === "object" &&
+    !Array.isArray(source.team_assignments)
+      ? (source.team_assignments as Record<string, unknown>)
+      : null;
+
+  const teamAssignments = teamSource
+    ? {
+        ...(asString(teamSource.tech_writer)
+          ? { tech_writer: asString(teamSource.tech_writer) }
+          : {}),
+        ...(asString(teamSource.ind_writer)
+          ? { ind_writer: asString(teamSource.ind_writer) }
+          : {}),
+        ...(asString(teamSource.inc_writer)
+          ? { inc_writer: asString(teamSource.inc_writer) }
+          : {}),
+      }
+    : undefined;
+
+  return {
+    ...(asString(source.phase) ? { phase: asString(source.phase) } : {}),
+    ...(asString(source.indication)
+      ? { indication: asString(source.indication) }
+      : {}),
+    ...(asString(source.studyType) ? { studyType: asString(source.studyType) } : {}),
+    ...(asString(source.regulatoryPath)
+      ? { regulatoryPath: asString(source.regulatoryPath) }
+      : {}),
+    ...(teamAssignments && Object.keys(teamAssignments).length
+      ? { team_assignments: teamAssignments }
+      : {}),
+  };
+};
+
 const normalizeSettings = (
-  project: ProjectRow,
+  metadata: unknown,
   preferStoredSettings: boolean,
 ): Project["settings"] => {
   if (!preferStoredSettings) {
@@ -64,16 +109,62 @@ const normalizeSettings = (
     };
   }
 
-  const rawSettings = (
-    project as unknown as {
-      settings?: { isPublic?: boolean; allowCollaboration?: boolean };
-    }
-  ).settings;
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return {
+      isPublic: false,
+      allowCollaboration: true,
+    };
+  }
+
+  const metadataRecord = metadata as Record<string, unknown>;
+  const rawSettings = metadataRecord.settings;
+  if (!rawSettings || typeof rawSettings !== "object" || Array.isArray(rawSettings)) {
+    return {
+      isPublic: false,
+      allowCollaboration: true,
+    };
+  }
+  const settingsRecord = rawSettings as Record<string, unknown>;
 
   return {
-    isPublic: rawSettings?.isPublic ?? false,
-    allowCollaboration: rawSettings?.allowCollaboration ?? true,
+    isPublic:
+      typeof settingsRecord.isPublic === "boolean"
+        ? settingsRecord.isPublic
+        : false,
+    allowCollaboration:
+      typeof settingsRecord.allowCollaboration === "boolean"
+        ? settingsRecord.allowCollaboration
+        : true,
   };
+};
+
+const buildTeamSize = ({
+  project,
+  techWriter,
+  indWriter,
+}: {
+  project: ProjectRow;
+  techWriter: string | null;
+  indWriter: string | null;
+}) => {
+  const uniqueUserIds = new Set<string>();
+  const addUserId = (value: string | null | undefined) => {
+    if (typeof value !== "string") return;
+    const normalized = value.trim();
+    if (!normalized) return;
+    uniqueUserIds.add(normalized);
+  };
+
+  addUserId(project.project_creator_id);
+  addUserId(project.cmc_lead);
+  addUserId(project.clinical_lead);
+  addUserId(project.preclinical_lead);
+  addUserId(project.regulatory_owner);
+  addUserId(project.publisher);
+  addUserId(techWriter);
+  addUserId(indWriter);
+
+  return uniqueUserIds.size;
 };
 
 export const dbToClientProject = ({
@@ -90,6 +181,7 @@ export const dbToClientProject = ({
   const { techWriter, indWriter } = getWriterAssignmentsFromMetadata(
     project.metadata,
   );
+  const teamSize = buildTeamSize({ project, techWriter, indWriter });
 
   return {
     ...project,
@@ -104,12 +196,12 @@ export const dbToClientProject = ({
     targetDate: project.target_ind_submission_date || "",
     tenantId: project.tenantid ?? fallbackTenantId ?? "",
     ownerId: project.project_creator_id ?? "",
-    teamSize: 0,
+    teamSize,
     teamMembers: [],
     createdAt: project.created_at,
     updatedAt: project.updated_at,
-    settings: normalizeSettings(project, preferStoredSettings),
-    metadata: (project.metadata as Project["metadata"]) ?? {},
+    settings: normalizeSettings(project.metadata, preferStoredSettings),
+    metadata: toProjectMetadata(project.metadata),
     targetIndSubmissionDate: project.target_ind_submission_date ?? "",
     preIndMeetingDate: project.pre_ind_meeting_date,
     projectStartDate: project.project_start_date ?? "",

@@ -55,10 +55,17 @@ if (canUseDOM) {
 
   store.subscribe(() => {
     const state = store.getState()
+    const currentUserId = state.auth.user?.id ?? null
 
     if (state.projects.selectedProjectId !== lastSelectedProjectId) {
       lastSelectedProjectId = state.projects.selectedProjectId
       persistString("selectedProjectId", lastSelectedProjectId)
+      if (currentUserId) {
+        persistString(
+          `selectedProjectId:${currentUserId}`,
+          lastSelectedProjectId,
+        )
+      }
     }
 
     if (state.documents.selectedDocumentId !== lastSelectedDocumentId) {

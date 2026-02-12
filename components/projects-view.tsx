@@ -393,9 +393,9 @@ export function ProjectsView() {
                              </Badge>
                           </div>
                         </div>
-                        {project.code && (
+                        {(project.code || project.id) && (
                           <p className="text-sm text-muted-foreground font-mono">
-                            {project.code}
+                            {project.code || "N/A"} / {project.id}
                           </p>
                         )}
                       </div>

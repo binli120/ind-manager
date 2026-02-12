@@ -125,12 +125,7 @@ export function Header({
       !selectedProjectId ||
       !effectiveProjects.some((p) => p.id === selectedProjectId)
     ) {
-      const preferred = effectiveProjects.find(
-        (p) =>
-          p.code?.toLowerCase() === "lpathmab" ||
-          p.title?.toLowerCase().includes("lpathmab")
-      );
-      setProject((preferred ?? effectiveProjects[0]).id);
+      setProject(effectiveProjects[0].id);
     }
   }, [effectiveProjects, selectedProjectId, setProject]);
 

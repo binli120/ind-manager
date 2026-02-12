@@ -5,7 +5,6 @@ import type { Database } from "@/lib/supabase/schema";
 import { isAdminEmail } from "@/lib/utils";
 import {
   getTenantNameFromMetadata,
-  getWriterAssignmentsFromMetadata,
   type ProjectAssignmentRow,
 } from "@/lib/projects/projectMapper";
 
@@ -57,52 +56,6 @@ const createProjectFolderStructure = async ({
   }
 };
 
-const updateWriterColumns = async ({
-  supabase,
-  projectId,
-  metadata,
-}: {
-  supabase: ReturnType<typeof createBrowserClient>;
-  projectId: string;
-  metadata: unknown;
-}) => {
-  const writerAssignments = getWriterAssignmentsFromMetadata(metadata);
-  const writerColumnsPayload: Record<string, unknown> = {};
-
-  if (writerAssignments.techWriter) {
-    writerColumnsPayload.tech_writer = writerAssignments.techWriter;
-  }
-
-  if (writerAssignments.indWriter) {
-    writerColumnsPayload.ind_writer = writerAssignments.indWriter;
-    writerColumnsPayload.inc_writer = writerAssignments.indWriter;
-  }
-
-  if (Object.keys(writerColumnsPayload).length === 0) {
-    return;
-  }
-
-  const projectsTable = supabase.from("projects") as unknown as {
-    update: (payload: Record<string, unknown>) => {
-      eq: (
-        column: string,
-        value: string,
-      ) => Promise<{ error: { message?: string } | null }>;
-    };
-  };
-
-  const { error: writerColumnsError } = await projectsTable
-    .update(writerColumnsPayload)
-    .eq("id", projectId);
-
-  if (writerColumnsError) {
-    console.warn("Writer columns update skipped", {
-      projectId,
-      writerColumnsError,
-    });
-  }
-};
-
 const fetchUserContext = async (
   userId: string,
 ): Promise<{ userData: UserRow; isAdmin: boolean }> => {
@@ -117,7 +70,11 @@ const fetchUserContext = async (
     throw userError;
   }
 
-  const userData = (userRow ?? {}) as UserRow;
+  const userData: UserRow = {
+    tenantid:
+      typeof userRow?.tenantid === "string" ? userRow.tenantid : undefined,
+    email: typeof userRow?.email === "string" ? userRow.email : undefined,
+  };
   return {
     userData,
     isAdmin: isAdminEmail(userData?.email),
@@ -155,7 +112,12 @@ export const fetchVisibleProjectRowsForUser = async ({
     throw assignError;
   }
 
-  const assignmentRows = (assignments ?? []) as ProjectAssignmentRow[];
+  const assignmentRows: ProjectAssignmentRow[] = (assignments ?? []).flatMap(
+    (assignment) =>
+      assignment.project_id
+        ? [{ project_id: assignment.project_id, role: assignment.role ?? null }]
+        : [],
+  );
   const assignedIds = assignmentRows.map((assignment) => assignment.project_id);
 
   if (!isAdmin && requireAssignmentsForNonAdmin && assignedIds.length === 0) {
@@ -181,7 +143,7 @@ export const fetchVisibleProjectRowsForUser = async ({
   }
 
   return {
-    rows: (projects ?? []) as ProjectRow[],
+    rows: projects ?? [],
     assignmentRows,
     fallbackTenantId: userData.tenantid ?? null,
   };
@@ -213,7 +175,7 @@ export const fetchProjectRowById = async (projectId: string): Promise<ProjectRow
     throw error;
   }
 
-  return project as ProjectRow;
+  return project;
 };
 
 export const createProjectRowWithOwnerAssignment = async ({
@@ -239,7 +201,7 @@ export const createProjectRowWithOwnerAssignment = async ({
     throw userError;
   }
 
-  const userData = userRow as { tenantid?: string };
+  const userData = userRow;
   if (!userData?.tenantid) {
     throw new Error("User has no tenant");
   }
@@ -304,13 +266,7 @@ export const createProjectRowWithOwnerAssignment = async ({
     throw assignmentError;
   }
 
-  await updateWriterColumns({
-    supabase,
-    projectId: newProject.id,
-    metadata: normalizedProjectData.metadata,
-  });
-
-  return newProject as ProjectRow;
+  return newProject;
 };
 
 export const updateProjectRowById = async ({
@@ -333,13 +289,7 @@ export const updateProjectRowById = async ({
     throw error;
   }
 
-  await updateWriterColumns({
-    supabase,
-    projectId,
-    metadata: updates.metadata,
-  });
-
-  return data as ProjectRow;
+  return data;
 };
 
 export const deleteProjectById = async (projectId: string): Promise<void> => {

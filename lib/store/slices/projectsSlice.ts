@@ -59,6 +59,19 @@ const initialState: ProjectsState = {
   selectedProjectId: null,
 };
 
+const getPersistedSelectedProjectId = (userId?: string) => {
+  if (typeof window === "undefined") return null;
+  try {
+    if (userId) {
+      const userScoped = localStorage.getItem(`selectedProjectId:${userId}`);
+      if (userScoped) return userScoped;
+    }
+    return localStorage.getItem("selectedProjectId");
+  } catch {
+    return null;
+  }
+};
+
 // MOCK: Remove mock mode when Supabase projects are live.
 //const useMockProjects = true;
 //const MOCK_TENANT_ID = "demo-tenant";
@@ -331,17 +344,18 @@ const projectsSlice = createSlice({
         state.isLoading = false;
         state.hasLoadedOnce = true;
         state.projects = action.payload;
+        const persistedSelection = getPersistedSelectedProjectId(
+          action.meta.arg.userId,
+        );
+        const preferredProjectId = persistedSelection ?? state.selectedProjectId;
 
-        if (state.selectedProjectId) {
-          state.currentProject = state.projects.find((project) =>
-            project.id === state.selectedProjectId
-          ) || null;
+        if (preferredProjectId) {
+          state.currentProject =
+            state.projects.find((project) => project.id === preferredProjectId) ?? null;
+          state.selectedProjectId = state.currentProject?.id ?? null;
+        }
 
-          if (!state.currentProject && state.projects.length > 0) {
-            state.currentProject = state.projects[0];
-            state.selectedProjectId = state.projects[0].id;
-          }
-        } else if (state.projects.length > 0) {
+        if (!state.currentProject && state.projects.length > 0) {
           state.currentProject = state.projects[0];
           state.selectedProjectId = state.projects[0].id;
         }
@@ -362,10 +376,20 @@ const projectsSlice = createSlice({
         state.hasLoadedOnce = true;
         state.projects = action.payload;
 
-        if (state.projects.length > 0) {
+        const preferredProjectId =
+          state.selectedProjectId ?? getPersistedSelectedProjectId();
+        if (preferredProjectId) {
+          state.currentProject =
+            state.projects.find((project) => project.id === preferredProjectId) ?? null;
+          state.selectedProjectId = state.currentProject?.id ?? null;
+        }
+
+        if (!state.currentProject && state.projects.length > 0) {
           state.currentProject = state.projects[0];
           state.selectedProjectId = state.projects[0].id;
-        } else {
+        }
+
+        if (state.projects.length === 0) {
           state.currentProject = null;
           state.selectedProjectId = null;
         }
@@ -379,7 +403,6 @@ const projectsSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.projects = [];
         state.currentProject = null;
-        state.selectedProjectId = null;
         state.isLoading = false;
         state.hasLoadedOnce = false;
         state.error = null;

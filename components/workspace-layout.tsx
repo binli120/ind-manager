@@ -20,7 +20,7 @@ import { setCommentsPanelOpen, setSidebarOpen } from '@/lib/store/slices/uiSlice
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { authServices } from '@/app/api/auth/auth-services';
-import type { UserPrivilege } from '@/components/ui/users/users-page';
+import { isAdminEmail } from '@/lib/utils';
 
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -51,19 +51,44 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     setShowNoProjectDialog(shouldLockWorkspace);
   }, [shouldLockWorkspace]);
 
-  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<UserPrivilege | ''>('');
+  const [currentUserPrivilege, setCurrentUserPrivilege] = useState<string>('user');
 
   useEffect(() => {
-    async function getUserPrivilege() {
-      const authData = await authServices.getUser();
-      const authUser = authData.data?.user;
-      if (authUser) {
-        const privilege = (authUser?.user_metadata?.privilege as UserPrivilege) ?? 'user';
-        setCurrentUserPrivilege(privilege);
-      }
+    const privilege = typeof user?.privilege === 'string' ? user.privilege : null;
+    const role = typeof user?.role === 'string' ? user.role : null;
+    const email = typeof user?.email === 'string' ? user.email : null;
+    const adminValues = new Set([
+      'system_admin',
+      'user_manager',
+      'admin',
+      'system_administrator',
+    ]);
+
+    if (email && isAdminEmail(email)) {
+      setCurrentUserPrivilege('system_admin');
+      return;
     }
-    getUserPrivilege();
-  }, []);
+
+    if (role && adminValues.has(role)) {
+      setCurrentUserPrivilege(role);
+      return;
+    }
+
+    if (privilege && adminValues.has(privilege)) {
+      setCurrentUserPrivilege(privilege);
+      return;
+    }
+
+    if (privilege) {
+      setCurrentUserPrivilege(privilege);
+      return;
+    }
+    if (role) {
+      setCurrentUserPrivilege(role);
+      return;
+    }
+    setCurrentUserPrivilege('user');
+  }, [user?.privilege, user?.role, user?.email]);
 
   const handleToggleSidebar = () => {
     dispatch(setSidebarOpen(!sidebarOpen));

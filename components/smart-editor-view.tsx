@@ -190,9 +190,7 @@ export function SmartEditorView() {
         return;
       }
 
-      const fullPath =
-        (selectedSubsection as { fullPath?: string }).fullPath ||
-        selectedSubsection.title;
+      const fullPath = selectedSubsection.fullPath || selectedSubsection.title;
 
       console.info('[SmartEditor] file selection', {
         id: selectedSubsection.id,

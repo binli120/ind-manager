@@ -69,7 +69,7 @@ describe("lib/projects/projectService", () => {
     mockedIsAdminEmail.mockReturnValue(false);
   });
 
-  it("creates folder + project + owner assignment and backfills writer columns", async () => {
+  it("creates folder + project + owner assignment", async () => {
     const usersSingle = jest.fn().mockResolvedValue({
       data: { tenantid: "tenant-1" },
       error: null,
@@ -90,8 +90,6 @@ describe("lib/projects/projectService", () => {
         }),
       }),
     });
-    const projectsUpdateEq = jest.fn().mockResolvedValue({ error: null });
-    const projectsUpdate = jest.fn().mockReturnValue({ eq: projectsUpdateEq });
     const userProjectInsert = jest.fn().mockResolvedValue({ error: null });
 
     const supabaseMock = {
@@ -109,7 +107,6 @@ describe("lib/projects/projectService", () => {
         if (table === "projects") {
           return {
             insert: projectsInsert,
-            update: projectsUpdate,
             delete: jest.fn().mockReturnValue({ eq: jest.fn() }),
           };
         }
@@ -184,14 +181,6 @@ describe("lib/projects/projectService", () => {
       }),
     );
 
-    expect(projectsUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tech_writer: "writer-tech",
-        ind_writer: "writer-ind",
-        inc_writer: "writer-ind",
-      }),
-    );
-
     expect(created.id).toBe("proj-1");
   });
 
@@ -225,7 +214,6 @@ describe("lib/projects/projectService", () => {
                 }),
               }),
             }),
-            update: jest.fn().mockReturnValue({ eq: jest.fn() }),
             delete: projectsDelete,
           };
         }
