@@ -1,71 +1,74 @@
-import { User, UserRole } from "@/components/ui/users/users-page";
+import type { User, UserRole } from "@/components/ui/users/users-page";
+import { createClient } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/schema";
 
 type UserRow = {
   id: string;
-  name: string;
+  name: string | null;
   email: string;
   phone: string | null;
-  role: UserRole;
-  status: string;
+  submission_role: Database["public"]["Enums"]["submission_role"];
+  status: Database["public"]["Enums"]["user_status"] | null;
+  tenantid: string | null;
   tenants?: { name?: string | null } | null;
 };
 
-const ADMIN_PROXY_ENDPOINT = "/api/admin/proxy";
+const USER_SELECT_WITH_TENANT =
+  "id,name,email,phone,submission_role,status,tenantid,tenants(name)";
 
-const asJson = async <T>(res: Response) => {
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body?.error || "Request failed");
-  }
-  return (await res.json()) as T;
-};
+const mapUserRow = (row: UserRow): User => ({
+  id: row.id,
+  name: row.name ?? "",
+  email: row.email,
+  phone: row.phone ?? "",
+  role: row.submission_role as UserRole,
+  company: row.tenants?.name ?? "",
+  status: (row.status as User["status"]) ?? "pending",
+});
 
 export async function fetchUsers(tenantId?: string): Promise<User[]> {
-  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
-    method: "POST",
-    body: JSON.stringify({
-      table: "users",
-      action: "select",
-      data: { select: "*, tenants(name)" },
-      ...(tenantId ? { filters: { tenantid: tenantId } } : {}),
-    }),
-  });
+  const supabase = createClient();
 
-  const { data } = await asJson<{ data: UserRow[] }>(res);
+  let query = supabase
+    .from("users")
+    .select(USER_SELECT_WITH_TENANT)
+    .order("name", { ascending: true });
 
-  return data.map((row) => ({
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    phone: row.phone ?? "",
-    role: row.role,
-    company: row.tenants?.name ?? "",
-    status: (row.status as User["status"]) ?? "pending",
-  }));
+  if (tenantId) {
+    query = query.eq("tenantid", tenantId);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(error.message || "Failed to fetch users");
+  }
+
+  const rows = (data ?? []) as UserRow[];
+  return rows.map(mapUserRow);
 }
 
-export async function updateUserStatus(id: string, status: string) {
-  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
-    method: "POST",
-    body: JSON.stringify({
-      table: "users",
-      action: "update",
-      data: { values: { status }, select: "*, tenants(name)" },
-      filters: { id },
-    }),
-  });
+export async function updateUserStatus(
+  id: string,
+  status: Database["public"]["Enums"]["user_status"],
+) {
+  const supabase = createClient();
 
-  const { data } = await asJson<{ data: UserRow[] }>(res);
-  const row = data[0];
+  const { data, error } = await supabase
+    .from("users")
+    .update({ status })
+    .eq("id", id)
+    .select(USER_SELECT_WITH_TENANT)
+    .single();
 
+  if (error) {
+    throw new Error(error.message || "Failed to update user status");
+  }
+
+  const mapped = mapUserRow(data as UserRow);
   return {
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    phone: row.phone,
-    role: row.role,
-    company: row.tenants?.name ?? "",
-    status: row.status,
+    ...mapped,
+    phone: mapped.phone,
+    status: mapped.status,
   };
 }
 
@@ -77,130 +80,96 @@ export async function createUser(user: {
   role: UserRole;
   tenantId: string;
 }) {
-  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
-    method: "POST",
-    body: JSON.stringify({
-      table: "users",
-      action: "insert",
-      data: {
-        values: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          submission_role: user.role,
-          tenantid: user.tenantId,
-          status: "pending",
-        },
-        select: "*, tenants(name)",
-      },
-    }),
-  });
+  const supabase = createClient();
 
-  const { data } = await asJson<{ data: UserRow[] }>(res);
-  const row = data[0];
+  const { data, error } = await supabase
+    .from("users")
+    .insert({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      submission_role: user.role,
+      tenantid: user.tenantId,
+      status: "pending",
+    })
+    .select(USER_SELECT_WITH_TENANT)
+    .single();
 
+  if (error) {
+    throw new Error(error.message || "Failed to create user");
+  }
+
+  const mapped = mapUserRow(data as UserRow);
   return {
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    phone: row.phone,
-    role: row.role,
-    company: row.tenants?.name ?? "",
-    status: row.status,
+    ...mapped,
+    phone: mapped.phone,
+    status: mapped.status,
   };
 }
 
 export async function fetchCurrentUser(id: string) {
-  const res = await fetch(ADMIN_PROXY_ENDPOINT, {
-    method: "POST",
-    body: JSON.stringify({
-      table: "users",
-      action: "select",
-      data: { select: "*" },
-      filters: { id },
-    }),
-  });
-  const { data } = await asJson<{ data: UserRow[] }>(res);
-  return data?.[0] || null;
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select(USER_SELECT_WITH_TENANT)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message || "Failed to fetch current user");
+  }
+
+  return data ? mapUserRow(data as UserRow) : null;
 }
 
 export async function fetchUserProjectIds(userId: string): Promise<string[]> {
-  const res = await fetch("/api/database", {
-    method: "POST",
-    body: JSON.stringify({
-      table: "user_project",
-      action: "select",
-      data: { select: "project_id" },
-      filters: { user_id: userId },
-    }),
-  });
-  
-  const json = await res.json();
-  if (json.error) {
-    console.error("fetchUserProjectIds error:", json.error);
-    throw new Error(json.error.message || "Failed to fetch assignments");
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("user_project")
+    .select("project_id")
+    .eq("user_id", userId);
+
+  if (error) {
+    throw new Error(error.message || "Failed to fetch assignments");
   }
-  
-  return json.data ? json.data.map((row: { project_id: string }) => row.project_id) : [];
+
+  return (data ?? [])
+    .map((row) => row.project_id)
+    .filter((projectId): projectId is string => Boolean(projectId));
 }
 
-export async function addUserToProject(userId: string, projectId: string, currentUserId?: string) {
-  const values: Record<string, string> = {
+export async function addUserToProject(
+  userId: string,
+  projectId: string,
+  currentUserId?: string,
+) {
+  const supabase = createClient();
+
+  const values: Database["public"]["Tables"]["user_project"]["Insert"] = {
     user_id: userId,
     project_id: projectId,
+    ...(currentUserId ? { created_by: currentUserId } : {}),
   };
-  
-  if (currentUserId) {
-    values.created_by = currentUserId;
-  }
 
-  const res = await fetch("/api/database", {
-    method: "POST",
-    body: JSON.stringify({
-      table: "user_project",
-      action: "insert",
-      data: { values },
-    }),
-  });
-  
-  const json = await res.json();
-  if (json.error) {
-    console.error("addUserToProject error:", json.error);
-    throw new Error(json.error.message || "Failed to assign project");
+  const { error } = await supabase.from("user_project").insert(values);
+  if (error) {
+    throw new Error(error.message || "Failed to assign project");
   }
 }
 
 export async function removeUserFromProject(userId: string, projectId: string) {
-  const fetchRes = await fetch("/api/database", {
-    method: "POST",
-    body: JSON.stringify({
-      table: "user_project",
-      action: "select",
-      data: { select: "id" },
-      filters: { user_id: userId, project_id: projectId },
-    }),
-  });
+  const supabase = createClient();
 
-  const { data, error } = await fetchRes.json();
-  
+  const { error } = await supabase
+    .from("user_project")
+    .delete()
+    .eq("user_id", userId)
+    .eq("project_id", projectId);
+
   if (error) {
-    console.error("removeUserFromProject find error:", error);
-    throw new Error(error.message);
-  }
-
-  if (data && data.length > 0) {
-    const deleteRes = await fetch("/api/database", {
-      method: "POST",
-      body: JSON.stringify({
-        table: "user_project",
-        action: "delete",
-        filters: { id: data[0].id },
-      }),
-    });
-    const deleteJson = await deleteRes.json();
-    if (deleteJson.error) {
-      throw new Error(deleteJson.error.message);
-    }
+    throw new Error(error.message || "Failed to remove project assignment");
   }
 }

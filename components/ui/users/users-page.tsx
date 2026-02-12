@@ -22,7 +22,7 @@ import { fetchUsers, updateUserStatus, createUser, fetchTenants } from "@/lib/su
 import { authServices } from "@/app/api/auth/auth-services";
 import { AssignProjectDialog } from './assign-project-dialog';
 import { fetchProjects } from "@/lib/supabase/projects";
-import type { Project } from "@/lib/store/slices/projectsSlice";
+import type { Project } from "@/lib/projects/types";
 
 //These should be made more robust in the future.
 export type UserRole =
