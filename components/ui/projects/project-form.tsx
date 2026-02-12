@@ -130,13 +130,13 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       },
     ];
 
-    const knownRoleKeys: TeamAssignableRole[] = [
+    const knownRoleKeys = [
       "cmc_lead",
       "clinical_lead",
       "preclinical_lead",
       "regulatory_owner",
       "publisher",
-    ];
+    ] as const satisfies ReadonlyArray<keyof ProjectCreation>;
 
     knownRoleKeys.forEach((role) => {
       const assignedUserId = source?.[role];

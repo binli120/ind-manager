@@ -9,7 +9,9 @@ import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 jest.mock("next/image", () => ({
   __esModule: true,
   default: (props: React.ComponentProps<"img">) => {
-    const { loader, unoptimized, ...rest } = props
+    const rest = { ...props }
+    Reflect.deleteProperty(rest, "loader")
+    Reflect.deleteProperty(rest, "unoptimized")
     return <img {...rest} /> // eslint-disable-line jsx-a11y/alt-text
   },
 }))
