@@ -3,18 +3,6 @@
 // Email: blee@filynai.com
 "use client";
 
-import { useAppSelector, useAppDispatch } from "@/lib/store";
-import {
-  setViewMode,
-  setFilters,
-  fetchProjects,
-  createProject,
-  ProjectCreation,
-  deleteProject,
-  updateProject,
-  ProjectUpdate,
-} from "@/lib/store/slices";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 //class merge for active
@@ -44,6 +32,7 @@ import {
   Pill,
   Target,
 } from "lucide-react";
+import { useProjectsViewController } from "@/hooks/useProjectsViewController";
 import { ProjectForm } from "./ui/projects/project-form";
 
 //IM-61: Add status info
@@ -116,141 +105,34 @@ const priorityConfig = {
 };
 
 export function ProjectsView() {
-  const dispatch = useAppDispatch();
-  const { viewMode, filters, projects, isLoading } = useAppSelector(
-    (state) => state.projects,
-  );
-  //const { teams } = useAppSelector((state) => state.teams);
-  //const { selectedTeamId } = useAppSelector((state) => state.teams);
-  const { user } = useAppSelector((state) => state.auth);
-
-
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
-  const [createProjectError, setCreateProjectError] = useState<string | null>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editProject, setEditProject] = useState<ProjectCreation | null>(null);
-  //IM-61 add pagination state
-  const [page, setPage] = useState(1);
-  const pageSize = 6; 
-  useEffect(() => setPage(1), [filters]);
-
-  useEffect(() => {
-    if (user?.id) {
-      dispatch(fetchProjects({ userId: user.id }));
-    }
-  }, [dispatch, user?.id]);
-
-  
-
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-      project.sponsor.toLowerCase().includes(filters.search.toLowerCase()) ||
-      project.drug.toLowerCase().includes(filters.search.toLowerCase());
-    const matchesStatus =
-      filters.status === "all" || project.status === filters.status;
-    const matchesPriority =
-      filters.priority === "all" || project.priority === filters.priority;
-
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
-  //IM-61 pagination state
-  const totalPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize));
-  const pagedProjects = filteredProjects.slice((page - 1) * pageSize, page * pageSize);
-
-
-  const handleViewModeChange = (mode: "grid" | "list") => {
-    dispatch(setViewMode(mode));
-  };
-
-  const handleSearchChange = (search: string) => {
-    dispatch(setFilters({ search }));
-  };
-
-  const handleStatusFilterChange = (status: string) => {
-    dispatch(setFilters({ status }));
-  };
-
-  const handlePriorityFilterChange = (priority: string) => {
-    dispatch(setFilters({ priority }));
-  };
-
-  const handleCreateProject = async (data: ProjectCreation) => {
-    setCreateProjectError(null);
-    setIsCreatingProject(true);
-    try {
-      await dispatch(createProject(data)).unwrap();
-      setShowCreateDialog(false);
-      setPage(1);
-    } catch (error: unknown) {
-      setCreateProjectError(
-        typeof error === "string" ? error : "Failed to create project",
-      );
-      throw error;
-    } finally {
-      setIsCreatingProject(false);
-    }
-  };
-
-  const handleEditProject = (data: ProjectUpdate) => {
-    if (editProject == null || editProject.id == null) return;
-    dispatch(
-      updateProject({
-        projectId: editProject.id,
-        updates: { ...data, id: undefined },
-      }),
-    );
-    setShowEditDialog(false);
-  };
-
-  const handleDeleteProject = (projectId: string) => {
-    if (
-      confirm(
-        "Are you sure you wish to delete this project? This action cannot be undone.",
-      )
-    ) {
-      dispatch(deleteProject(projectId));
-    }
-  };
-
-  const handleClickEdit = (projectId: string) => {
-    const proj = projects.find((p) => p.id === projectId);
-    if (!proj) return;
-    setShowEditDialog(true);
-    setEditProject({
-      id: proj.id,
-      tenantid: proj.tenantId ?? "",
-      drug_name: proj.drug,
-      ind_title: proj.title,
-      ind_number: proj.code,
-      product_type: proj.productType,
-      description: proj.description,
-      sponsor_contact_email: proj.sponsorContactEmail,
-      sponsor_name: proj.sponsor,
-      fda_contact_email: proj.fdaContactEmail,
-      project_start_date: proj.projectStartDate,
-      pre_ind_meeting_date: proj.preIndMeetingDate,
-      target_ind_submission_date: proj.targetIndSubmissionDate,
-      additional_notes: proj.additionalNotes,
-      cmc_lead: proj.cmcLead,
-      clinical_lead: proj.clinicalLead,
-      preclinical_lead: proj.preclinicalLead,
-      regulatory_owner: proj.regulatoryOwner,
-      publisher: proj.publisher,
-      metadata:
-        proj.techWriter || proj.indWriter
-          ? {
-              team_assignments: {
-                ...(proj.techWriter ? { tech_writer: proj.techWriter } : {}),
-                ...(proj.indWriter
-                  ? { ind_writer: proj.indWriter, inc_writer: proj.indWriter }
-                  : {}),
-              },
-            }
-          : undefined,
-    });
-  };
+  const {
+    user,
+    viewMode,
+    filters,
+    isLoading,
+    showCreateDialog,
+    isCreatingProject,
+    createProjectError,
+    showEditDialog,
+    editProject,
+    page,
+    totalPages,
+    filteredProjects,
+    pagedProjects,
+    handleViewModeChange,
+    handleSearchChange,
+    handleStatusFilterChange,
+    handlePriorityFilterChange,
+    openCreateDialog,
+    closeCreateDialog,
+    handleCreateProject,
+    closeEditDialog,
+    handleEditProject,
+    handleDeleteProject,
+    openEditDialog,
+    goToPreviousPage,
+    goToNextPage,
+  } = useProjectsViewController();
 
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50/50">
@@ -268,10 +150,7 @@ export function ProjectsView() {
 
           <Button
             className="bg-purple-600 text-white hover:bg-purple-700 shadow-sm"
-            onClick={() => {
-              setCreateProjectError(null);
-              setShowCreateDialog(true);
-            }}
+            onClick={openCreateDialog}
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Project
@@ -508,7 +387,7 @@ export function ProjectsView() {
                           variant="ghost"
                           size="sm"
                           className="flex-1 hover:bg-accent/10 hover:text-accent"
-                          onClick={() => handleClickEdit(project.id)}
+                          onClick={() => openEditDialog(project.id)}
                         >
                           <Edit3 className="w-4 h-4 mr-2" />
                           Edit
@@ -571,7 +450,7 @@ export function ProjectsView() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={goToPreviousPage}
             disabled={page === 1}
           >
             Prev
@@ -582,7 +461,7 @@ export function ProjectsView() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={goToNextPage}
             disabled={page === totalPages}
           >
             Next
@@ -609,11 +488,7 @@ export function ProjectsView() {
           onSubmit={handleCreateProject}
           isSubmitting={isCreatingProject}
           submitError={createProjectError}
-          onCancel={() => {
-            if (isCreatingProject) return;
-            setCreateProjectError(null);
-            setShowCreateDialog(false);
-          }}
+          onCancel={closeCreateDialog}
         />
       )}
       {showEditDialog && editProject && (
@@ -622,7 +497,7 @@ export function ProjectsView() {
           initialData={editProject}
           isEditing
           onSubmit={handleEditProject}
-          onCancel={() => setShowEditDialog(false)}
+          onCancel={closeEditDialog}
         />
       )}
     </div>

@@ -25,7 +25,7 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import type { UserPrivilege } from '@/components/ui/users/users-page';
+import type { UserPrivilege } from '@/lib/users/types';
 
 interface SidebarProps {
   isOpen: boolean;

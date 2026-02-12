@@ -1,4 +1,4 @@
-import type { User, UserRole } from "@/components/ui/users/users-page";
+import type { User, UserRole } from "@/lib/users/types";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/schema";
 

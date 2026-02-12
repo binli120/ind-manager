@@ -20,28 +20,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useTenant } from '@/hooks/useTenant';
-import { useTenantUsers } from '@/hooks/useTenantUsers';
+import { useProjectFormController } from '@/hooks/useProjectFormController';
 import {
-  getDefaultProjectData,
   PRODUCT_TYPES,
   PROJECT_CREATION_STEPS,
-  validateProjectStep,
 } from '@/lib/metadata/projects';
 import {
-  buildTeamRows,
-  createTeamRowId,
-  isTeamRowsValid,
-  normalizeProjectSubmissionData,
   TEAM_ROLE_OPTIONS,
   TEAM_ROLE_OWNER,
   TeamAssignableRole,
-  TeamMemberRow,
 } from '@/lib/projects/projectFormModel';
-import { useAppSelector } from '@/lib/store';
 import { ProjectCreation } from '@/lib/projects/types';
 import { Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low' },
@@ -49,7 +39,6 @@ const PRIORITY_OPTIONS = [
   { value: 'high', label: 'High' },
   { value: 'critical', label: 'Critical' },
 ] as const;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface ProjectFormProps {
   initialData?: ProjectCreation;
@@ -68,143 +57,31 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   isSubmitting = false,
   submitError,
 }) => {
-  const { user } = useAppSelector((state) => state.auth);
-  const { currentTenant, selectedTenantId } = useTenant();
-  const defaultTenantId =
-    selectedTenantId ?? currentTenant?.id ?? 'demo-tenant';
-  const ownerUserId = user?.id ?? '';
-  const ownerDisplayName = user?.name?.trim() || user?.email || 'Current User';
-
-  const [currentStep, setCurrentStep] = useState(1);
-  const [projectData, setProjectData] = useState<ProjectCreation>(() => {
-    const base = initialData || getDefaultProjectData();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return { ...base, tenantid: (base as any).tenantid || defaultTenantId };
+  const {
+    currentStep,
+    projectData,
+    teamRows,
+    tenantUsers,
+    usersLoadError,
+    ownerDisplayName,
+    progress,
+    stepValid,
+    sponsorEmail,
+    fdaEmail,
+    sponsorEmailValid,
+    fdaEmailValid,
+    nextStep,
+    prevStep,
+    addTeamRow,
+    removeTeamRow,
+    updateTeamRow,
+    updateProjectData,
+    handleSubmit,
+  } = useProjectFormController({
+    initialData,
+    onSubmit,
+    isSubmitting,
   });
-  const [teamRows, setTeamRows] = useState<TeamMemberRow[]>(() =>
-    buildTeamRows(initialData, ownerUserId),
-  );
-  const { users: tenantUsers, error: usersLoadError } =
-    useTenantUsers(defaultTenantId);
-
-  useEffect(() => {
-    setTeamRows((prevRows) => {
-      if (!prevRows.length) {
-        return [
-          {
-            id: createTeamRowId(),
-            userId: ownerUserId,
-            role: TEAM_ROLE_OWNER,
-          },
-        ];
-      }
-      const [ownerRow, ...rest] = prevRows;
-      return [
-        { ...ownerRow, userId: ownerUserId, role: TEAM_ROLE_OWNER },
-        ...rest,
-      ];
-    });
-  }, [ownerUserId]);
-
-  const progress = (currentStep / PROJECT_CREATION_STEPS.length) * 100;
-
-  const nextStep = () => {
-    if (currentStep < PROJECT_CREATION_STEPS.length) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const sponsorEmail =
-    typeof projectData.sponsor_contact_email === 'string'
-      ? projectData.sponsor_contact_email.trim()
-      : '';
-  const fdaEmail =
-    typeof projectData.fda_contact_email === 'string'
-      ? projectData.fda_contact_email.trim()
-      : '';
-  const sponsorEmailValid = EMAIL_REGEX.test(sponsorEmail);
-  const fdaEmailValid = !fdaEmail || EMAIL_REGEX.test(fdaEmail);
-  const isTeamStepValid = isTeamRowsValid(teamRows);
-
-  const isStepValid = () => {
-    const baseStepValid = validateProjectStep(currentStep, projectData);
-    if (!baseStepValid) return false;
-    if (currentStep === 4) return isTeamStepValid;
-    if (currentStep !== 2) return true;
-    if (!sponsorEmailValid || !fdaEmailValid) return false;
-    return true;
-  };
-
-  const addTeamRow = () => {
-    setTeamRows((prevRows) => [
-      ...prevRows,
-      { id: createTeamRowId(), userId: '', role: '' },
-    ]);
-  };
-
-  const removeTeamRow = (rowId: string) => {
-    setTeamRows((prevRows) =>
-      prevRows.filter(
-        (row) => row.id !== rowId || row.role === TEAM_ROLE_OWNER,
-      ),
-    );
-  };
-
-  const updateTeamRow = (
-    rowId: string,
-    updates: Partial<Pick<TeamMemberRow, 'userId' | 'role'>>,
-  ) => {
-    setTeamRows((prevRows) =>
-      prevRows.map((row) =>
-        row.id === rowId
-          ? {
-              ...row,
-              ...updates,
-            }
-          : row,
-      ),
-    );
-  };
-
-  const handleSubmit = async () => {
-    if (isSubmitting) return;
-
-    const tenantMeta = currentTenant
-      ? { id: currentTenant.id, name: currentTenant.name }
-      : selectedTenantId
-        ? { id: selectedTenantId }
-        : null;
-    const submissionData = normalizeProjectSubmissionData({
-      projectData,
-      tenantMeta,
-      teamRows,
-    });
-
-    try {
-      await onSubmit(submissionData);
-      setProjectData({
-        ...(initialData || getDefaultProjectData()),
-        tenantid: defaultTenantId,
-      });
-      setTeamRows(buildTeamRows(initialData, ownerUserId));
-      setCurrentStep(1);
-    } catch {
-      // Keep form state when submit fails so user can retry.
-    }
-  };
-
-  const updateProjectData = <T extends keyof ProjectCreation>(
-    field: T,
-    value: ProjectCreation[T],
-  ) => {
-    setProjectData((prev) => ({ ...prev, [field]: value }));
-  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -669,7 +546,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               <Button
                 type='button'
                 onClick={handleSubmit}
-                disabled={!isStepValid() || isSubmitting}
+                disabled={!stepValid || isSubmitting}
               >
                 {isSubmitting ? (
                   <Loader2 className='h-4 w-4 mr-2 animate-spin' />
@@ -688,7 +565,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               <Button
                 type='button'
                 onClick={nextStep}
-                disabled={!isStepValid() || isSubmitting}
+                disabled={!stepValid || isSubmitting}
               >
                 Next
                 <ChevronRight className='h-4 w-4 ml-2' />

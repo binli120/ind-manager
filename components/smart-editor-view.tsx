@@ -30,6 +30,14 @@ import {
   saveTreeCache,
   toSectionNumber,
 } from '@/lib/smart-editor/smartEditorViewModel';
+import {
+  addSubsectionForSelection,
+  buildUploadedSection,
+  deleteSubsectionFromSection,
+  findParentSectionForSubsection,
+  reorderSubsectionsInSection,
+  toRelativeS3Key,
+} from '@/lib/smart-editor/sectionTreeModel';
 import { upsertSectionPath } from '@/lib/section-tree';
 import type { Section, SubsectionContent } from '@/types/section';
 import { HelpCircle, Loader2 } from 'lucide-react';
@@ -259,15 +267,9 @@ export function SmartEditorView() {
 
   const handleSelectSubsection = (subsection: SubsectionContent) => {
     setSelectedSubsection(subsection);
-    const parentSection = sectionData.find((s) => {
-      const findInSubsections = (subs: SubsectionContent[]): boolean => {
-        return subs.some((sub) => {
-          if (sub.id === subsection.id) return true;
-          if (sub.subsections) return findInSubsections(sub.subsections);
-          return false;
-        });
-      };
-      return s.subsections && findInSubsections(s.subsections);
+    const parentSection = findParentSectionForSubsection({
+      sections: sectionData,
+      subsectionId: subsection.id,
     });
 
     if (
@@ -281,88 +283,22 @@ export function SmartEditorView() {
 
   const handleAddSubsection = (subsectionNumber: string, header: string) => {
     console.log('[v0] Adding subsection:', subsectionNumber, header);
-
-    const newSubsection: SubsectionContent = {
-      id: `new-${Date.now()}`,
-      subsectionNumber,
-      title: header,
-      header,
-      content: '',
-      isRequired: false,
-      status: 'draft',
-      isUserAdded: true,
-    };
-
-    let shouldUpdateSelection = false;
-    let newParentSubsection: SubsectionContent | null = null;
-
     if (!selectedSection) return;
-    setSectionData((prevSections) =>
-      prevSections.map((section) => {
-        if (section.id === selectedSection.id) {
-          // Helper function to recursively add subsection to the correct parent
-          const addSubsectionRecursive = (
-            subs: SubsectionContent[],
-          ): SubsectionContent[] => {
-            // If we're viewing a category subsection, add to its children
-            if (selectedSubsection?.isCategory) {
-              return subs.map((sub) => {
-                if (sub.id === selectedSubsection.id) {
-                  shouldUpdateSelection = true;
-                  newParentSubsection = {
-                    ...sub,
-                    subsections: [...(sub.subsections || []), newSubsection],
-                  };
-                  return newParentSubsection;
-                }
-                if (sub.subsections) {
-                  return {
-                    ...sub,
-                    subsections: addSubsectionRecursive(sub.subsections),
-                  };
-                }
-                return sub;
-              });
-            }
-            // If we're viewing a regular subsection's parent
-            else if (selectedSubsection) {
-              return subs.map((sub) => {
-                // Check if this sub contains our selected subsection
-                if (
-                  sub.subsections?.some((s) => s.id === selectedSubsection.id)
-                ) {
-                  shouldUpdateSelection = true;
-                  newParentSubsection = {
-                    ...sub,
-                    subsections: [...(sub.subsections || []), newSubsection],
-                  };
-                  return newParentSubsection;
-                }
-                if (sub.subsections) {
-                  return {
-                    ...sub,
-                    subsections: addSubsectionRecursive(sub.subsections),
-                  };
-                }
-                return sub;
-              });
-            }
-            // No specific subsection selected, add to top level
-            return [...subs, newSubsection];
-          };
 
-          return {
-            ...section,
-            subsections: addSubsectionRecursive(section.subsections || []),
-          };
-        }
-        return section;
-      }),
-    );
+    const { sections: nextSections, nextSelectedSubsection } =
+      addSubsectionForSelection({
+        sections: sectionData,
+        selectedSectionId: selectedSection.id,
+        selectedSubsection,
+        subsectionNumber,
+        header,
+      });
 
-    if (shouldUpdateSelection && newParentSubsection) {
+    setSectionData(nextSections);
+
+    if (nextSelectedSubsection) {
       setTimeout(() => {
-        setSelectedSubsection(newParentSubsection);
+        setSelectedSubsection(nextSelectedSubsection);
         setTimeout(() => {
           const element = document.getElementById(
             `section-${subsectionNumber}`,
@@ -386,18 +322,10 @@ export function SmartEditorView() {
     templateNumber: string,
     createdKey?: string,
   ) => {
-    const toRelativeKey = (uri: string) => {
-      if (uri.startsWith('s3://')) {
-        const parts = uri.replace('s3://', '').split('/');
-        return parts.slice(1).join('/');
-      }
-      return uri;
-    };
-
     const result = upsertSectionPath(sectionData, templateNumber);
 
     if (createdKey) {
-      const relKey = toRelativeKey(createdKey);
+      const relKey = toRelativeS3Key(createdKey);
       result.leaf.fullPath = relKey;
     }
 
@@ -430,49 +358,18 @@ export function SmartEditorView() {
 
   const handleUploadComplete = (sectionNumber: string, fileName: string) => {
     console.log('[v0] PDF uploaded:', fileName, 'Section:', sectionNumber);
-
-    // Create new section from uploaded PDF
-    const newSection: Section = {
-      id: `uploaded-${Date.now()}`,
-      number: sectionNumber,
-      title: fileName.replace('.pdf', ''),
-      parentSection: sectionNumber.split('.').slice(0, -1).join('.'),
-      isRequired: false,
-      status: 'draft',
-      isCategory: false,
-      isUserAdded: false,
-    };
-
+    const newSection = buildUploadedSection({ sectionNumber, fileName });
     setSectionData((prev) => [...prev, newSection]);
   };
 
   const handleDeleteSubsection = (subsectionId: string) => {
     console.log('[v0] Deleting subsection:', subsectionId);
 
-    if (!selectedSection) return;
     setSectionData((prevSections) =>
-      prevSections.map((section) => {
-        if (section.id === selectedSection.id) {
-          // Helper function to recursively remove subsection
-          const removeSubsectionRecursive = (
-            subs: SubsectionContent[],
-          ): SubsectionContent[] => {
-            return subs
-              .filter((sub) => sub.id !== subsectionId)
-              .map((sub) => ({
-                ...sub,
-                subsections: sub.subsections
-                  ? removeSubsectionRecursive(sub.subsections)
-                  : undefined,
-              }));
-          };
-
-          return {
-            ...section,
-            subsections: removeSubsectionRecursive(section.subsections || []),
-          };
-        }
-        return section;
+      deleteSubsectionFromSection({
+        sections: prevSections,
+        selectedSectionId: selectedSection?.id ?? null,
+        subsectionId,
       }),
     );
 
@@ -496,41 +393,12 @@ export function SmartEditorView() {
       parentId,
     );
 
-    if (!selectedSection) return;
     setSectionData((prevSections) =>
-      prevSections.map((section) => {
-        if (section.id === selectedSection.id) {
-          // Helper function to reorder subsections recursively
-          const reorderSubsectionsRecursive = (
-            subs: SubsectionContent[],
-          ): SubsectionContent[] => {
-            // Find the dragged and target items
-            const draggedIndex = subs.findIndex((s) => s.id === draggedId);
-            const targetIndex = subs.findIndex((s) => s.id === targetId);
-
-            // If both found at this level, reorder them
-            if (draggedIndex !== -1 && targetIndex !== -1) {
-              const newSubs = [...subs];
-              const [draggedItem] = newSubs.splice(draggedIndex, 1);
-              newSubs.splice(targetIndex, 0, draggedItem);
-              return newSubs;
-            }
-
-            // Otherwise, recurse into nested subsections
-            return subs.map((sub) => ({
-              ...sub,
-              subsections: sub.subsections
-                ? reorderSubsectionsRecursive(sub.subsections)
-                : undefined,
-            }));
-          };
-
-          return {
-            ...section,
-            subsections: reorderSubsectionsRecursive(section.subsections || []),
-          };
-        }
-        return section;
+      reorderSubsectionsInSection({
+        sections: prevSections,
+        selectedSectionId: selectedSection?.id ?? null,
+        draggedId,
+        targetId,
       }),
     );
   };

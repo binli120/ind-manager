@@ -26,13 +26,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useEffect, useState } from 'react';
-import type { User, UserPrivilege, UserRole } from './users-page';
-import { roleLabels } from './users-page';
+import type { AddUserInput, UserPrivilege, UserRole } from '@/lib/users/types';
+import {
+  coreRegulatoryRoles,
+  roleLabels,
+  scientificClinicalRoles,
+  supportingRoles,
+} from '@/lib/users/types';
 
 type AddUserDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (user: Omit<User, 'id' | 'status'> & { password: string; privilege: UserPrivilege }) => void;
+  onAdd: (user: AddUserInput) => void;
   companies: string[];
   currentUserPrivilege: UserPrivilege;
 };
@@ -99,26 +104,6 @@ export function AddUserDialog({
     });
     onOpenChange(false);
   };
-
-  const coreRegulatoryRoles: UserRole[] = [
-    'reg_affairs_manager_lead',
-    'regulatory_writer_medical_writer',
-    'ectd_publishing_specialist',
-  ];
-
-  const scientificClinicalRoles: UserRole[] = [
-    'clinical_development_lead',
-    'medical_monitor',
-    'nonclinical_toxicology_lead',
-    'cmc_lead',
-  ];
-
-  const supportingRoles: UserRole[] = [
-    'quality_assurance',
-    'project_manager',
-    'data_manager_biostatistician',
-    'document_management_specialist',
-  ];
 
   useEffect(() => {
     if (open) {
