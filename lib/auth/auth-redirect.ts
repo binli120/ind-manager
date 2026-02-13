@@ -15,11 +15,24 @@ export const resolveAuthEmailRedirectUrl = (
     process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL ||
     process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
     fallbackOrigin;
-  const baseUrl = trimTrailingSlashes(configuredBaseUrl);
+  const parsedUrl = new URL(configuredBaseUrl, fallbackOrigin);
+  const currentPath = trimTrailingSlashes(parsedUrl.pathname);
 
   if (!path) {
-    return baseUrl;
+    return currentPath && currentPath !== "/"
+      ? `${parsedUrl.origin}${currentPath}`
+      : parsedUrl.origin;
+  }
+  const targetPath = trimTrailingSlashes(normalizePath(path));
+
+  // If env is already a full route (e.g. .../auth/reset-password), do not append again.
+  if (currentPath && currentPath !== "/" && currentPath.endsWith(targetPath)) {
+    return `${parsedUrl.origin}${currentPath}`;
   }
 
-  return `${baseUrl}${normalizePath(path)}`;
+  const nextPath = currentPath && currentPath !== "/"
+    ? `${currentPath}${targetPath}`
+    : targetPath;
+
+  return `${parsedUrl.origin}${nextPath}`;
 };
