@@ -67,9 +67,6 @@ export default function Page() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="password">Password</Label>
-                    <Link href="/auth/forgot-password" className="text-sm text-muted-foreground hover:underline">
-                      Forgot your password?
-                    </Link>
                     <Input
                       id="password"
                       type="password"
@@ -79,11 +76,11 @@ export default function Page() {
                     />
                   </div>
                   {error && !isAuthSessionMissing && (
-                      <Link href="/auth/forgot-password" className="text-sm text-red-500 hover:underline">
-                        Invalid login. Forgot your password?
-                      </Link>
+                    <Link href="/auth/forgot-password" className="text-sm text-red-500 hover:underline">
+                      Invalid login. Forgot your password?
+                    </Link>
                   )}
-                  
+
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>
