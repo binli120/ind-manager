@@ -4,6 +4,7 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { resolveAuthEmailRedirectUrl } from "@/lib/auth/auth-redirect";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/schema";
 
@@ -127,7 +128,10 @@ export async function POST(request: NextRequest) {
   const { name, email, phone, submission_role, tenantid, privilege: targetPrivilege } =
     parsed.data;
 
-  const redirectTo = `${request.nextUrl.origin}/auth/login`;
+  const redirectTo = resolveAuthEmailRedirectUrl(
+    request.nextUrl.origin,
+    "/auth/reset-password",
+  );
   const { data: inviteData, error: inviteError } =
     await adminClient.auth.admin.inviteUserByEmail(email, {
       redirectTo,

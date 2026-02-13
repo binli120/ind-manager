@@ -5,9 +5,11 @@
 import { authServices } from "@/lib/auth/auth-services";
 import { fetchProjects } from "@/lib/supabase/projects";
 import {
+  deleteUser,
   fetchTenants,
   fetchUsers,
   inviteUser,
+  resendUserInvite,
   updateUser,
   updateUserStatus,
 } from "@/lib/supabase";
@@ -47,6 +49,10 @@ export function useUsersPageController() {
     null,
   );
   const [isSavingUserEdit, setIsSavingUserEdit] = useState(false);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [resendingInviteUserId, setResendingInviteUserId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     let isActive = true;
@@ -196,6 +202,49 @@ export function useUsersPageController() {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    setIsDeletingUser(true);
+    try {
+      await deleteUser(userId);
+      setUsers((previousUsers) =>
+        previousUsers.filter((entry) => entry.id !== userId),
+      );
+      if (selectedUserForAssignment?.id === userId) {
+        setSelectedUserForAssignment(null);
+        setIsAssignDialogOpen(false);
+      }
+      if (selectedUserForEdit?.id === userId) {
+        setSelectedUserForEdit(null);
+        setIsEditDialogOpen(false);
+      }
+    } finally {
+      setIsDeletingUser(false);
+    }
+  };
+
+  const handleResendInvite = async (userId: string) => {
+    setResendingInviteUserId(userId);
+    try {
+      const updatedUser = await resendUserInvite(userId);
+      setUsers((previousUsers) =>
+        previousUsers.map((entry) =>
+          entry.id === userId
+            ? {
+                ...entry,
+                ...updatedUser,
+                phone: (updatedUser?.phone ?? entry.phone ?? "").toString(),
+                status: (updatedUser?.status as User["status"]) ?? entry.status,
+              }
+          : entry,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to resend invite:", error);
+    } finally {
+      setResendingInviteUserId(null);
+    }
+  };
+
   return {
     users,
     filteredUsers,
@@ -216,11 +265,15 @@ export function useUsersPageController() {
     isEditDialogOpen,
     selectedUserForEdit,
     isSavingUserEdit,
+    isDeletingUser,
+    resendingInviteUserId,
     handleToggleStatus,
+    handleResendInvite,
     handleAddUser,
     handleAssignProjects,
     handleOpenEditUser,
     handleEditDialogOpenChange,
     handleSaveEditedUser,
+    handleDeleteUser,
   };
 }

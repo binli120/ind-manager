@@ -168,3 +168,30 @@ export async function removeUserFromProject(userId: string, projectId: string) {
     projectId,
   });
 }
+
+export async function deleteUser(id: string) {
+  const response = await fetch(`/api/users/${id}`, {
+    method: "DELETE",
+  });
+
+  await asJson<{ message: string }>(response);
+}
+
+export async function resendUserInvite(userId: string) {
+  const response = await fetch("/api/admin/users/resend-invite", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ userId }),
+  });
+
+  const payload = await asJson<{ user: UserSelectRow }>(response);
+  const mapped = mapUserRow(payload.user);
+
+  return {
+    ...mapped,
+    phone: mapped.phone,
+    status: mapped.status,
+  };
+}

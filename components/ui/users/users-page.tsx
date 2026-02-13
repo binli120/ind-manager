@@ -7,6 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -22,12 +30,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, SearchIcon, FolderGit2 } from 'lucide-react';
+import {
+  FolderGit2,
+  Loader2,
+  Mail,
+  Plus,
+  SearchIcon,
+  Trash2,
+  UserCheck,
+  UserX,
+} from 'lucide-react';
 import { AddUserDialog } from './add-user-dialog';
 import { AssignProjectDialog } from './assign-project-dialog';
 import { EditUserDialog } from './edit-user-dialog';
 import { useUsersPageController } from '@/hooks/useUsersPageController';
 import { roleLabels } from '@/lib/users/types';
+import { useState } from 'react';
 
 export default function UsersPage() {
   const {
@@ -49,13 +67,30 @@ export default function UsersPage() {
     isEditDialogOpen,
     selectedUserForEdit,
     isSavingUserEdit,
+    isDeletingUser,
+    resendingInviteUserId,
     handleToggleStatus,
+    handleResendInvite,
     handleAddUser,
     handleAssignProjects,
     handleOpenEditUser,
     handleEditDialogOpenChange,
     handleSaveEditedUser,
+    handleDeleteUser,
   } = useUsersPageController();
+  const [selectedUserForDelete, setSelectedUserForDelete] = useState<
+    { id: string; name: string; email: string } | null
+  >(null);
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedUserForDelete) return;
+    try {
+      await handleDeleteUser(selectedUserForDelete.id);
+      setSelectedUserForDelete(null);
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+    }
+  };
 
   return (
     <div className='flex-1 overflow-y-auto bg-gray-50/50'>
@@ -148,12 +183,15 @@ export default function UsersPage() {
                 <TableHead className='text-right font-semibold text-foreground'>
                   Actions
                 </TableHead>
+                <TableHead className='text-right font-semibold text-foreground'>
+                  Delete
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className='h-24 text-center'>
+                  <TableCell colSpan={8} className='h-24 text-center'>
                     No users found.
                   </TableCell>
                 </TableRow>
@@ -203,29 +241,62 @@ export default function UsersPage() {
                         )}
                         {user.status !== 'pending' && (
                           <Button
-                            variant='outline'
+                            variant='ghost'
                             size='sm'
                             onClick={(event) => {
                               event.stopPropagation();
                               handleToggleStatus(user.id);
                             }}
+                            title={
+                              user.status === 'active'
+                                ? 'Deactivate user'
+                                : 'Activate user'
+                            }
                           >
-                            {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                            {user.status === 'active' ? (
+                              <UserX className='h-4 w-4' />
+                            ) : (
+                              <UserCheck className='h-4 w-4' />
+                            )}
                           </Button>
                         )}
                         {user.status === 'pending' && (
                           <Button
-                            variant='outline'
+                            variant='ghost'
                             size='sm'
                             onClick={(event) => {
                               event.stopPropagation();
-                              handleToggleStatus(user.id);
+                              void handleResendInvite(user.id);
                             }}
+                            disabled={resendingInviteUserId === user.id}
+                            title='Resend invite email'
                           >
-                            Activate
+                            {resendingInviteUserId === user.id ? (
+                              <Loader2 className='h-4 w-4 animate-spin' />
+                            ) : (
+                              <Mail className='h-4 w-4' />
+                            )}
                           </Button>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='text-destructive hover:text-destructive'
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSelectedUserForDelete({
+                            id: user.id,
+                            name: user.name,
+                            email: user.email,
+                          });
+                        }}
+                        title='Delete user'
+                      >
+                        <Trash2 className='h-4 w-4' />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -258,6 +329,44 @@ export default function UsersPage() {
         isSaving={isSavingUserEdit}
         onSave={handleSaveEditedUser}
       />
+
+      <Dialog
+        open={Boolean(selectedUserForDelete)}
+        onOpenChange={(open) => {
+          if (!open && !isDeletingUser) {
+            setSelectedUserForDelete(null);
+          }
+        }}
+      >
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{' '}
+              <span className='font-medium text-foreground'>
+                {selectedUserForDelete?.name || selectedUserForDelete?.email}
+              </span>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => setSelectedUserForDelete(null)}
+              disabled={isDeletingUser}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={() => void handleDeleteConfirm()}
+              disabled={isDeletingUser}
+            >
+              {isDeletingUser ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

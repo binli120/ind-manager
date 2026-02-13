@@ -2,10 +2,17 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import type { Database } from "@/lib/supabase/schema"
 
-const adminPrivileges = ["system_admin", "user_manager"] as const
+const adminPrivileges = [
+  "system_admin",
+  "user_manager",
+  "admin",
+  "system_administrator",
+] as const
 type AdminPrivilege = (typeof adminPrivileges)[number]
 
 const updateUserSchema = z.object({
@@ -32,7 +39,20 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     }
 
     const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
-    const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
+    const role = (user.user_metadata?.role ?? "") as AdminPrivilege | string
+    let isAdmin =
+      adminPrivileges.includes(privilege as AdminPrivilege) ||
+      adminPrivileges.includes(role as AdminPrivilege)
+    if (!isAdmin) {
+      const { data: userRow } = await supabase
+        .from("users")
+        .select("submission_role")
+        .eq("id", user.id)
+        .maybeSingle()
+      isAdmin =
+        (userRow as { submission_role?: string } | null)?.submission_role ===
+        "system_administrator"
+    }
 
     if (!isAdmin && user.id !== id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
@@ -67,7 +87,20 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     }
 
     const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
-    const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
+    const role = (user.user_metadata?.role ?? "") as AdminPrivilege | string
+    let isAdmin =
+      adminPrivileges.includes(privilege as AdminPrivilege) ||
+      adminPrivileges.includes(role as AdminPrivilege)
+    if (!isAdmin) {
+      const { data: userRow } = await supabase
+        .from("users")
+        .select("submission_role")
+        .eq("id", user.id)
+        .maybeSingle()
+      isAdmin =
+        (userRow as { submission_role?: string } | null)?.submission_role ===
+        "system_administrator"
+    }
 
     // Only allow users to update their own profile (or admins)
     if (!isAdmin && user.id !== id) {
@@ -111,14 +144,55 @@ export async function DELETE(_request: NextRequest, context: { params: Promise<{
     }
 
     const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
-    const isAdmin = adminPrivileges.includes(privilege as AdminPrivilege)
+    const role = (user.user_metadata?.role ?? "") as AdminPrivilege | string
+    let isAdmin =
+      adminPrivileges.includes(privilege as AdminPrivilege) ||
+      adminPrivileges.includes(role as AdminPrivilege)
+    if (!isAdmin) {
+      const { data: userRow } = await supabase
+        .from("users")
+        .select("submission_role")
+        .eq("id", user.id)
+        .maybeSingle()
+      isAdmin =
+        (userRow as { submission_role?: string } | null)?.submission_role ===
+        "system_administrator"
+    }
 
     // Only allow users to delete their own profile (or admins)
     if (!isAdmin && user.id !== id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    // Delete user profile
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
+    const serviceRoleKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ??
+      process.env.SUPABASE_SERVICE_KEY ??
+      ""
+    if (!supabaseUrl || !serviceRoleKey) {
+      return NextResponse.json(
+        {
+          error:
+            "Supabase admin configuration is missing. Set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_KEY.",
+        },
+        { status: 500 },
+      )
+    }
+
+    const adminClient = createSupabaseClient<Database>(supabaseUrl, serviceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
+
+    // Delete auth account first (ignore not-found to allow idempotent cleanup).
+    const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(id)
+    if (authDeleteError && !/not found/i.test(authDeleteError.message || "")) {
+      return NextResponse.json({ error: authDeleteError.message }, { status: 400 })
+    }
+
+    // Delete app profile row.
     const { error } = await supabase.from("users").delete().eq("id", id)
 
     if (error) {
