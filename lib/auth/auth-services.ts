@@ -6,6 +6,7 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabaseEnv } from '@/lib/env';
+import { resolveAuthEmailRedirectUrl } from '@/lib/auth/auth-redirect';
 
 const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
 const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
@@ -42,7 +43,10 @@ export const authServices = {
 
   async resetPassword(email: string) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}`,
+      redirectTo: resolveAuthEmailRedirectUrl(
+        window.location.origin,
+        '/auth/reset-password',
+      ),
     });
     return { error };
   },

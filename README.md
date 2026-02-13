@@ -62,6 +62,7 @@ Required:
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon key.
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (required for admin invite flow).
+- `NEXT_PUBLIC_AUTH_REDIRECT_URL` - full app base URL used in auth emails (for example, `https://ind-manager-v2-dev.vercel.app`).
 
 Optional:
 - `NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL` - override auth redirect URL in dev.
