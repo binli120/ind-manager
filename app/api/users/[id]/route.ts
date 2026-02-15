@@ -6,6 +6,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import type { Database } from "@/lib/supabase/schema"
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers"
 
 const adminPrivileges = [
   "system_admin",
@@ -22,9 +23,8 @@ const updateUserSchema = z.object({
   status: z.string().optional(),
 })
 
-export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
-  void _request
 
   try {
     const { id } = await context.params
@@ -37,6 +37,9 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const rateLimited = checkRateLimit({ tier: "read", request, userId: user.id })
+    if (rateLimited) return rateLimited
 
     const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
     const role = (user.user_metadata?.role ?? "") as AdminPrivilege | string
@@ -86,6 +89,9 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const rateLimitedPut = checkRateLimit({ tier: "write", request, userId: user.id })
+    if (rateLimitedPut) return rateLimitedPut
+
     const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
     const role = (user.user_metadata?.role ?? "") as AdminPrivilege | string
     let isAdmin =
@@ -127,9 +133,8 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
   }
 }
 
-export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
-  void _request
 
   try {
     const { id } = await context.params
@@ -142,6 +147,9 @@ export async function DELETE(_request: NextRequest, context: { params: Promise<{
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const rateLimitedDel = checkRateLimit({ tier: "sensitive", request, userId: user.id })
+    if (rateLimitedDel) return rateLimitedDel
 
     const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
     const role = (user.user_metadata?.role ?? "") as AdminPrivilege | string

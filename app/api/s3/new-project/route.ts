@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { resolvePdfAnalysisApiBaseUrl } from "@/lib/common/pdfAnalysisApiBaseUrl";
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers";
 
 const API_BASE = resolvePdfAnalysisApiBaseUrl({ stripApiSuffix: true });
 const DEFAULT_BUCKET =
@@ -13,6 +14,9 @@ const DEFAULT_BUCKET =
 const DEFAULT_AWS_REGION = process.env.AWS_REGION || "us-east-1";
 
 export async function POST(req: NextRequest) {
+  const rateLimited = checkRateLimit({ tier: "write", request: req });
+  if (rateLimited) return rateLimited;
+
   try {
     if (!API_BASE) {
       return NextResponse.json(

@@ -4,6 +4,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers"
 
 const adminPrivileges = [
   "system_admin",
@@ -20,7 +21,7 @@ const userProfileSchema = z.object({
   status: z.string().optional(),
 })
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient()
 
   try {
@@ -33,6 +34,9 @@ export async function GET() {
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const rateLimited = checkRateLimit({ tier: "read", request, userId: user.id })
+    if (rateLimited) return rateLimited
 
     const privilege = (user.user_metadata?.privilege ?? "") as AdminPrivilege | string
     const role = (user.user_metadata?.role ?? "") as AdminPrivilege | string
@@ -79,6 +83,9 @@ export async function POST(request: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const rateLimitedWrite = checkRateLimit({ tier: "write", request, userId: user.id })
+    if (rateLimitedWrite) return rateLimitedWrite
 
     const userData = userProfileSchema.parse(await request.json())
 

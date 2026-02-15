@@ -3,8 +3,12 @@
 // Email: blee@filynai.com
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers"
 
 export async function POST(request: NextRequest) {
+  const rateLimited = checkRateLimit({ tier: "auth", request })
+  if (rateLimited) return rateLimited
+
   const supabase = await createClient()
   const { email, password, action } = await request.json()
 
@@ -60,7 +64,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rateLimited = checkRateLimit({ tier: "read", request })
+  if (rateLimited) return rateLimited
+
   const supabase = await createClient()
 
   try {

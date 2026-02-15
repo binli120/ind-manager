@@ -6,6 +6,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { resolvePdfAnalysisApiBaseUrl } from "@/lib/common/pdfAnalysisApiBaseUrl";
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers";
 
 interface AssetsSectionImage {
   id?: string;
@@ -309,6 +310,9 @@ const readLocalAssets = async (): Promise<AssetsSectionResponse | null> => {
 };
 
 export async function GET(request: NextRequest) {
+  const rateLimited = checkRateLimit({ tier: "read", request });
+  if (rateLimited) return rateLimited;
+
   const searchParams = request.nextUrl.searchParams;
   const tenantId = searchParams.get("tenant_id")?.trim() || DEFAULT_TENANT;
   const projectId = searchParams.get("project_id")?.trim() || DEFAULT_PROJECT;

@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { resolvePdfAnalysisApiBaseUrl } from "@/lib/common/pdfAnalysisApiBaseUrl"
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers"
 
 const API_BASE = resolvePdfAnalysisApiBaseUrl({ stripApiSuffix: true })
 const DEFAULT_BUCKET =
@@ -14,6 +15,9 @@ const DEFAULT_TENANT = "c38daae8-07a8-4da4-9a68-9a9955b09f70"
 const DEFAULT_PROJECT = "2b44ecab-45c8-4105-b4ae-e9b7080bb4d6"
 
 export async function POST(req: NextRequest) {
+  const rateLimited = checkRateLimit({ tier: "write", request: req })
+  if (rateLimited) return rateLimited
+
   try {
     if (!API_BASE) {
       return NextResponse.json(
