@@ -38,5 +38,6 @@ next-env.d.ts
 #vscode
 .vscode
 
+.claude/
 .DS_Store
 __pycache__/
