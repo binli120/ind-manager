@@ -7,6 +7,7 @@ import { z } from "zod";
 import { resolveAuthEmailRedirectUrl } from "@/lib/auth/auth-redirect";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/schema";
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers";
 
 const adminPrivileges = [
   "system_admin",
@@ -94,6 +95,9 @@ export async function POST(request: NextRequest) {
   if (!isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  const rateLimited = checkRateLimit({ tier: "sensitive", request, userId: user.id });
+  if (rateLimited) return rateLimited;
 
   const parsed = inviteUserSchema.safeParse(await request.json());
   if (!parsed.success) {

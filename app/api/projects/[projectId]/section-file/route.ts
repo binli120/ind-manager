@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers"
 
 const region = process.env.AWS_REGION ?? "us-east-1"
 const defaultBucket = process.env.DOC_REPOSITORY_BUCKET ?? "doc-repository-dev"
@@ -27,6 +28,9 @@ export async function POST(
   req: NextRequest,
   context: { params: Promise<{ projectId: string }> },
 ) {
+  const rateLimited = checkRateLimit({ tier: "write", request: req })
+  if (rateLimited) return rateLimited
+
   const params = await context.params
   const projectId = params.projectId
   if (!projectId) {

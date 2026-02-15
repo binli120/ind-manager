@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import type { Section, SubsectionContent } from "@/types/section";
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers";
 
 const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx"];
 const IGNORE_SUFFIXES = [".pdf.tables", ".pdf.images"];
@@ -243,6 +244,9 @@ export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ projectId: string }> }
 ) {
+  const rateLimited = checkRateLimit({ tier: "read", request: _req });
+  if (rateLimited) return rateLimited;
+
   const params = await context.params;
   const projectId = params.projectId;
 

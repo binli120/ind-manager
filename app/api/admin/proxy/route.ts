@@ -4,6 +4,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers"
 
 const adminPrivileges = [
   "system_admin",
@@ -121,6 +122,9 @@ export async function POST(request: NextRequest) {
   if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const rateLimited = checkRateLimit({ tier: "write", request, userId: user.id })
+  if (rateLimited) return rateLimited
 
   const parsed = requestSchema.safeParse(await request.json())
   if (!parsed.success) {
