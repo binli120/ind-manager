@@ -70,12 +70,15 @@ export function SmartEditorView() {
   const [treeRetryKey, setTreeRetryKey] = useState(0);
   const [usedCachedTree, setUsedCachedTree] = useState(false);
   const [treeCacheKey, setTreeCacheKey] = useState<string | null>(null);
+  const selectedFilePath =
+    selectedSubsection?.fullPath || selectedSubsection?.title || '';
+  const isSelectedWordFile = /\.docx?$/i.test(selectedFilePath);
   const isSelectedFile =
     Boolean(selectedSubsection) &&
     selectedSubsection?.isCategory !== true &&
     Boolean(
       selectedSubsection?.fullPath ||
-        /\.(pdf|doc|docx|md)$/i.test(selectedSubsection?.title ?? ''),
+        /\.(pdf|doc|docx)$/i.test(selectedSubsection?.title ?? ''),
     );
 
   const { companyValue, projectNameValue, primaryS3Key } = useMemo(
@@ -207,6 +210,7 @@ export function SmartEditorView() {
 
       const fullPath = selectedSubsection.fullPath || selectedSubsection.title;
       const isPdfFile = /\.pdf$/i.test(fullPath);
+      const isWordFile = /\.docx?$/i.test(fullPath);
 
       console.info('[SmartEditor] file selection', {
         id: selectedSubsection.id,
@@ -232,22 +236,27 @@ export function SmartEditorView() {
           return;
         }
 
-        const mdKey = `${fullPath}.extracted.md`;
-        const mdPayload = await fetchSignedProjectAsset<{ text?: string }>({
-          projectId: selectedProjectId,
-          key: mdKey,
-          format: 'text',
-        });
-        const mdText = mdPayload.text;
-        if (!mdText) {
-          throw new Error('md sidecar empty');
+        if (isWordFile) {
+          const mdKey = `${fullPath}.extracted.md`;
+          const mdPayload = await fetchSignedProjectAsset<{ text?: string }>({
+            projectId: selectedProjectId,
+            key: mdKey,
+            format: 'text',
+          });
+          const mdText = mdPayload.text;
+          if (!mdText) {
+            throw new Error('md sidecar empty');
+          }
+          console.info('[SmartEditor] loaded markdown sidecar', {
+            mdKey,
+            bytes: mdText.length,
+          });
+          setFileText(mdText);
+          setFileMode('md');
+          return;
         }
-        console.info('[SmartEditor] loaded markdown sidecar', {
-          mdKey,
-          bytes: mdText.length,
-        });
-        setFileText(mdText);
-        setFileMode('md');
+
+        throw new Error('Unsupported file type for editor');
       } catch (fileLoadError) {
         try {
           const pdfPayload = await fetchSignedProjectAsset<{ url: string }>({
@@ -492,7 +501,7 @@ export function SmartEditorView() {
                 {fileError}
               </div>
             )}
-            {fileMode === 'md' && fileText && (
+            {fileMode === 'md' && fileText && isSelectedWordFile && (
               <div className='h-[80vh] overflow-y-auto rounded-md border border-border bg-card p-4 space-y-4'>
                 <div className='border-b border-border pb-3'>
                   <div className='flex items-center justify-between gap-3'>
@@ -533,6 +542,11 @@ export function SmartEditorView() {
                   className='w-full h-[80vh] border-0'
                   title='PDF Preview'
                 />
+              </div>
+            )}
+            {fileMode !== 'md' && fileMode !== 'pdf' && !fileLoading && (
+              <div className='rounded border border-amber-300 bg-amber-50 text-amber-900 px-4 py-2 text-sm'>
+                Unsupported file type. Only DOC/DOCX opens in editor; PDF opens in preview.
               </div>
             )}
           </div>
