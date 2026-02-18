@@ -70,6 +70,13 @@ export function SmartEditorView() {
   const [treeRetryKey, setTreeRetryKey] = useState(0);
   const [usedCachedTree, setUsedCachedTree] = useState(false);
   const [treeCacheKey, setTreeCacheKey] = useState<string | null>(null);
+  const isSelectedFile =
+    Boolean(selectedSubsection) &&
+    selectedSubsection?.isCategory !== true &&
+    Boolean(
+      selectedSubsection?.fullPath ||
+        /\.(pdf|doc|docx|md)$/i.test(selectedSubsection?.title ?? ''),
+    );
 
   const { companyValue, projectNameValue, primaryS3Key } = useMemo(
     () =>
@@ -189,7 +196,7 @@ export function SmartEditorView() {
   // Load file content (md or pdf) when a file subsection is selected
   useEffect(() => {
     const loadFile = async () => {
-      if (!selectedSubsection || selectedSubsection.isCategory || !selectedProjectId) {
+      if (!selectedSubsection || !isSelectedFile || !selectedProjectId) {
         setFileMode(null);
         setFileUrl(null);
         setFileText(null);
@@ -199,6 +206,7 @@ export function SmartEditorView() {
       }
 
       const fullPath = selectedSubsection.fullPath || selectedSubsection.title;
+      const isPdfFile = /\.pdf$/i.test(fullPath);
 
       console.info('[SmartEditor] file selection', {
         id: selectedSubsection.id,
@@ -212,10 +220,19 @@ export function SmartEditorView() {
       setFileUrl(null);
       setFileText(null);
 
-      const mdKey = `${fullPath}.extracted.md`;
-
       try {
-        // Try markdown sidecar first
+        if (isPdfFile) {
+          const pdfPayload = await fetchSignedProjectAsset<{ url: string }>({
+            projectId: selectedProjectId,
+            key: fullPath,
+            format: 'url',
+          });
+          setFileUrl(pdfPayload.url);
+          setFileMode('pdf');
+          return;
+        }
+
+        const mdKey = `${fullPath}.extracted.md`;
         const mdPayload = await fetchSignedProjectAsset<{ text?: string }>({
           projectId: selectedProjectId,
           key: mdKey,
@@ -231,8 +248,7 @@ export function SmartEditorView() {
         });
         setFileText(mdText);
         setFileMode('md');
-      } catch (mdError) {
-        console.warn('[SmartEditor] markdown sidecar missing', mdKey, mdError);
+      } catch (fileLoadError) {
         try {
           const pdfPayload = await fetchSignedProjectAsset<{ url: string }>({
             projectId: selectedProjectId,
@@ -249,6 +265,7 @@ export function SmartEditorView() {
           );
           console.error('[SmartEditor] failed loading file', {
             fullPath,
+            fileLoadError,
             pdfError,
           });
         }
@@ -258,7 +275,7 @@ export function SmartEditorView() {
     };
 
     loadFile();
-  }, [selectedSubsection, selectedProjectId]);
+  }, [isSelectedFile, selectedSubsection, selectedProjectId]);
 
   const handleSelectSection = (section: Section) => {
     setSelectedSection(section);
@@ -462,7 +479,7 @@ export function SmartEditorView() {
             <div className='h-4 w-80 rounded bg-muted animate-pulse' />
             <div className='h-[520px] w-full rounded bg-muted animate-pulse' />
           </div>
-        ) : selectedSubsection && !selectedSubsection.isCategory ? (
+        ) : isSelectedFile ? (
           <div className='p-6 space-y-4'>
             {fileLoading && (
               <div className='space-y-2'>
@@ -492,14 +509,6 @@ export function SmartEditorView() {
                       <Badge className='bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400'>
                         Draft
                       </Badge>
-                    </div>
-                    <div className='flex items-center gap-2 flex-wrap'>
-                      <Button variant='outline' size='sm' className='text-xs'>
-                        View &amp; Edit Template
-                      </Button>
-                      <Button variant='outline' size='sm' className='text-xs'>
-                        Materials (0)
-                      </Button>
                     </div>
                   </div>
                 </div>
@@ -534,6 +543,7 @@ export function SmartEditorView() {
               selectedSubsection={selectedSubsection}
               onAddSubsection={handleAddSubsection}
               onDeleteSubsection={handleDeleteSubsection}
+              onSelectSubsection={handleSelectSubsection}
             />
           )
         )}

@@ -121,6 +121,7 @@ interface SectionEditorProps {
   selectedSubsection: SubsectionContent | null
   onAddSubsection: (subsectionNumber: string, header: string) => void
   onDeleteSubsection: (subsectionId: string) => void
+  onSelectSubsection: (subsection: SubsectionContent) => void
 }
 
 function SubsectionEditor({
@@ -155,7 +156,7 @@ function SubsectionEditor({
   const [aiText, setAiText] = useState<string | null>(null)
   const [showAiDialog, setShowAiDialog] = useState(false)
   const [showTemplate, setShowTemplate] = useState(false)
-  const [templateResolving, setTemplateResolving] = useState(false)
+  const [templateResolving] = useState(false)
   const [templateResolveError, setTemplateResolveError] = useState<string | null>(null)
   const [resolvedSection, setResolvedSection] = useState(effectiveSectionNumber)
   const [showTableInsert, setShowTableInsert] = useState(false)
@@ -409,7 +410,6 @@ function SubsectionEditor({
       return
     }
 
-    // Try cached section list first
     const cached = sectionList ? resolveSectionFromList(sectionList) : null
     if (cached) {
       setResolvedSection(cached)
@@ -417,29 +417,7 @@ function SubsectionEditor({
       return
     }
 
-    setTemplateResolving(true)
-    try {
-      const response = await requestPdfAnalysisApi<unknown>({
-        path: "/ncd/sectionList",
-        method: "GET",
-        headers: userId ? { "user-id": userId } : undefined,
-        userIdHeader: userId,
-        allowRedirects: false,
-        suppressErrorLog: true,
-      })
-      const resolved = resolveSectionFromList(response)
-      if (resolved) {
-        setResolvedSection(resolved)
-        setShowTemplate(true)
-      } else {
-        setTemplateResolveError("Could not resolve section number from section list.")
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to resolve section number."
-      setTemplateResolveError(msg)
-    } finally {
-      setTemplateResolving(false)
-    }
+    setTemplateResolveError("Could not resolve section number from section list.")
   }
 
   return (
@@ -634,6 +612,7 @@ export function SectionEditor({
   selectedSubsection,
   onAddSubsection,
   onDeleteSubsection,
+  onSelectSubsection,
 }: SectionEditorProps) {
   const dispatch = useAppDispatch()
   const userId = useAppSelector((s) => s.auth.user?.id)
@@ -647,14 +626,6 @@ export function SectionEditor({
     if (sectionList || sectionListLoading || sectionListError) return
     void dispatch(fetchSectionList({ userId }))
   }, [dispatch, userId, sectionList, sectionListLoading, sectionListError])
-
-  const scrollToSubsection = (subsectionNumber: string) => {
-    const element = document.getElementById(`section-${subsectionNumber}`)
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" })
-      window.history.replaceState(null, "", `#section-${subsectionNumber}`)
-    }
-  }
 
   const findParentSubsection = (subsection: SubsectionContent | null): SubsectionContent | null => {
     if (!subsection) return null
@@ -708,6 +679,10 @@ export function SectionEditor({
         : section.number
     : section.number
 
+  const inlineEditorSubsections = subsectionsToShow.filter(
+    (subsection) => !subsection.isCategory && !subsection.fullPath,
+  )
+
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-background">
       <div className="w-full max-w-[calc(100%-20px)] mx-auto">
@@ -727,7 +702,7 @@ export function SectionEditor({
           </div>
         </div>
 
-        {subsectionsToShow.length > 1 && (
+        {subsectionsToShow.length > 0 && (
           <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-md border-b border-border mb-6 px-6 py-4 rounded-lg shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3" data-tour="jump-navigation">
@@ -736,9 +711,9 @@ export function SectionEditor({
                   {subsectionsToShow.map((sub) => (
                     <Button
                       key={sub.id}
-                      variant="outline"
+                      variant={selectedSubsection?.id === sub.id ? "secondary" : "outline"}
                       size="sm"
-                      onClick={() => scrollToSubsection(sub.subsectionNumber)}
+                      onClick={() => onSelectSubsection(sub)}
                       className="h-7 px-3 text-xs"
                     >
                       {sub.subsectionNumber}
@@ -762,8 +737,14 @@ export function SectionEditor({
               Add first element
             </Button>
           </div>
+        ) : inlineEditorSubsections.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">
+              This folder contains nested folders/files only. Select an item from Jump to section.
+            </p>
+          </div>
         ) : (
-          subsectionsToShow.map((subsection, index) => (
+          inlineEditorSubsections.map((subsection, index) => (
             <div key={subsection.id}>
               <SubsectionEditor
                 subsection={subsection}
@@ -772,7 +753,7 @@ export function SectionEditor({
                 onApprove={() => {}}
                 onDelete={onDeleteSubsection}
                 index={index}
-                total={subsectionsToShow.length}
+                total={inlineEditorSubsections.length}
               />
             </div>
           ))

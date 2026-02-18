@@ -2,7 +2,7 @@
 // Author: Bin Lee
 // Email: blee@filynai.com
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit"
-import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
+import { getSectionListPayload } from "@/lib/section-list-mapping"
 
 export interface SectionListPayload {
   count?: number
@@ -26,17 +26,9 @@ const initialState: SectionListState = {
 
 export const fetchSectionList = createAsyncThunk<SectionListPayload, { userId: string }>(
   "sectionList/fetch",
-  async ({ userId }, { rejectWithValue }) => {
+  async (_args, { rejectWithValue }) => {
     try {
-      const resp = await requestPdfAnalysisApi<SectionListPayload>({
-        path: "/ncd/sectionList",
-        method: "GET",
-        headers: { "user-id": userId },
-        userIdHeader: userId,
-        allowRedirects: false,
-        suppressErrorLog: true,
-      })
-      return resp
+      return getSectionListPayload()
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to load section list"
       return rejectWithValue(msg)

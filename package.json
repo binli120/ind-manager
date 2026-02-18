@@ -13,7 +13,8 @@
     "start": "next start",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build",
-    "stack": "bash scripts/run-stack.sh"
+    "stack": "bash scripts/run-stack.sh",
+    "tabulated:fetch": "node scripts/fetch-tabulated-result.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.705.0",

@@ -65,14 +65,131 @@ const buildApiUrl = (path: string, query?: object) => {
   return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 };
 
-const parseResponsePayload = async (response: Response): Promise<unknown> => {
-  const text = await response.text();
-  if (!text) return null;
+const INVALID_JSON_ESCAPE_REGEX = /\\(?!["\\/bfnrtu])/g;
+const CONCATENATED_JSON_OBJECTS_REGEX = /}\s*{/;
+const CONCATENATED_JSON_OBJECTS_GLOBAL_REGEX = /}\s*{/g;
+
+const tryParseJson = (text: string): unknown | undefined => {
   try {
     return JSON.parse(text);
   } catch {
+    return undefined;
+  }
+};
+
+const repairInvalidJsonEscapes = (text: string) =>
+  text.replace(INVALID_JSON_ESCAPE_REGEX, "\\\\");
+
+const parseLooseJsonPayload = (text: string): unknown => {
+  const direct = tryParseJson(text);
+  if (direct !== undefined) return direct;
+
+  const repairedEscapes = repairInvalidJsonEscapes(text);
+  const repairedParsed = tryParseJson(repairedEscapes);
+  if (repairedParsed !== undefined) return repairedParsed;
+
+  if (!CONCATENATED_JSON_OBJECTS_REGEX.test(repairedEscapes)) {
     return text;
   }
+
+  const splitChunks = repairedEscapes.split(CONCATENATED_JSON_OBJECTS_GLOBAL_REGEX);
+  const parsedChunks = splitChunks
+    .map((chunk, index) => {
+      if (index === 0) return tryParseJson(`${chunk}}`);
+      if (index === splitChunks.length - 1) return tryParseJson(`{${chunk}`);
+      return tryParseJson(`{${chunk}}`);
+    })
+    .filter((value): value is unknown => value !== undefined);
+
+  if (parsedChunks.length) {
+    return parsedChunks[parsedChunks.length - 1];
+  }
+
+  const arrayCandidate = `[${repairedEscapes.replace(CONCATENATED_JSON_OBJECTS_GLOBAL_REGEX, "},{")}]`;
+  const parsedArray = tryParseJson(arrayCandidate);
+  if (Array.isArray(parsedArray) && parsedArray.length) {
+    return parsedArray[parsedArray.length - 1];
+  }
+
+  return text;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const isBlankCell = (value: unknown) =>
+  value === null ||
+  value === undefined ||
+  (typeof value === "string" && value.trim().length === 0);
+
+const isSparseTabulatedRow = (row: Record<string, unknown>, columns: string[]) => {
+  const keys = columns.length ? columns : Object.keys(row);
+  if (!keys.length) return true;
+
+  const emptyCount = keys.reduce(
+    (count, key) => count + (isBlankCell(row[key]) ? 1 : 0),
+    0,
+  );
+  return emptyCount === keys.length || emptyCount / keys.length >= 0.7;
+};
+
+const inferMethodOfAdministration = (row: Record<string, unknown>) => {
+  const location = String(row["Location in CTD"] ?? "");
+  const context = location.toLowerCase();
+  if (context.includes("in vitro")) return "in vitro";
+  if (context.includes("intravenous") || context.includes(" i.v")) return "intravenous";
+  if (context.includes("intraperitoneal") || context.includes(" i.p")) return "intraperitoneal";
+  if (context.includes("oral") || context.includes(" p.o")) return "oral";
+  return null;
+};
+
+const fillMissingTabulatedCells = (
+  row: Record<string, unknown>,
+  columns: string[],
+): Record<string, unknown> => {
+  const normalized: Record<string, unknown> = { ...row };
+  const keys = columns.length ? columns : Object.keys(row);
+  keys.forEach((key) => {
+    const value = normalized[key];
+    if (!isBlankCell(value)) return;
+
+    if (key === "Method of Administration") {
+      const inferred = inferMethodOfAdministration(row);
+      normalized[key] = inferred ?? "Not reported";
+      return;
+    }
+
+    normalized[key] = "Not reported";
+  });
+  return normalized;
+};
+
+const pruneSparseTabulatedRows = (payload: unknown): unknown => {
+  if (!isRecord(payload)) return payload;
+  if (!Array.isArray(payload.tables)) return payload;
+
+  const tables = payload.tables.map((table) => {
+    if (!isRecord(table) || !Array.isArray(table.rows)) return table;
+
+    const columns = Array.isArray(table.columns)
+      ? table.columns.filter((column): column is string => typeof column === "string")
+      : [];
+    const rows = table.rows
+      .filter((row) => {
+        if (!isRecord(row)) return false;
+        return !isSparseTabulatedRow(row, columns);
+      })
+      .map((row) => fillMissingTabulatedCells(row as Record<string, unknown>, columns));
+    return { ...table, rows };
+  });
+
+  return { ...payload, tables };
+};
+
+const parseResponsePayload = async (response: Response): Promise<unknown> => {
+  const text = await response.text();
+  if (!text || !text.trim()) return null;
+  return parseLooseJsonPayload(text);
 };
 
 const extractErrorMessage = (payload: unknown) => {
@@ -201,7 +318,10 @@ export const requestPdfAnalysisApi = async <
     redirect: allowRedirects ? "follow" : "manual",
   });
 
-  const payload = await parseResponsePayload(response);
+  let payload = await parseResponsePayload(response);
+  if (path.includes("/ncd/assets/tabulated")) {
+    payload = pruneSparseTabulatedRows(payload);
+  }
 
   if (!response.ok) {
     if (!allowRedirects && response.status >= 300 && response.status < 400) {

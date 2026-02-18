@@ -13,6 +13,10 @@ export interface SubsectionContent {
   subsections?: SubsectionContent[];
   isUserAdded?: boolean;
   fullPath?: string;
+  templateType?: "folder" | "file";
+  description?: string;
+  templateText?: string;
+  templateDepth?: number;
 }
 
 export interface Section {
@@ -23,8 +27,12 @@ export interface Section {
   isRequired: boolean;
   status: "draft" | "accepted" | "in-review" | "approved";
   isCategory?: boolean;
-   isUserAdded?: boolean;
+  isUserAdded?: boolean;
   subsections?: SubsectionContent[];
+  templateType?: "folder" | "file";
+  description?: string;
+  templateText?: string;
+  templateDepth?: number;
 }
 
 export interface ModalityContent {

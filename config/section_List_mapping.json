@@ -1,0 +1,3898 @@
+[
+  {
+    "id": "m1",
+    "value": "1",
+    "text": "1 — Administrative Information",
+    "depth": 0,
+    "type": "folder",
+    "desc": "Region-specific administrative and prescribing information. Structure varies by region (US, EU, JP, CA). This module is NOT harmonized across ICH regions."
+  },
+  {
+    "id": "m1.1",
+    "value": "1.1",
+    "text": "1.1 — Forms",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Application forms required by the regional authority (e.g., FDA Form 356h for NDA/BLA, Form 1571 for IND, Form 3674 for FDAAA certification, Form 3792 for BsUFA)."
+  },
+  {
+    "id": "m1.2",
+    "value": "1.2",
+    "text": "1.2 — Cover Letters",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Cover letters accompanying the submission, including transmittal letters and statements of purpose."
+  },
+  {
+    "id": "m1.3",
+    "value": "1.3",
+    "text": "1.3 — Administrative Information",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Administrative details about the sponsor, applicant, contact information, financial disclosures, patent and exclusivity claims."
+  },
+  {
+    "id": "m1.3.1",
+    "value": "1.3.1",
+    "text": "1.3.1 — Contact/Sponsor/Applicant Information",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Contact details for the sponsor or applicant, including changes to address, agents, sponsors, and ownership transfers."
+  },
+  {
+    "id": "m1.3.1.1",
+    "value": "1.3.1.1",
+    "text": "1.3.1.1 — Change of Address or Corporate Name",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Notification of changes to the applicant's address or corporate name, including DMF address or corporate name changes."
+  },
+  {
+    "id": "m1.3.1.2",
+    "value": "1.3.1.2",
+    "text": "1.3.1.2 — Change in Contact/Agent",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Notification of changes to the designated contact person or authorized agent, including DMF contact/agent changes."
+  },
+  {
+    "id": "m1.3.1.3",
+    "value": "1.3.1.3",
+    "text": "1.3.1.3 — Change in Sponsor",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Notification of a change in the sponsor of the application or investigation."
+  },
+  {
+    "id": "m1.3.1.4",
+    "value": "1.3.1.4",
+    "text": "1.3.1.4 — Transfer of Obligation",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Transfer of sponsor obligations to a contract research organization (CRO) per 21 CFR 312.52."
+  },
+  {
+    "id": "m1.3.1.5",
+    "value": "1.3.1.5",
+    "text": "1.3.1.5 — Change in Ownership of an Application or Reissuance of License",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Documents related to transfer of application ownership or reissuance of a biologics license."
+  },
+  {
+    "id": "m1.3.2",
+    "value": "1.3.2",
+    "text": "1.3.2 — Field Copy Certification",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Certification that a field copy of the application has been provided to the appropriate FDA district office."
+  },
+  {
+    "id": "m1.3.3",
+    "value": "1.3.3",
+    "text": "1.3.3 — Debarment Certification",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Certification that the applicant has not been debarred under the Generic Drug Enforcement Act."
+  },
+  {
+    "id": "m1.3.4",
+    "value": "1.3.4",
+    "text": "1.3.4 — Financial Certification and Disclosure",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Financial certification and disclosure statements for clinical investigators (Forms FDA 3454 and 3455) per 21 CFR Part 54."
+  },
+  {
+    "id": "m1.3.5",
+    "value": "1.3.5",
+    "text": "1.3.5 — Patent and Exclusivity",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Patent information, certifications, and exclusivity claims associated with the drug product."
+  },
+  {
+    "id": "m1.3.5.1",
+    "value": "1.3.5.1",
+    "text": "1.3.5.1 — Patent Information",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Patent information submissions (Forms FDA 3542a and 3542) identifying patents covering the drug, drug product, or method of use."
+  },
+  {
+    "id": "m1.3.5.2",
+    "value": "1.3.5.2",
+    "text": "1.3.5.2 — Patent Certification",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Patent certifications required under paragraph IV or other certification types for ANDA or 505(b)(2) applications."
+  },
+  {
+    "id": "m1.3.5.3",
+    "value": "1.3.5.3",
+    "text": "1.3.5.3 — Exclusivity Claim",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Claims for market exclusivity such as new chemical entity exclusivity, orphan drug exclusivity, or pediatric exclusivity."
+  },
+  {
+    "id": "m1.3.6",
+    "value": "1.3.6",
+    "text": "1.3.6 — Tropical Disease Priority Review Voucher",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Documentation related to tropical disease priority review voucher requests or transfers."
+  },
+  {
+    "id": "m1.4",
+    "value": "1.4",
+    "text": "1.4 — References",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Letters of authorization, statements of right of reference, and cross-references to previously submitted information."
+  },
+  {
+    "id": "m1.4.1",
+    "value": "1.4.1",
+    "text": "1.4.1 — Letter of Authorization",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Letters of authorization from DMF holders permitting the applicant to reference DMF information."
+  },
+  {
+    "id": "m1.4.2",
+    "value": "1.4.2",
+    "text": "1.4.2 — Statement of Right of Reference",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Written authorization statements granting right of reference to previously submitted data from another application."
+  },
+  {
+    "id": "m1.4.3",
+    "value": "1.4.3",
+    "text": "1.4.3 — List of Authorized Persons to Incorporate by Reference",
+    "depth": 2,
+    "type": "folder",
+    "desc": "List of persons authorized to incorporate information by reference from a DMF."
+  },
+  {
+    "id": "m1.4.4",
+    "value": "1.4.4",
+    "text": "1.4.4 — Cross-Reference to Previously Submitted Information",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Cross-references to information previously submitted in other applications or submissions."
+  },
+  {
+    "id": "m1.5",
+    "value": "1.5",
+    "text": "1.5 — Application Status",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Requests related to application lifecycle status changes: withdrawal, inactivation, reactivation, reinstatement."
+  },
+  {
+    "id": "m1.5.1",
+    "value": "1.5.1",
+    "text": "1.5.1 — Withdrawal of an IND",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to withdraw an Investigational New Drug application per 21 CFR 312.38."
+  },
+  {
+    "id": "m1.5.2",
+    "value": "1.5.2",
+    "text": "1.5.2 — Inactivation Request",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to place an IND on inactive status per 21 CFR 312.45(a)."
+  },
+  {
+    "id": "m1.5.3",
+    "value": "1.5.3",
+    "text": "1.5.3 — Reactivation Request",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to resume clinical investigations under an inactive IND per 21 CFR 312.45(d)."
+  },
+  {
+    "id": "m1.5.4",
+    "value": "1.5.4",
+    "text": "1.5.4 — Reinstatement Request",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to reinstate a previously withdrawn or terminated application."
+  },
+  {
+    "id": "m1.5.5",
+    "value": "1.5.5",
+    "text": "1.5.5 — Withdrawal of an Unapproved BLA, NDA, ANDA, or Supplement",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to withdraw an unapproved marketing application (BLA, NDA, ANDA) or supplement."
+  },
+  {
+    "id": "m1.5.6",
+    "value": "1.5.6",
+    "text": "1.5.6 — Withdrawal of Listed Drug",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to voluntarily withdraw a listed drug from sale."
+  },
+  {
+    "id": "m1.5.7",
+    "value": "1.5.7",
+    "text": "1.5.7 — Withdrawal of Approval of an Application or Revocation of License",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Documents related to FDA withdrawal of approval or revocation of a biologics license."
+  },
+  {
+    "id": "m1.6",
+    "value": "1.6",
+    "text": "1.6 — Meetings",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Meeting-related documents including requests, background materials, and correspondence with the review division."
+  },
+  {
+    "id": "m1.6.1",
+    "value": "1.6.1",
+    "text": "1.6.1 — Meeting Request",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Formal request for a meeting with the FDA review division (Type A, B, or C meetings)."
+  },
+  {
+    "id": "m1.6.2",
+    "value": "1.6.2",
+    "text": "1.6.2 — Meeting Background Materials",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Background packages and briefing documents submitted in advance of FDA meetings."
+  },
+  {
+    "id": "m1.6.3",
+    "value": "1.6.3",
+    "text": "1.6.3 — Correspondence Regarding Meetings",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Follow-up correspondence, meeting minutes, and other communications related to FDA meetings."
+  },
+  {
+    "id": "m1.7",
+    "value": "1.7",
+    "text": "1.7 — Fast Track",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Fast track designation requests, withdrawal requests, rolling review requests, and related correspondence."
+  },
+  {
+    "id": "m1.7.1",
+    "value": "1.7.1",
+    "text": "1.7.1 — Fast Track Designation Request",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request for fast track designation for a drug intended to treat a serious condition with unmet medical need."
+  },
+  {
+    "id": "m1.7.2",
+    "value": "1.7.2",
+    "text": "1.7.2 — Fast Track Designation Withdrawal Request",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to withdraw a previously granted fast track designation."
+  },
+  {
+    "id": "m1.7.3",
+    "value": "1.7.3",
+    "text": "1.7.3 — Rolling Review Request",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to submit portions of a marketing application on a rolling basis before the complete application is submitted."
+  },
+  {
+    "id": "m1.7.4",
+    "value": "1.7.4",
+    "text": "1.7.4 — Correspondence Regarding Fast Track/Rolling Review",
+    "depth": 2,
+    "type": "folder",
+    "desc": "General correspondence related to fast track designation or rolling review processes."
+  },
+  {
+    "id": "m1.8",
+    "value": "1.8",
+    "text": "1.8 — Special Protocol Assessment Request",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Requests for FDA evaluation and agreement on the design and analysis of clinical, carcinogenicity, or stability studies."
+  },
+  {
+    "id": "m1.8.1",
+    "value": "1.8.1",
+    "text": "1.8.1 — Clinical Study",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Special protocol assessment request for a clinical study (typically Phase 3 pivotal trial)."
+  },
+  {
+    "id": "m1.8.2",
+    "value": "1.8.2",
+    "text": "1.8.2 — Carcinogenicity Study",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Special protocol assessment request for a carcinogenicity study design."
+  },
+  {
+    "id": "m1.8.3",
+    "value": "1.8.3",
+    "text": "1.8.3 — Stability Study",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Special protocol assessment request for a stability study protocol."
+  },
+  {
+    "id": "m1.8.4",
+    "value": "1.8.4",
+    "text": "1.8.4 — Animal Efficacy Study for Approval Under the Animal Rule",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Special protocol assessment for animal efficacy studies used to support approval under the Animal Rule (21 CFR 314.600)."
+  },
+  {
+    "id": "m1.9",
+    "value": "1.9",
+    "text": "1.9 — Pediatric Administrative Information",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Pediatric-related administrative documents including waiver/deferral requests, exclusivity determinations, and study plans."
+  },
+  {
+    "id": "m1.9.1",
+    "value": "1.9.1",
+    "text": "1.9.1 — Request for Waiver of Pediatric Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request for waiver of pediatric study requirements under PREA."
+  },
+  {
+    "id": "m1.9.2",
+    "value": "1.9.2",
+    "text": "1.9.2 — Request for Deferral of Pediatric Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to defer completion of pediatric studies until after approval of the adult indication."
+  },
+  {
+    "id": "m1.9.3",
+    "value": "1.9.3",
+    "text": "1.9.3 — Request for Pediatric Exclusivity Determination",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request for a determination of pediatric exclusivity under the Best Pharmaceuticals for Children Act (BPCA)."
+  },
+  {
+    "id": "m1.9.4",
+    "value": "1.9.4",
+    "text": "1.9.4 — Proposed Pediatric Study Request and Amendments",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Proposed pediatric study requests (PSRs) and any amendments to agreed-upon study plans."
+  },
+  {
+    "id": "m1.9.6",
+    "value": "1.9.6",
+    "text": "1.9.6 — Other Correspondence Regarding Pediatric Exclusivity or Study Plans",
+    "depth": 2,
+    "type": "folder",
+    "desc": "General correspondence regarding pediatric exclusivity or PREA requirements not covered by other subsections."
+  },
+  {
+    "id": "m1.10",
+    "value": "1.10",
+    "text": "1.10 — Dispute Resolution",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Requests for dispute resolution and related correspondence regarding scientific or medical disagreements with FDA."
+  },
+  {
+    "id": "m1.10.1",
+    "value": "1.10.1",
+    "text": "1.10.1 — Request for Dispute Resolution",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Formal request for resolution of a scientific or medical dispute with the review division."
+  },
+  {
+    "id": "m1.10.2",
+    "value": "1.10.2",
+    "text": "1.10.2 — Correspondence Related to Dispute Resolution",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Follow-up correspondence and supporting documents related to an ongoing dispute resolution process."
+  },
+  {
+    "id": "m1.11",
+    "value": "1.11",
+    "text": "1.11 — Information Amendment",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Information amendments for content not covered under Modules 2 through 5, organized by discipline."
+  },
+  {
+    "id": "m1.11.1",
+    "value": "1.11.1",
+    "text": "1.11.1 — Quality Information Amendment",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Chemistry/quality information amendment for content not appropriate for Module 3."
+  },
+  {
+    "id": "m1.11.2",
+    "value": "1.11.2",
+    "text": "1.11.2 — Nonclinical Information Amendment",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Nonclinical/toxicology information amendment for content not appropriate for Module 4."
+  },
+  {
+    "id": "m1.11.3",
+    "value": "1.11.3",
+    "text": "1.11.3 — Clinical Information Amendment",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Clinical information amendment for content not appropriate for Module 5."
+  },
+  {
+    "id": "m1.11.4",
+    "value": "1.11.4",
+    "text": "1.11.4 — Multiple Module Information Amendment",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Information amendment spanning multiple modules/disciplines."
+  },
+  {
+    "id": "m1.12",
+    "value": "1.12",
+    "text": "1.12 — Other Correspondence",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Miscellaneous correspondence not covered by other Module 1 subsections."
+  },
+  {
+    "id": "m1.12.1",
+    "value": "1.12.1",
+    "text": "1.12.1 — Pre-IND Correspondence",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Correspondence with FDA prior to filing an IND application."
+  },
+  {
+    "id": "m1.12.2",
+    "value": "1.12.2",
+    "text": "1.12.2 — Request to Charge for Clinical Trial",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to charge subjects or their insurers for an investigational drug used in a clinical trial."
+  },
+  {
+    "id": "m1.12.3",
+    "value": "1.12.3",
+    "text": "1.12.3 — Request to Charge for Expanded Access",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request to charge for an investigational drug made available through expanded access programs."
+  },
+  {
+    "id": "m1.12.4",
+    "value": "1.12.4",
+    "text": "1.12.4 — Request for Comments and Advice",
+    "depth": 2,
+    "type": "folder",
+    "desc": "General requests for FDA comments, advice, or feedback on regulatory or scientific matters."
+  },
+  {
+    "id": "m1.12.5",
+    "value": "1.12.5",
+    "text": "1.12.5 — Request for a Waiver",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Requests for waivers of regulatory requirements, including PSUR waivers."
+  },
+  {
+    "id": "m1.12.6",
+    "value": "1.12.6",
+    "text": "1.12.6 — Exception from Informed Consent for Emergency Research",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Documentation supporting exception from informed consent for emergency research per 21 CFR 50.24."
+  },
+  {
+    "id": "m1.12.7",
+    "value": "1.12.7",
+    "text": "1.12.7 — Public Disclosure Statement for Exception from Informed Consent",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Public disclosure statement required when exception from informed consent is used for emergency research."
+  },
+  {
+    "id": "m1.12.8",
+    "value": "1.12.8",
+    "text": "1.12.8 — Correspondence Regarding Exception from Informed Consent",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Correspondence related to exception from informed consent, including IRB disapproval notifications."
+  },
+  {
+    "id": "m1.12.9",
+    "value": "1.12.9",
+    "text": "1.12.9 — Notification of Discontinuation of Clinical Trial",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Report regarding the discontinuation of a clinical investigation per 21 CFR 312.31(a)(2)."
+  },
+  {
+    "id": "m1.12.10",
+    "value": "1.12.10",
+    "text": "1.12.10 — Generic Drug Enforcement Act Statement",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Statement required under the Generic Drug Enforcement Act of 1992."
+  },
+  {
+    "id": "m1.12.11",
+    "value": "1.12.11",
+    "text": "1.12.11 — ANDA Basis for Submission Statement",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Statement of the basis for an ANDA submission (e.g., 505(j) or 505(b)(2) pathway)."
+  },
+  {
+    "id": "m1.12.12",
+    "value": "1.12.12",
+    "text": "1.12.12 — Comparison of Generic Drug and Reference Listed Drug",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Side-by-side comparison of the generic drug product and the reference listed drug (RLD)."
+  },
+  {
+    "id": "m1.12.13",
+    "value": "1.12.13",
+    "text": "1.12.13 — Request for Waiver for In Vivo Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request for waiver of in vivo study requirements based on BCS classification or other criteria."
+  },
+  {
+    "id": "m1.12.14",
+    "value": "1.12.14",
+    "text": "1.12.14 — Environmental Analysis",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Environmental impact analysis or claim for categorical exclusion per 21 CFR 25."
+  },
+  {
+    "id": "m1.12.15",
+    "value": "1.12.15",
+    "text": "1.12.15 — Request for Waiver of In Vivo Bioavailability Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request for waiver of in vivo bioavailability study requirements per 21 CFR 320.22."
+  },
+  {
+    "id": "m1.12.16",
+    "value": "1.12.16",
+    "text": "1.12.16 — Field Alert Reports",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Field alert reports notifying FDA of product quality issues discovered after distribution."
+  },
+  {
+    "id": "m1.12.17",
+    "value": "1.12.17",
+    "text": "1.12.17 — Orphan Drug Designation",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Orphan drug designation request and supporting documentation per 21 CFR 316 Subpart C."
+  },
+  {
+    "id": "m1.12.18",
+    "value": "1.12.18",
+    "text": "1.12.18 — Regenerative Medicine Advanced Therapy (RMAT) Designation",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Request for RMAT designation for eligible regenerative medicine therapies per 21st Century Cures Act."
+  },
+  {
+    "id": "m1.13",
+    "value": "1.13",
+    "text": "1.13 — Annual Report",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Annual reports summarizing the progress of investigations and post-approval activities per 21 CFR 312.33 (IND) or 314.81 (NDA)."
+  },
+  {
+    "id": "m1.13.1",
+    "value": "1.13.1",
+    "text": "1.13.1 — Summary for Nonclinical Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report summary of nonclinical/preclinical studies completed or in progress during the reporting period."
+  },
+  {
+    "id": "m1.13.2",
+    "value": "1.13.2",
+    "text": "1.13.2 — Summary of Clinical Pharmacology Information",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report summary of clinical pharmacology findings, including drug actions and PK/PD data."
+  },
+  {
+    "id": "m1.13.3",
+    "value": "1.13.3",
+    "text": "1.13.3 — Summary of Safety Information",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report summary of adverse experiences, IND safety reports, deaths, and dropouts."
+  },
+  {
+    "id": "m1.13.4",
+    "value": "1.13.4",
+    "text": "1.13.4 — Summary of Labeling Changes",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report summary of labeling changes made during the reporting period."
+  },
+  {
+    "id": "m1.13.5",
+    "value": "1.13.5",
+    "text": "1.13.5 — Summary of Manufacturing Changes",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report summary of significant manufacturing changes during the reporting period."
+  },
+  {
+    "id": "m1.13.6",
+    "value": "1.13.6",
+    "text": "1.13.6 — Summary of Microbiological Changes",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report summary of significant microbiological changes during the reporting period."
+  },
+  {
+    "id": "m1.13.7",
+    "value": "1.13.7",
+    "text": "1.13.7 — Summary of Other Significant New Information",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report summary of other significant new information not covered by other subsections."
+  },
+  {
+    "id": "m1.13.8",
+    "value": "1.13.8",
+    "text": "1.13.8 — Individual Study Information",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report listing of individual study information for clinical trials conducted during the reporting period."
+  },
+  {
+    "id": "m1.13.9",
+    "value": "1.13.9",
+    "text": "1.13.9 — General Investigational Plan",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report description of the general investigational plan for the coming year."
+  },
+  {
+    "id": "m1.13.10",
+    "value": "1.13.10",
+    "text": "1.13.10 — Foreign Marketing",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report summary of significant foreign marketing developments for the drug."
+  },
+  {
+    "id": "m1.13.11",
+    "value": "1.13.11",
+    "text": "1.13.11 — Distribution Data",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report distribution data for approved drug products."
+  },
+  {
+    "id": "m1.13.12",
+    "value": "1.13.12",
+    "text": "1.13.12 — Status of Postmarketing Study Commitments and Requirements",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report status update on postmarketing study commitments and requirements."
+  },
+  {
+    "id": "m1.13.13",
+    "value": "1.13.13",
+    "text": "1.13.13 — Status of Other Postmarketing Studies and Requirements",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report status update on other postmarketing study obligations (e.g., CMC studies)."
+  },
+  {
+    "id": "m1.13.14",
+    "value": "1.13.14",
+    "text": "1.13.14 — Log of Outstanding Regulatory Business",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual report log of outstanding regulatory business with the agency."
+  },
+  {
+    "id": "m1.13.15",
+    "value": "1.13.15",
+    "text": "1.13.15 — Development Safety Update Report (DSUR)",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Annual development safety update report (ICH E2F) summarizing safety findings during the reporting period."
+  },
+  {
+    "id": "m1.14",
+    "value": "1.14",
+    "text": "1.14 — Labeling",
+    "depth": 1,
+    "type": "folder",
+    "desc": "All labeling documents including draft, final, listed drug, investigational, and foreign labeling."
+  },
+  {
+    "id": "m1.14.1",
+    "value": "1.14.1",
+    "text": "1.14.1 — Draft Labeling",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Proposed draft labeling for the drug product prior to approval."
+  },
+  {
+    "id": "m1.14.1.1",
+    "value": "1.14.1.1",
+    "text": "1.14.1.1 — Draft Carton and Container Labels",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Draft versions of carton and container labels for the drug product."
+  },
+  {
+    "id": "m1.14.1.2",
+    "value": "1.14.1.2",
+    "text": "1.14.1.2 — Annotated Draft Labeling Text",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Draft labeling text with annotations indicating supporting data references for each claim."
+  },
+  {
+    "id": "m1.14.1.3",
+    "value": "1.14.1.3",
+    "text": "1.14.1.3 — Draft Labeling Text",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Clean draft labeling text without annotations."
+  },
+  {
+    "id": "m1.14.1.4",
+    "value": "1.14.1.4",
+    "text": "1.14.1.4 — Label Comprehension Studies",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Studies assessing consumer comprehension and understanding of proposed labeling."
+  },
+  {
+    "id": "m1.14.1.5",
+    "value": "1.14.1.5",
+    "text": "1.14.1.5 — Labeling History",
+    "depth": 3,
+    "type": "folder",
+    "desc": "History of labeling changes over the product lifecycle."
+  },
+  {
+    "id": "m1.14.2",
+    "value": "1.14.2",
+    "text": "1.14.2 — Final Labeling",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Approved final labeling for the drug product."
+  },
+  {
+    "id": "m1.14.2.1",
+    "value": "1.14.2.1",
+    "text": "1.14.2.1 — Final Carton or Container Labels",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Final approved carton and container labels."
+  },
+  {
+    "id": "m1.14.2.2",
+    "value": "1.14.2.2",
+    "text": "1.14.2.2 — Final Package Insert",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Final approved package insert including prescribing information, patient information, and medication guides."
+  },
+  {
+    "id": "m1.14.2.3",
+    "value": "1.14.2.3",
+    "text": "1.14.2.3 — Final Labeling Text",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Final approved labeling text in clean format."
+  },
+  {
+    "id": "m1.14.3",
+    "value": "1.14.3",
+    "text": "1.14.3 — Listed Drug Labeling",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Labeling for the reference listed drug (RLD) used for comparison in ANDA or 505(b)(2) applications."
+  },
+  {
+    "id": "m1.14.3.1",
+    "value": "1.14.3.1",
+    "text": "1.14.3.1 — Annotated Comparison with Listed Drug",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Side-by-side annotated comparison of proposed labeling with the reference listed drug labeling."
+  },
+  {
+    "id": "m1.14.3.2",
+    "value": "1.14.3.2",
+    "text": "1.14.3.2 — Approved Labeling Text for Listed Drug",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Copy of the currently approved labeling for the reference listed drug."
+  },
+  {
+    "id": "m1.14.3.3",
+    "value": "1.14.3.3",
+    "text": "1.14.3.3 — Labeling Text for Reference Listed Drug",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Full labeling text of the reference listed drug."
+  },
+  {
+    "id": "m1.14.4",
+    "value": "1.14.4",
+    "text": "1.14.4 — Investigational Drug Labeling",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Labeling for investigational drugs used in clinical trials."
+  },
+  {
+    "id": "m1.14.4.1",
+    "value": "1.14.4.1",
+    "text": "1.14.4.1 — Investigator Brochure",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Investigator's brochure (IB) providing clinical and nonclinical data relevant to the study of the investigational product."
+  },
+  {
+    "id": "m1.14.4.2",
+    "value": "1.14.4.2",
+    "text": "1.14.4.2 — Investigational Drug Labeling",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Labels and labeling for the investigational drug product used in clinical trials."
+  },
+  {
+    "id": "m1.14.5",
+    "value": "1.14.5",
+    "text": "1.14.5 — Foreign Labeling",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Labeling approved or used in foreign markets."
+  },
+  {
+    "id": "m1.14.6",
+    "value": "1.14.6",
+    "text": "1.14.6 — Product Labeling for 2253 Submissions",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Product labeling submitted with Form FDA 2253 transmittals for advertisements and promotional labeling."
+  },
+  {
+    "id": "m1.15",
+    "value": "1.15",
+    "text": "1.15 — Promotional Material",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Promotional and advertising materials submitted for FDA review, organized by correspondence and material types."
+  },
+  {
+    "id": "m1.15.1",
+    "value": "1.15.1",
+    "text": "1.15.1 — Correspondence Relating to Promotional Materials",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Correspondence related to promotional material submissions and FDA feedback."
+  },
+  {
+    "id": "m1.15.1.1",
+    "value": "1.15.1.1",
+    "text": "1.15.1.1 — Request for Advisory Comments on Launch Materials",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Request for FDA advisory comments on promotional materials planned for product launch."
+  },
+  {
+    "id": "m1.15.1.2",
+    "value": "1.15.1.2",
+    "text": "1.15.1.2 — Request for Advisory Comments on Non-Launch Materials",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Request for FDA advisory comments on promotional materials not related to initial launch."
+  },
+  {
+    "id": "m1.15.1.3",
+    "value": "1.15.1.3",
+    "text": "1.15.1.3 — Presubmission of Launch Promotional Materials for Accelerated Approval Products",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Presubmission of launch promotional materials for products approved under accelerated approval."
+  },
+  {
+    "id": "m1.15.1.4",
+    "value": "1.15.1.4",
+    "text": "1.15.1.4 — Presubmission of Non-Launch Promotional Materials for Accelerated Approval Products",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Presubmission of non-launch promotional materials for products approved under accelerated approval."
+  },
+  {
+    "id": "m1.15.1.5",
+    "value": "1.15.1.5",
+    "text": "1.15.1.5 — Pre-Dissemination Review of Television Ads",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Submission of television advertisements for pre-dissemination review by FDA."
+  },
+  {
+    "id": "m1.15.1.6",
+    "value": "1.15.1.6",
+    "text": "1.15.1.6 — Response to Untitled Letter or Warning Letter",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Response to FDA untitled letters or warning letters regarding promotional materials."
+  },
+  {
+    "id": "m1.15.1.7",
+    "value": "1.15.1.7",
+    "text": "1.15.1.7 — Response to Information Request",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Response to FDA information requests regarding promotional activities."
+  },
+  {
+    "id": "m1.15.1.8",
+    "value": "1.15.1.8",
+    "text": "1.15.1.8 — Correspondence Accompanying Materials Previously Missing or Rejected",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Correspondence accompanying resubmission of promotional materials previously missing or rejected."
+  },
+  {
+    "id": "m1.15.1.9",
+    "value": "1.15.1.9",
+    "text": "1.15.1.9 — Withdrawal Request",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Request to withdraw a previously submitted promotional material from FDA review."
+  },
+  {
+    "id": "m1.15.1.10",
+    "value": "1.15.1.10",
+    "text": "1.15.1.10 — Submission of Annotated References",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Submission of annotated references supporting claims made in promotional materials."
+  },
+  {
+    "id": "m1.15.1.11",
+    "value": "1.15.1.11",
+    "text": "1.15.1.11 — General Correspondence",
+    "depth": 3,
+    "type": "folder",
+    "desc": "General correspondence regarding promotional materials not covered by other subsections."
+  },
+  {
+    "id": "m1.15.2",
+    "value": "1.15.2",
+    "text": "1.15.2 — Materials",
+    "depth": 2,
+    "type": "folder",
+    "desc": "The actual promotional materials organized by document type."
+  },
+  {
+    "id": "m1.15.2.1",
+    "value": "1.15.2.1",
+    "text": "1.15.2.1 — Material",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Individual promotional material piece, identified by promotional-material-type keyword and material-id."
+  },
+  {
+    "id": "m1.15.2.1.1",
+    "value": "1.15.2.1.1",
+    "text": "1.15.2.1.1 — Clean Version",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Clean (unannotated) version of the promotional material."
+  },
+  {
+    "id": "m1.15.2.1.2",
+    "value": "1.15.2.1.2",
+    "text": "1.15.2.1.2 — Annotated Version",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Annotated version of the promotional material with references to supporting data."
+  },
+  {
+    "id": "m1.15.2.1.3",
+    "value": "1.15.2.1.3",
+    "text": "1.15.2.1.3 — Annotated Labeling Version",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Promotional material annotated with labeling references to show consistency with approved labeling."
+  },
+  {
+    "id": "m1.15.2.1.4",
+    "value": "1.15.2.1.4",
+    "text": "1.15.2.1.4 — Annotated References",
+    "depth": 4,
+    "type": "folder",
+    "desc": "References cited in the promotional material with relevant sections annotated."
+  },
+  {
+    "id": "m1.16",
+    "value": "1.16",
+    "text": "1.16 — Risk Management Plan",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Risk management and REMS documentation."
+  },
+  {
+    "id": "m1.16.1",
+    "value": "1.16.1",
+    "text": "1.16.1 — Risk Management (Non-REMS)",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Risk management plans and documents that are not part of a formal REMS program."
+  },
+  {
+    "id": "m1.16.2",
+    "value": "1.16.2",
+    "text": "1.16.2 — Risk Evaluation and Mitigation Strategy (REMS)",
+    "depth": 2,
+    "type": "folder",
+    "desc": "All REMS-related documents including the strategy itself, assessments, and modifications."
+  },
+  {
+    "id": "m1.16.2.1",
+    "value": "1.16.2.1",
+    "text": "1.16.2.1 — Final REMS",
+    "depth": 3,
+    "type": "folder",
+    "desc": "The approved final REMS document."
+  },
+  {
+    "id": "m1.16.2.2",
+    "value": "1.16.2.2",
+    "text": "1.16.2.2 — Draft REMS",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Proposed draft REMS submitted for FDA review."
+  },
+  {
+    "id": "m1.16.2.3",
+    "value": "1.16.2.3",
+    "text": "1.16.2.3 — REMS Assessment",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Periodic REMS assessment reports evaluating the effectiveness of the strategy."
+  },
+  {
+    "id": "m1.16.2.4",
+    "value": "1.16.2.4",
+    "text": "1.16.2.4 — REMS Assessment Methodology",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Description of the methodology used for REMS assessments."
+  },
+  {
+    "id": "m1.16.2.5",
+    "value": "1.16.2.5",
+    "text": "1.16.2.5 — REMS Correspondence",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Correspondence related to REMS development, implementation, and assessment."
+  },
+  {
+    "id": "m1.16.2.6",
+    "value": "1.16.2.6",
+    "text": "1.16.2.6 — REMS Modification History",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Document tracking all modifications made to the REMS over time."
+  },
+  {
+    "id": "m1.17",
+    "value": "1.17",
+    "text": "1.17 — Postmarketing Studies",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Correspondence regarding postmarketing study commitments and requirements."
+  },
+  {
+    "id": "m1.17.1",
+    "value": "1.17.1",
+    "text": "1.17.1 — Correspondence Regarding Postmarketing Commitments",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Correspondence regarding voluntary postmarketing study commitments."
+  },
+  {
+    "id": "m1.17.2",
+    "value": "1.17.2",
+    "text": "1.17.2 — Correspondence Regarding Postmarketing Requirements",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Correspondence regarding FDA-mandated postmarketing study requirements."
+  },
+  {
+    "id": "m1.18",
+    "value": "1.18",
+    "text": "1.18 — Naming",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Proprietary name and biological proper name suffix proposals and reviews."
+  },
+  {
+    "id": "m1.18.1",
+    "value": "1.18.1",
+    "text": "1.18.1 — Proprietary Names",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Proposed proprietary (brand) name submissions and supporting safety analyses."
+  },
+  {
+    "id": "m1.18.2",
+    "value": "1.18.2",
+    "text": "1.18.2 — Biological Proper Name Suffix",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Proposed nonproprietary name suffix for biological products to distinguish biosimilars."
+  },
+  {
+    "id": "m1.19",
+    "value": "1.19",
+    "text": "1.19 — Pre-EUA and EUA",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Emergency Use Authorization (EUA) requests, pre-EUA submissions, and related documentation under the Project BioShield Act."
+  },
+  {
+    "id": "m1.20",
+    "value": "1.20",
+    "text": "1.20 — General Investigational Plan for Initial IND",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Brief description of the overall investigational plan for the initial IND submission per 21 CFR 312.23(a)(3)(iv)."
+  },
+  {
+    "id": "m2",
+    "value": "2",
+    "text": "2 — CTD Summaries",
+    "depth": 0,
+    "type": "folder",
+    "desc": "High-level summaries and overviews of the quality, nonclinical, and clinical information presented in Modules 3, 4, and 5. Provides a comprehensive yet concise overview for regulatory reviewers."
+  },
+  {
+    "id": "m2.2",
+    "value": "2.2",
+    "text": "2.2 — Introduction to Summary",
+    "depth": 1,
+    "type": "folder",
+    "desc": "General introduction to the CTD summaries including product name, pharmacological class, proposed indication, and dosage form."
+  },
+  {
+    "id": "m2.3",
+    "value": "2.3",
+    "text": "2.3 — Quality Overall Summary",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Overall summary of the quality (CMC) data covering drug substance, drug product, appendices, and regional information."
+  },
+  {
+    "id": "m2.3.I",
+    "value": "2.3.I",
+    "text": "2.3.I — Introduction",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Introduction to the quality overall summary."
+  },
+  {
+    "id": "m2.3.S",
+    "value": "2.3.S",
+    "text": "2.3.S — Drug Substance",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Quality overall summary for the drug substance, including general properties, manufacture, characterization, control, and stability."
+  },
+  {
+    "id": "m2.3.P",
+    "value": "2.3.P",
+    "text": "2.3.P — Drug Product",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Quality overall summary for the drug product, including composition, pharmaceutical development, manufacture, control, and stability."
+  },
+  {
+    "id": "m2.3.A",
+    "value": "2.3.A",
+    "text": "2.3.A — Appendices",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Quality overall summary appendices."
+  },
+  {
+    "id": "m2.3.A.1",
+    "value": "2.3.A.1",
+    "text": "2.3.A.1 — Facilities and Equipment",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Summary of manufacturing facilities and equipment used for drug substance and drug product manufacture."
+  },
+  {
+    "id": "m2.3.A.2",
+    "value": "2.3.A.2",
+    "text": "2.3.A.2 — Adventitious Agents Safety Evaluation",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Summary of adventitious agents safety evaluation for biological/biotechnology products."
+  },
+  {
+    "id": "m2.3.A.3",
+    "value": "2.3.A.3",
+    "text": "2.3.A.3 — Excipients",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Summary information on novel excipients used in the drug product formulation."
+  },
+  {
+    "id": "m2.3.R",
+    "value": "2.3.R",
+    "text": "2.3.R — Regional Information",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Region-specific quality information included in the quality overall summary."
+  },
+  {
+    "id": "m2.4",
+    "value": "2.4",
+    "text": "2.4 — Nonclinical Overview",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Integrated overview of the nonclinical testing strategy and findings, providing an overall assessment of nonclinical data in Modules 4."
+  },
+  {
+    "id": "m2.4.1",
+    "value": "2.4.1",
+    "text": "2.4.1 — Overview of the Nonclinical Testing Strategy",
+    "depth": 2,
+    "type": "file",
+    "desc": "Overview of the nonclinical testing strategy, including rationale for the nonclinical development program and its relationship to clinical development."
+  },
+  {
+    "id": "m2.4.1-a",
+    "value": "2.4.1-a",
+    "text": "2.4.1-a — Overview of the Nonclinical Testing Strategy",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.1-a for Overview of the Nonclinical Testing Strategy."
+  },
+  {
+    "id": "m2.4.1-b",
+    "value": "2.4.1-b",
+    "text": "2.4.1-b — Overview of the Nonclinical Testing Strategy",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.1-b for Overview of the Nonclinical Testing Strategy."
+  },
+  {
+    "id": "m2.4.1-c",
+    "value": "2.4.1-c",
+    "text": "2.4.1-c — Overview of the Nonclinical Testing Strategy",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.1-c for Overview of the Nonclinical Testing Strategy."
+  },
+  {
+    "id": "m2.4.1-d",
+    "value": "2.4.1-d",
+    "text": "2.4.1-d — Overview of the Nonclinical Testing Strategy",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.1-d for Overview of the Nonclinical Testing Strategy."
+  },
+  {
+    "id": "m2.4.1-e",
+    "value": "2.4.1-e",
+    "text": "2.4.1-e — Overview of the Nonclinical Testing Strategy",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.1-e for Overview of the Nonclinical Testing Strategy."
+  },
+  {
+    "id": "m2.4.1-f",
+    "value": "2.4.1-f",
+    "text": "2.4.1-f — Overview of the Nonclinical Testing Strategy",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.1-f for Overview of the Nonclinical Testing Strategy."
+  },
+  {
+    "id": "m2.4.1-g",
+    "value": "2.4.1-g",
+    "text": "2.4.1-g — Overview of the Nonclinical Testing Strategy",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.1-g for Overview of the Nonclinical Testing Strategy."
+  },
+  {
+    "id": "m2.4.2",
+    "value": "2.4.2",
+    "text": "2.4.2 — Pharmacology",
+    "depth": 2,
+    "type": "file",
+    "desc": "Overview of nonclinical pharmacology findings including primary pharmacodynamics, secondary pharmacodynamics, safety pharmacology, and pharmacodynamic drug interactions."
+  },
+  {
+    "id": "m2.4.2-a",
+    "value": "2.4.2-a",
+    "text": "2.4.2-a — Pharmacology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.2-a for Pharmacology."
+  },
+  {
+    "id": "m2.4.2-b",
+    "value": "2.4.2-b",
+    "text": "2.4.2-b — Pharmacology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.2-b for Pharmacology."
+  },
+  {
+    "id": "m2.4.2-c",
+    "value": "2.4.2-c",
+    "text": "2.4.2-c — Pharmacology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.2-c for Pharmacology."
+  },
+  {
+    "id": "m2.4.2-d",
+    "value": "2.4.2-d",
+    "text": "2.4.2-d — Pharmacology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.2-d for Pharmacology."
+  },
+  {
+    "id": "m2.4.2-e",
+    "value": "2.4.2-e",
+    "text": "2.4.2-e — Pharmacology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.2-e for Pharmacology."
+  },
+  {
+    "id": "m2.4.2-f",
+    "value": "2.4.2-f",
+    "text": "2.4.2-f — Pharmacology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.2-f for Pharmacology."
+  },
+  {
+    "id": "m2.4.2-g",
+    "value": "2.4.2-g",
+    "text": "2.4.2-g — Pharmacology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.2-g for Pharmacology."
+  },
+  {
+    "id": "m2.4.3",
+    "value": "2.4.3",
+    "text": "2.4.3 — Pharmacokinetics",
+    "depth": 2,
+    "type": "file",
+    "desc": "Overview of nonclinical pharmacokinetic findings including absorption, distribution, metabolism, excretion, and pharmacokinetic drug interactions."
+  },
+  {
+    "id": "m2.4.3-a",
+    "value": "2.4.3-a",
+    "text": "2.4.3-a — Pharmacokinetics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.3-a for Pharmacokinetics."
+  },
+  {
+    "id": "m2.4.3-b",
+    "value": "2.4.3-b",
+    "text": "2.4.3-b — Pharmacokinetics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.3-b for Pharmacokinetics."
+  },
+  {
+    "id": "m2.4.3-c",
+    "value": "2.4.3-c",
+    "text": "2.4.3-c — Pharmacokinetics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.3-c for Pharmacokinetics."
+  },
+  {
+    "id": "m2.4.3-d",
+    "value": "2.4.3-d",
+    "text": "2.4.3-d — Pharmacokinetics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.3-d for Pharmacokinetics."
+  },
+  {
+    "id": "m2.4.3-e",
+    "value": "2.4.3-e",
+    "text": "2.4.3-e — Pharmacokinetics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.3-e for Pharmacokinetics."
+  },
+  {
+    "id": "m2.4.3-f",
+    "value": "2.4.3-f",
+    "text": "2.4.3-f — Pharmacokinetics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.3-f for Pharmacokinetics."
+  },
+  {
+    "id": "m2.4.3-g",
+    "value": "2.4.3-g",
+    "text": "2.4.3-g — Pharmacokinetics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.3-g for Pharmacokinetics."
+  },
+  {
+    "id": "m2.4.3-h",
+    "value": "2.4.3-h",
+    "text": "2.4.3-h — Pharmacokinetics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.3-h for Pharmacokinetics."
+  },
+  {
+    "id": "m2.4.3-i",
+    "value": "2.4.3-i",
+    "text": "2.4.3-i — Pharmacokinetics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.3-i for Pharmacokinetics."
+  },
+  {
+    "id": "m2.4.4",
+    "value": "2.4.4",
+    "text": "2.4.4 — Toxicology",
+    "depth": 2,
+    "type": "file",
+    "desc": "Overview of nonclinical toxicology findings including single-dose, repeat-dose, genotoxicity, carcinogenicity, reproductive toxicity, local tolerance, and other toxicity studies."
+  },
+  {
+    "id": "m2.4.4-a",
+    "value": "2.4.4-a",
+    "text": "2.4.4-a — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-a for Toxicology."
+  },
+  {
+    "id": "m2.4.4-b",
+    "value": "2.4.4-b",
+    "text": "2.4.4-b — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-b for Toxicology."
+  },
+  {
+    "id": "m2.4.4-c",
+    "value": "2.4.4-c",
+    "text": "2.4.4-c — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-c for Toxicology."
+  },
+  {
+    "id": "m2.4.4-d",
+    "value": "2.4.4-d",
+    "text": "2.4.4-d — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-d for Toxicology."
+  },
+  {
+    "id": "m2.4.4-e",
+    "value": "2.4.4-e",
+    "text": "2.4.4-e — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-e for Toxicology."
+  },
+  {
+    "id": "m2.4.4-g",
+    "value": "2.4.4-g",
+    "text": "2.4.4-g — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-g for Toxicology."
+  },
+  {
+    "id": "m2.4.4-h",
+    "value": "2.4.4-h",
+    "text": "2.4.4-h — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-h for Toxicology."
+  },
+  {
+    "id": "m2.4.4-i",
+    "value": "2.4.4-i",
+    "text": "2.4.4-i — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-i for Toxicology."
+  },
+  {
+    "id": "m2.4.4-j",
+    "value": "2.4.4-j",
+    "text": "2.4.4-j — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-j for Toxicology."
+  },
+  {
+    "id": "m2.4.4-k",
+    "value": "2.4.4-k",
+    "text": "2.4.4-k — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-k for Toxicology."
+  },
+  {
+    "id": "m2.4.4-l",
+    "value": "2.4.4-l",
+    "text": "2.4.4-l — Toxicology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.4-l for Toxicology."
+  },
+  {
+    "id": "m2.4.5",
+    "value": "2.4.5",
+    "text": "2.4.5 — Integrated Overview and Conclusions",
+    "depth": 2,
+    "type": "file",
+    "desc": "Integrated overview and conclusions of the nonclinical findings, including an overall assessment of the nonclinical data and implications for human safety."
+  },
+  {
+    "id": "m2.4.5-a",
+    "value": "2.4.5-a",
+    "text": "2.4.5-a — Integrated Overview and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.5-a for Integrated Overview and Conclusions."
+  },
+  {
+    "id": "m2.4.5-b",
+    "value": "2.4.5-b",
+    "text": "2.4.5-b — Integrated Overview and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.5-b for Integrated Overview and Conclusions."
+  },
+  {
+    "id": "m2.4.5-c",
+    "value": "2.4.5-c",
+    "text": "2.4.5-c — Integrated Overview and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.5-c for Integrated Overview and Conclusions."
+  },
+  {
+    "id": "m2.4.5-d",
+    "value": "2.4.5-d",
+    "text": "2.4.5-d — Integrated Overview and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.5-d for Integrated Overview and Conclusions."
+  },
+  {
+    "id": "m2.4.5-e",
+    "value": "2.4.5-e",
+    "text": "2.4.5-e — Integrated Overview and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.5-e for Integrated Overview and Conclusions."
+  },
+  {
+    "id": "m2.4.5-f",
+    "value": "2.4.5-f",
+    "text": "2.4.5-f — Integrated Overview and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.5-f for Integrated Overview and Conclusions."
+  },
+  {
+    "id": "m2.4.5-g",
+    "value": "2.4.5-g",
+    "text": "2.4.5-g — Integrated Overview and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.5-g for Integrated Overview and Conclusions."
+  },
+  {
+    "id": "m2.4.5-h",
+    "value": "2.4.5-h",
+    "text": "2.4.5-h — Integrated Overview and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.5-h for Integrated Overview and Conclusions."
+  },
+  {
+    "id": "m2.4.6",
+    "value": "2.4.6",
+    "text": "2.4.6 — List of Literature Citations",
+    "depth": 2,
+    "type": "file",
+    "desc": "List of literature citations referenced in the Nonclinical Overview (Module 2.4)."
+  },
+  {
+    "id": "m2.4.6-a",
+    "value": "2.4.6-a",
+    "text": "2.4.6-a — List of Literature Citations",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.6-a for List of Literature Citations."
+  },
+  {
+    "id": "m2.4.6-b",
+    "value": "2.4.6-b",
+    "text": "2.4.6-b — List of Literature Citations",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.4.6-b for List of Literature Citations."
+  },
+  {
+    "id": "m2.5",
+    "value": "2.5",
+    "text": "2.5 — Clinical Overview",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Critical analysis of the clinical data in Module 5, presenting a benefit-risk assessment of the drug product for the proposed indication."
+  },
+  {
+    "id": "m2.6",
+    "value": "2.6",
+    "text": "2.6 — Nonclinical Written and Tabulated Summaries",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Detailed written and tabulated summaries of nonclinical pharmacology, pharmacokinetics, and toxicology studies."
+  },
+  {
+    "id": "m2.6.1",
+    "value": "2.6.1",
+    "text": "2.6.1 — Introduction",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Introduction to the nonclinical written and tabulated summaries."
+  },
+  {
+    "id": "m2.6.1-a",
+    "value": "2.6.1-a",
+    "text": "2.6.1-a — Introduction",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.6.1-a for Introduction to the nonclinical written and tabulated summaries."
+  },
+  {
+    "id": "m2.6.1-b",
+    "value": "2.6.1-b",
+    "text": "2.6.1-b — Introduction",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.6.1-b for Introduction to the nonclinical written and tabulated summaries."
+  },
+  {
+    "id": "m2.6.1-c",
+    "value": "2.6.1-c",
+    "text": "2.6.1-c — Introduction",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.6.1-c for Introduction to the nonclinical written and tabulated summaries."
+  },
+  {
+    "id": "m2.6.1-d",
+    "value": "2.6.1-d",
+    "text": "2.6.1-d — Introduction",
+    "depth": 3,
+    "type": "file",
+    "desc": "Template 2.6.1-d for Introduction to the nonclinical written and tabulated summaries."
+  },
+  {
+    "id": "m2.6.2",
+    "value": "2.6.2",
+    "text": "2.6.2 — Pharmacology Written Summary",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Written summary of pharmacology studies including primary pharmacodynamics, secondary pharmacodynamics, safety pharmacology, and PD drug interactions."
+  },
+  {
+    "id": "m2.6.2.1",
+    "value": "2.6.2.1",
+    "text": "2.6.2.1 — Brief Summary",
+    "depth": 3,
+    "type": "file",
+    "desc": "Brief Summary section of the Pharmacology Written Summary."
+  },
+  {
+    "id": "m2.6.2.1-a",
+    "value": "2.6.2.1-a",
+    "text": "2.6.2.1-a — Brief Summary",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.1-a for Brief Summary."
+  },
+  {
+    "id": "m2.6.2.1-b",
+    "value": "2.6.2.1-b",
+    "text": "2.6.2.1-b — Brief Summary",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.1-b for Brief Summary."
+  },
+  {
+    "id": "m2.6.2.2",
+    "value": "2.6.2.2",
+    "text": "2.6.2.2 — Primary Pharmacodynamics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Primary Pharmacodynamics section of the Pharmacology Written Summary."
+  },
+  {
+    "id": "m2.6.2.2-a",
+    "value": "2.6.2.2-a",
+    "text": "2.6.2.2-a — Primary Pharmacodynamics",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.2-a for Primary Pharmacodynamics."
+  },
+  {
+    "id": "m2.6.2.2-b",
+    "value": "2.6.2.2-b",
+    "text": "2.6.2.2-b — Primary Pharmacodynamics",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.2-b for Primary Pharmacodynamics."
+  },
+  {
+    "id": "m2.6.2.2-c",
+    "value": "2.6.2.2-c",
+    "text": "2.6.2.2-c — Primary Pharmacodynamics",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.2-c for Primary Pharmacodynamics."
+  },
+  {
+    "id": "m2.6.2.2-d",
+    "value": "2.6.2.2-d",
+    "text": "2.6.2.2-d — Primary Pharmacodynamics",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.2-d for Primary Pharmacodynamics."
+  },
+  {
+    "id": "m2.6.2.3",
+    "value": "2.6.2.3",
+    "text": "2.6.2.3 — Secondary Pharmacodynamics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Secondary Pharmacodynamics section of the Pharmacology Written Summary."
+  },
+  {
+    "id": "m2.6.2.3-a",
+    "value": "2.6.2.3-a",
+    "text": "2.6.2.3-a — Secondary Pharmacodynamics",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.3-a for Secondary Pharmacodynamics."
+  },
+  {
+    "id": "m2.6.2.3-b",
+    "value": "2.6.2.3-b",
+    "text": "2.6.2.3-b — Secondary Pharmacodynamics",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.3-b for Secondary Pharmacodynamics."
+  },
+  {
+    "id": "m2.6.2.4",
+    "value": "2.6.2.4",
+    "text": "2.6.2.4 — Safety Pharmacology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Safety Pharmacology section of the Pharmacology Written Summary."
+  },
+  {
+    "id": "m2.6.2.4-a",
+    "value": "2.6.2.4-a",
+    "text": "2.6.2.4-a — Safety Pharmacology",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.4-a for Safety Pharmacology."
+  },
+  {
+    "id": "m2.6.2.4-b",
+    "value": "2.6.2.4-b",
+    "text": "2.6.2.4-b — Safety Pharmacology",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.4-b for Safety Pharmacology."
+  },
+  {
+    "id": "m2.6.2.4-c",
+    "value": "2.6.2.4-c",
+    "text": "2.6.2.4-c — Safety Pharmacology",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.4-c for Safety Pharmacology."
+  },
+  {
+    "id": "m2.6.2.4-d",
+    "value": "2.6.2.4-d",
+    "text": "2.6.2.4-d — Safety Pharmacology",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.4-d for Safety Pharmacology."
+  },
+  {
+    "id": "m2.6.2.4-e",
+    "value": "2.6.2.4-e",
+    "text": "2.6.2.4-e — Safety Pharmacology",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.4-e for Safety Pharmacology."
+  },
+  {
+    "id": "m2.6.2.5",
+    "value": "2.6.2.5",
+    "text": "2.6.2.5 — Pharmacodynamic Drug Interactions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacodynamic Drug Interactions section of the Pharmacology Written Summary."
+  },
+  {
+    "id": "m2.6.2.5-a",
+    "value": "2.6.2.5-a",
+    "text": "2.6.2.5-a — Pharmacodynamic Drug Interactions",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.5-a for Pharmacodynamic Drug Interactions."
+  },
+  {
+    "id": "m2.6.2.5-b",
+    "value": "2.6.2.5-b",
+    "text": "2.6.2.5-b — Pharmacodynamic Drug Interactions",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.5-b for Pharmacodynamic Drug Interactions."
+  },
+  {
+    "id": "m2.6.2.6",
+    "value": "2.6.2.6",
+    "text": "2.6.2.6 — Discussion and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Discussion and Conclusions section of the Pharmacology Written Summary."
+  },
+  {
+    "id": "m2.6.2.6-a",
+    "value": "2.6.2.6-a",
+    "text": "2.6.2.6-a — Discussion and Conclusions",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.2.6-a for Discussion and Conclusions."
+  },
+  {
+    "id": "m2.6.3",
+    "value": "2.6.3",
+    "text": "2.6.3 — Pharmacology Tabulated Summary",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Tabulated summary of all pharmacology studies with key parameters and results."
+  },
+  {
+    "id": "m2.6.3.1",
+    "value": "2.6.3.1",
+    "text": "2.6.3.1 — Pharmacology: Overview",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacology: Overview section of the Pharmacology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.3.2",
+    "value": "2.6.3.2",
+    "text": "2.6.3.2 — Primary Pharmacodynamics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Primary Pharmacodynamics section of the Pharmacology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.3.3",
+    "value": "2.6.3.3",
+    "text": "2.6.3.3 — Secondary Pharmacodynamics",
+    "depth": 3,
+    "type": "file",
+    "desc": "Secondary Pharmacodynamics section of the Pharmacology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.3.4",
+    "value": "2.6.3.4",
+    "text": "2.6.3.4 — Safety Pharmacology",
+    "depth": 3,
+    "type": "file",
+    "desc": "Safety Pharmacology section of the Pharmacology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.3.5",
+    "value": "2.6.3.5",
+    "text": "2.6.3.5 — Pharmacodynamic Drug Interactions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacodynamic Drug Interactions section of the Pharmacology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.4",
+    "value": "2.6.4",
+    "text": "2.6.4 — Pharmacokinetics Written Summary",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Written summary of pharmacokinetic studies including absorption, distribution, metabolism, excretion, and PK drug interactions."
+  },
+  {
+    "id": "m2.6.4.1",
+    "value": "2.6.4.1",
+    "text": "2.6.4.1 — Brief Summary",
+    "depth": 3,
+    "type": "file",
+    "desc": "Brief Summary section of the Pharmacokinetics Written Summary."
+  },
+  {
+    "id": "m2.6.4.1-a",
+    "value": "2.6.4.1-a",
+    "text": "2.6.4.1-a — Brief Summary",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.1-a for Brief Summary."
+  },
+  {
+    "id": "m2.6.4.1-b",
+    "value": "2.6.4.1-b",
+    "text": "2.6.4.1-b — Brief Summary",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.1-b for Brief Summary."
+  },
+  {
+    "id": "m2.6.4.2",
+    "value": "2.6.4.2",
+    "text": "2.6.4.2 — Methods of Analysis",
+    "depth": 3,
+    "type": "file",
+    "desc": "Methods of Analysis section of the Pharmacokinetics Written Summary."
+  },
+  {
+    "id": "m2.6.4.2-a",
+    "value": "2.6.4.2-a",
+    "text": "2.6.4.2-a — Methods of Analysis",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.2-a for Methods of Analysis."
+  },
+  {
+    "id": "m2.6.4.2-b",
+    "value": "2.6.4.2-b",
+    "text": "2.6.4.2-b — Methods of Analysis",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.2-b for Methods of Analysis."
+  },
+  {
+    "id": "m2.6.4.3",
+    "value": "2.6.4.3",
+    "text": "2.6.4.3 — Absorption",
+    "depth": 3,
+    "type": "file",
+    "desc": "Absorption section of the Pharmacokinetics Written Summary."
+  },
+  {
+    "id": "m2.6.4.3-a",
+    "value": "2.6.4.3-a",
+    "text": "2.6.4.3-a — Absorption",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.3-a for Absorption."
+  },
+  {
+    "id": "m2.6.4.3-b",
+    "value": "2.6.4.3-b",
+    "text": "2.6.4.3-b — Absorption",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.3-b for Absorption."
+  },
+  {
+    "id": "m2.6.4.4",
+    "value": "2.6.4.4",
+    "text": "2.6.4.4 — Distribution",
+    "depth": 3,
+    "type": "file",
+    "desc": "Distribution section of the Pharmacokinetics Written Summary."
+  },
+  {
+    "id": "m2.6.4.4-a",
+    "value": "2.6.4.4-a",
+    "text": "2.6.4.4-a — Distribution",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.4-a for Distribution."
+  },
+  {
+    "id": "m2.6.4.4-b",
+    "value": "2.6.4.4-b",
+    "text": "2.6.4.4-b — Distribution",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.4-b for Distribution."
+  },
+  {
+    "id": "m2.6.4.4-c",
+    "value": "2.6.4.4-c",
+    "text": "2.6.4.4-c — Distribution",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.4-c for Distribution."
+  },
+  {
+    "id": "m2.6.4.5",
+    "value": "2.6.4.5",
+    "text": "2.6.4.5 — Metabolism",
+    "depth": 3,
+    "type": "file",
+    "desc": "Metabolism section of the Pharmacokinetics Written Summary."
+  },
+  {
+    "id": "m2.6.4.5-a",
+    "value": "2.6.4.5-a",
+    "text": "2.6.4.5-a — Metabolism",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.5-a for Metabolism."
+  },
+  {
+    "id": "m2.6.4.5-b",
+    "value": "2.6.4.5-b",
+    "text": "2.6.4.5-b — Metabolism",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.5-b for Metabolism."
+  },
+  {
+    "id": "m2.6.4.5-c",
+    "value": "2.6.4.5-c",
+    "text": "2.6.4.5-c — Metabolism",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.5-c for Metabolism."
+  },
+  {
+    "id": "m2.6.4.6",
+    "value": "2.6.4.6",
+    "text": "2.6.4.6 — Excretion",
+    "depth": 3,
+    "type": "file",
+    "desc": "Excretion section of the Pharmacokinetics Written Summary."
+  },
+  {
+    "id": "m2.6.4.6-a",
+    "value": "2.6.4.6-a",
+    "text": "2.6.4.6-a — Excretion",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.6-a for Excretion."
+  },
+  {
+    "id": "m2.6.4.6-b",
+    "value": "2.6.4.6-b",
+    "text": "2.6.4.6-b — Excretion",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.6-b for Excretion."
+  },
+  {
+    "id": "m2.6.4.7",
+    "value": "2.6.4.7",
+    "text": "2.6.4.7 — Pharmacokinetic Drug Interactions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetic Drug Interactions section of the Pharmacokinetics Written Summary."
+  },
+  {
+    "id": "m2.6.4.7-a",
+    "value": "2.6.4.7-a",
+    "text": "2.6.4.7-a — Pharmacokinetic Drug Interactions",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.7-a for Pharmacokinetic Drug Interactions."
+  },
+  {
+    "id": "m2.6.4.7-b",
+    "value": "2.6.4.7-b",
+    "text": "2.6.4.7-b — Pharmacokinetic Drug Interactions",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.7-b for Pharmacokinetic Drug Interactions."
+  },
+  {
+    "id": "m2.6.4.7-c",
+    "value": "2.6.4.7-c",
+    "text": "2.6.4.7-c — Pharmacokinetic Drug Interactions",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.7-c for Pharmacokinetic Drug Interactions."
+  },
+  {
+    "id": "m2.6.4.8",
+    "value": "2.6.4.8",
+    "text": "2.6.4.8 — Other Pharmacokinetic Studies",
+    "depth": 3,
+    "type": "file",
+    "desc": "Other Pharmacokinetic Studies section of the Pharmacokinetics Written Summary."
+  },
+  {
+    "id": "m2.6.4.8-a",
+    "value": "2.6.4.8-a",
+    "text": "2.6.4.8-a — Other Pharmacokinetic Studies",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.8-a for Other Pharmacokinetic Studies."
+  },
+  {
+    "id": "m2.6.4.9",
+    "value": "2.6.4.9",
+    "text": "2.6.4.9 — Discussion and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Discussion and Conclusions section of the Pharmacokinetics Written Summary."
+  },
+  {
+    "id": "m2.6.4.9-a",
+    "value": "2.6.4.9-a",
+    "text": "2.6.4.9-a — Discussion and Conclusions",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.4.9-a for Discussion and Conclusions."
+  },
+  {
+    "id": "m2.6.5",
+    "value": "2.6.5",
+    "text": "2.6.5 — Pharmacokinetics Tabulated Summary",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Tabulated summary of all pharmacokinetic studies with key parameters and results."
+  },
+  {
+    "id": "m2.6.5.1",
+    "value": "2.6.5.1",
+    "text": "2.6.5.1 — Pharmacokinetics: Overview",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Overview section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.2",
+    "value": "2.6.5.2",
+    "text": "2.6.5.2 — Analytical Methods and Validation Reports",
+    "depth": 3,
+    "type": "file",
+    "desc": "Analytical Methods and Validation Reports section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.3",
+    "value": "2.6.5.3",
+    "text": "2.6.5.3 — Pharmacokinetics: Absorption After a Single Dose",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Absorption After a Single Dose section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.4",
+    "value": "2.6.5.4",
+    "text": "2.6.5.4 — Pharmacokinetics: Absorption after Repeated Doses",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Absorption after Repeated Doses section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.5",
+    "value": "2.6.5.5",
+    "text": "2.6.5.5 — Pharmacokinetics: Organ Distribution",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Organ Distribution section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.6",
+    "value": "2.6.5.6",
+    "text": "2.6.5.6 — Pharmacokinetics: Plasma Protein Binding",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Plasma Protein Binding section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.7",
+    "value": "2.6.5.7",
+    "text": "2.6.5.7 — Pharmacokinetics: Study in Pregnant or Nursing Animals",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Study in Pregnant or Nursing Animals section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.8",
+    "value": "2.6.5.8",
+    "text": "2.6.5.8 — Pharmacokinetics: Other Distribution Study",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Other Distribution Study section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.9",
+    "value": "2.6.5.9",
+    "text": "2.6.5.9 — Pharmacokinetics: Metabolism In Vivo",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Metabolism In Vivo section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.10",
+    "value": "2.6.5.10",
+    "text": "2.6.5.10 — Pharmacokinetics: Metabolism In Vitro",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Metabolism In Vitro section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.11",
+    "value": "2.6.5.11",
+    "text": "2.6.5.11 — Pharmacokinetics: Possible Metabolic Pathways",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Possible Metabolic Pathways section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.12",
+    "value": "2.6.5.12",
+    "text": "2.6.5.12 — Pharmacokinetics: Induction/Inhibition of Drug-Metabolizing Enzymes",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Induction/Inhibition of Drug-Metabolizing Enzymes section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.13",
+    "value": "2.6.5.13",
+    "text": "2.6.5.13 — Pharmacokinetics: Excretion",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Excretion section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.14",
+    "value": "2.6.5.14",
+    "text": "2.6.5.14 — Pharmacokinetics: Excretion into Bile",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Excretion into Bile section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.15",
+    "value": "2.6.5.15",
+    "text": "2.6.5.15 — Pharmacokinetics: Drug-Drug Interactions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Drug-Drug Interactions section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.5.16",
+    "value": "2.6.5.16",
+    "text": "2.6.5.16 — Pharmacokinetics: Other PK Studies (Non-ADME/Other)",
+    "depth": 3,
+    "type": "file",
+    "desc": "Pharmacokinetics: Other PK Studies (Non-ADME/Other) section of the Pharmacokinetics Tabulated Summary."
+  },
+  {
+    "id": "m2.6.6",
+    "value": "2.6.6",
+    "text": "2.6.6 — Toxicology Written Summary",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Written summary of all toxicology studies including single-dose, repeat-dose, genotoxicity, carcinogenicity, reproductive toxicity, and other studies."
+  },
+  {
+    "id": "m2.6.6.1",
+    "value": "2.6.6.1",
+    "text": "2.6.6.1 — Brief Summary",
+    "depth": 3,
+    "type": "file",
+    "desc": "Brief Summary section of the Toxicology Written Summary."
+  },
+  {
+    "id": "m2.6.6.1-a",
+    "value": "2.6.6.1-a",
+    "text": "2.6.6.1-a — Brief Summary",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.1-a for Brief Summary."
+  },
+  {
+    "id": "m2.6.6.1-b",
+    "value": "2.6.6.1-b",
+    "text": "2.6.6.1-b — Brief Summary",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.1-b for Brief Summary."
+  },
+  {
+    "id": "m2.6.6.2",
+    "value": "2.6.6.2",
+    "text": "2.6.6.2 — Single-Dose Toxicity",
+    "depth": 3,
+    "type": "file",
+    "desc": "Single-Dose Toxicity section of the Toxicology Written Summary."
+  },
+  {
+    "id": "m2.6.6.2-a",
+    "value": "2.6.6.2-a",
+    "text": "2.6.6.2-a — Single-Dose Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.2-a for Single-Dose Toxicity."
+  },
+  {
+    "id": "m2.6.6.2-b",
+    "value": "2.6.6.2-b",
+    "text": "2.6.6.2-b — Single-Dose Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.2-b for Single-Dose Toxicity."
+  },
+  {
+    "id": "m2.6.6.3",
+    "value": "2.6.6.3",
+    "text": "2.6.6.3 — Repeat-Dose Toxicity",
+    "depth": 3,
+    "type": "file",
+    "desc": "Repeat-Dose Toxicity section of the Toxicology Written Summary."
+  },
+  {
+    "id": "m2.6.6.3-a",
+    "value": "2.6.6.3-a",
+    "text": "2.6.6.3-a — Repeat-Dose Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.3-a for Repeat-Dose Toxicity."
+  },
+  {
+    "id": "m2.6.6.3-b",
+    "value": "2.6.6.3-b",
+    "text": "2.6.6.3-b — Repeat-Dose Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.3-b for Repeat-Dose Toxicity."
+  },
+  {
+    "id": "m2.6.6.3-c",
+    "value": "2.6.6.3-c",
+    "text": "2.6.6.3-c — Repeat-Dose Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.3-c for Repeat-Dose Toxicity."
+  },
+  {
+    "id": "m2.6.6.3-d",
+    "value": "2.6.6.3-d",
+    "text": "2.6.6.3-d — Repeat-Dose Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.3-d for Repeat-Dose Toxicity."
+  },
+  {
+    "id": "m2.6.6.3-e",
+    "value": "2.6.6.3-e",
+    "text": "2.6.6.3-e — Repeat-Dose Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.3-e for Repeat-Dose Toxicity."
+  },
+  {
+    "id": "m2.6.6.4",
+    "value": "2.6.6.4",
+    "text": "2.6.6.4 — Genotoxicity",
+    "depth": 3,
+    "type": "file",
+    "desc": "Genotoxicity section of the Toxicology Written Summary."
+  },
+  {
+    "id": "m2.6.6.4-a",
+    "value": "2.6.6.4-a",
+    "text": "2.6.6.4-a — Genotoxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.4-a for Genotoxicity."
+  },
+  {
+    "id": "m2.6.6.4-b",
+    "value": "2.6.6.4-b",
+    "text": "2.6.6.4-b — Genotoxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.4-b for Genotoxicity."
+  },
+  {
+    "id": "m2.6.6.5",
+    "value": "2.6.6.5",
+    "text": "2.6.6.5 — Carcinogenicity",
+    "depth": 3,
+    "type": "file",
+    "desc": "Carcinogenicity section of the Toxicology Written Summary."
+  },
+  {
+    "id": "m2.6.6.5-a",
+    "value": "2.6.6.5-a",
+    "text": "2.6.6.5-a — Carcinogenicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.5-a for Carcinogenicity."
+  },
+  {
+    "id": "m2.6.6.5-b",
+    "value": "2.6.6.5-b",
+    "text": "2.6.6.5-b — Carcinogenicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.5-b for Carcinogenicity."
+  },
+  {
+    "id": "m2.6.6.6",
+    "value": "2.6.6.6",
+    "text": "2.6.6.6 — Reproductive and Developmental Toxicity",
+    "depth": 3,
+    "type": "file",
+    "desc": "Reproductive and Developmental Toxicity section of the Toxicology Written Summary."
+  },
+  {
+    "id": "m2.6.6.6-a",
+    "value": "2.6.6.6-a",
+    "text": "2.6.6.6-a — Reproductive and Developmental Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.6-a for Reproductive and Developmental Toxicity."
+  },
+  {
+    "id": "m2.6.6.6-b",
+    "value": "2.6.6.6-b",
+    "text": "2.6.6.6-b — Reproductive and Developmental Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.6-b for Reproductive and Developmental Toxicity."
+  },
+  {
+    "id": "m2.6.6.6-c",
+    "value": "2.6.6.6-c",
+    "text": "2.6.6.6-c — Reproductive and Developmental Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.6-c for Reproductive and Developmental Toxicity."
+  },
+  {
+    "id": "m2.6.6.6-d",
+    "value": "2.6.6.6-d",
+    "text": "2.6.6.6-d — Reproductive and Developmental Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.6-d for Reproductive and Developmental Toxicity."
+  },
+  {
+    "id": "m2.6.6.6-e",
+    "value": "2.6.6.6-e",
+    "text": "2.6.6.6-e — Reproductive and Developmental Toxicity",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.6-e for Reproductive and Developmental Toxicity."
+  },
+  {
+    "id": "m2.6.6.7",
+    "value": "2.6.6.7",
+    "text": "2.6.6.7 — Local Tolerance",
+    "depth": 3,
+    "type": "file",
+    "desc": "Local Tolerance section of the Toxicology Written Summary."
+  },
+  {
+    "id": "m2.6.6.7-a",
+    "value": "2.6.6.7-a",
+    "text": "2.6.6.7-a — Local Tolerance",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.7-a for Local Tolerance."
+  },
+  {
+    "id": "m2.6.6.7-b",
+    "value": "2.6.6.7-b",
+    "text": "2.6.6.7-b — Local Tolerance",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.7-b for Local Tolerance."
+  },
+  {
+    "id": "m2.6.6.8",
+    "value": "2.6.6.8",
+    "text": "2.6.6.8 — Other Toxicity Studies",
+    "depth": 3,
+    "type": "file",
+    "desc": "Other Toxicity Studies section of the Toxicology Written Summary."
+  },
+  {
+    "id": "m2.6.6.8-a",
+    "value": "2.6.6.8-a",
+    "text": "2.6.6.8-a — Other Toxicity Studies",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.8-a for Other Toxicity Studies."
+  },
+  {
+    "id": "m2.6.6.8-b",
+    "value": "2.6.6.8-b",
+    "text": "2.6.6.8-b — Other Toxicity Studies",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.8-b for Other Toxicity Studies."
+  },
+  {
+    "id": "m2.6.6.8-c",
+    "value": "2.6.6.8-c",
+    "text": "2.6.6.8-c — Other Toxicity Studies",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.8-c for Other Toxicity Studies."
+  },
+  {
+    "id": "m2.6.6.8-d",
+    "value": "2.6.6.8-d",
+    "text": "2.6.6.8-d — Other Toxicity Studies",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.8-d for Other Toxicity Studies."
+  },
+  {
+    "id": "m2.6.6.8-e",
+    "value": "2.6.6.8-e",
+    "text": "2.6.6.8-e — Other Toxicity Studies",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.8-e for Other Toxicity Studies."
+  },
+  {
+    "id": "m2.6.6.8-f",
+    "value": "2.6.6.8-f",
+    "text": "2.6.6.8-f — Other Toxicity Studies",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.8-f for Other Toxicity Studies."
+  },
+  {
+    "id": "m2.6.6.8-g",
+    "value": "2.6.6.8-g",
+    "text": "2.6.6.8-g — Other Toxicity Studies",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.8-g for Other Toxicity Studies."
+  },
+  {
+    "id": "m2.6.6.9",
+    "value": "2.6.6.9",
+    "text": "2.6.6.9 — Discussion and Conclusions",
+    "depth": 3,
+    "type": "file",
+    "desc": "Discussion and Conclusions section of the Toxicology Written Summary."
+  },
+  {
+    "id": "m2.6.6.9-a",
+    "value": "2.6.6.9-a",
+    "text": "2.6.6.9-a — Discussion and Conclusions",
+    "depth": 4,
+    "type": "file",
+    "desc": "Template 2.6.6.9-a for Discussion and Conclusions."
+  },
+  {
+    "id": "m2.6.7",
+    "value": "2.6.7",
+    "text": "2.6.7 — Toxicology Tabulated Summary",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Tabulated summary of all toxicology studies with key parameters and results."
+  },
+  {
+    "id": "m2.6.7.1",
+    "value": "2.6.7.1",
+    "text": "2.6.7.1 — Toxicology: Overview",
+    "depth": 3,
+    "type": "file",
+    "desc": "Toxicology: Overview section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.2",
+    "value": "2.6.7.2",
+    "text": "2.6.7.2 — Toxicokinetics: Overview of Toxicokinetics Studies",
+    "depth": 3,
+    "type": "file",
+    "desc": "Toxicokinetics: Overview of Toxicokinetics Studies section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.3",
+    "value": "2.6.7.3",
+    "text": "2.6.7.3 — Toxicokinetics: Overview of Toxicokinetics Data",
+    "depth": 3,
+    "type": "file",
+    "desc": "Toxicokinetics: Overview of Toxicokinetics Data section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.4",
+    "value": "2.6.7.4",
+    "text": "2.6.7.4 — Toxicology: Drug Substance",
+    "depth": 3,
+    "type": "file",
+    "desc": "Toxicology: Drug Substance section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.5",
+    "value": "2.6.7.5",
+    "text": "2.6.7.5 — Single-Dose Toxicity",
+    "depth": 3,
+    "type": "file",
+    "desc": "Single-Dose Toxicity section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.6",
+    "value": "2.6.7.6",
+    "text": "2.6.7.6 — Repeat-Dose Toxicity: Nonpivotal Studies",
+    "depth": 3,
+    "type": "file",
+    "desc": "Repeat-Dose Toxicity: Nonpivotal Studies section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.7",
+    "value": "2.6.7.7",
+    "text": "2.6.7.7 — Repeat-Dose Toxicity: Pivotal Studies",
+    "depth": 3,
+    "type": "file",
+    "desc": "Repeat-Dose Toxicity: Pivotal Studies section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.8",
+    "value": "2.6.7.8",
+    "text": "2.6.7.8 — Genotoxicity: In Vitro",
+    "depth": 3,
+    "type": "file",
+    "desc": "Genotoxicity: In Vitro section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.9",
+    "value": "2.6.7.9",
+    "text": "2.6.7.9 — Genotoxicity: In Vivo",
+    "depth": 3,
+    "type": "file",
+    "desc": "Genotoxicity: In Vivo section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.10",
+    "value": "2.6.7.10",
+    "text": "2.6.7.10 — Carcinogenicity",
+    "depth": 3,
+    "type": "file",
+    "desc": "Carcinogenicity section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.11",
+    "value": "2.6.7.11",
+    "text": "2.6.7.11 — Reproductive and Developmental Toxicity: Non-Pivotal Studies",
+    "depth": 3,
+    "type": "file",
+    "desc": "Reproductive and Developmental Toxicity: Non-Pivotal Studies section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.12",
+    "value": "2.6.7.12",
+    "text": "2.6.7.12 — Reproductive and Developmental Toxicity - Fertility and Early Embryonic Development to Implantation (Pivotal)",
+    "depth": 3,
+    "type": "file",
+    "desc": "Reproductive and Developmental Toxicity - Fertility and Early Embryonic Development to Implantation (Pivotal) section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.13",
+    "value": "2.6.7.13",
+    "text": "2.6.7.13 — Reproductive and Developmental Toxicity - Effects on Embryo-Fetal Development (Pivotal)",
+    "depth": 3,
+    "type": "file",
+    "desc": "Reproductive and Developmental Toxicity - Effects on Embryo-Fetal Development (Pivotal) section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.14",
+    "value": "2.6.7.14",
+    "text": "2.6.7.14 — Reproductive and Developmental Toxicity - Effects on Pre- and Postnatal Development, Including Maternal Function (Pivotal)",
+    "depth": 3,
+    "type": "file",
+    "desc": "Reproductive and Developmental Toxicity - Effects on Pre- and Postnatal Development, Including Maternal Function (Pivotal) section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.15",
+    "value": "2.6.7.15",
+    "text": "2.6.7.15 — Studies in Juvenile Animals",
+    "depth": 3,
+    "type": "file",
+    "desc": "Studies in Juvenile Animals section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.16",
+    "value": "2.6.7.16",
+    "text": "2.6.7.16 — Local Tolerance",
+    "depth": 3,
+    "type": "file",
+    "desc": "Local Tolerance section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.6.7.17",
+    "value": "2.6.7.17",
+    "text": "2.6.7.17 — Other Toxicity Studies",
+    "depth": 3,
+    "type": "file",
+    "desc": "Other Toxicity Studies section of the Toxicology Tabulated Summary."
+  },
+  {
+    "id": "m2.7",
+    "value": "2.7",
+    "text": "2.7 — Clinical Summary",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Detailed factual summaries of clinical data organized by biopharmaceutics, clinical pharmacology, efficacy, and safety."
+  },
+  {
+    "id": "m2.7.1",
+    "value": "2.7.1",
+    "text": "2.7.1 — Summary of Biopharmaceutic Studies and Associated Analytical Methods",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Summary of bioavailability, bioequivalence, in vitro dissolution, and associated bioanalytical method studies."
+  },
+  {
+    "id": "m2.7.2",
+    "value": "2.7.2",
+    "text": "2.7.2 — Summary of Clinical Pharmacology Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Summary of clinical pharmacology and PK/PD studies in healthy subjects and patients."
+  },
+  {
+    "id": "m2.7.3",
+    "value": "2.7.3",
+    "text": "2.7.3 — Summary of Clinical Efficacy",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Summary of clinical efficacy data for each claimed indication, including design, demographics, endpoints, and results."
+  },
+  {
+    "id": "m2.7.4",
+    "value": "2.7.4",
+    "text": "2.7.4 — Summary of Clinical Safety",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Summary of clinical safety data including adverse events, laboratory findings, vital signs, and safety in special populations."
+  },
+  {
+    "id": "m2.7.5",
+    "value": "2.7.5",
+    "text": "2.7.5 — References",
+    "depth": 2,
+    "type": "folder",
+    "desc": "List of references cited in the clinical summary sections."
+  },
+  {
+    "id": "m2.7.6",
+    "value": "2.7.6",
+    "text": "2.7.6 — Synopses of Individual Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Individual study synopses for all clinical studies referenced in the clinical summary."
+  },
+  {
+    "id": "m3",
+    "value": "3",
+    "text": "3 — Quality",
+    "depth": 0,
+    "type": "folder",
+    "desc": "Chemistry, Manufacturing, and Controls (CMC) information for the drug substance and drug product. This module retains the deepest folder hierarchy in eCTD v4.0."
+  },
+  {
+    "id": "m3.2",
+    "value": "3.2",
+    "text": "3.2 — Body of Data",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Detailed quality data for drug substance(s), drug product(s), appendices, and regional information."
+  },
+  {
+    "id": "m3.2.S",
+    "value": "3.2.S",
+    "text": "3.2.S — Drug Substance",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Complete quality information for each drug substance, organized by substance and manufacturer. One set per substance-manufacturer combination."
+  },
+  {
+    "id": "m3.2.S.1",
+    "value": "3.2.S.1",
+    "text": "3.2.S.1 — General Information",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Nomenclature, structure, general properties, and physicochemical characterization of the drug substance."
+  },
+  {
+    "id": "m3.2.S.2",
+    "value": "3.2.S.2",
+    "text": "3.2.S.2 — Manufacture",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Information on the drug substance manufacturing process."
+  },
+  {
+    "id": "m3.2.S.2.1",
+    "value": "3.2.S.2.1",
+    "text": "3.2.S.2.1 — Manufacturer(s)",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Name, address, and responsibility of each manufacturer involved in drug substance production."
+  },
+  {
+    "id": "m3.2.S.2.2",
+    "value": "3.2.S.2.2",
+    "text": "3.2.S.2.2 — Description of Manufacturing Process and Process Controls",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Description of the drug substance manufacturing process including flow diagram, process controls, and critical steps."
+  },
+  {
+    "id": "m3.2.S.2.3",
+    "value": "3.2.S.2.3",
+    "text": "3.2.S.2.3 — Control of Materials",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Specifications and quality controls for starting materials, reagents, solvents, and catalysts."
+  },
+  {
+    "id": "m3.2.S.2.4",
+    "value": "3.2.S.2.4",
+    "text": "3.2.S.2.4 — Controls of Critical Steps and Intermediates",
+    "depth": 4,
+    "type": "folder",
+    "desc": "In-process controls, tests, and acceptance criteria for critical manufacturing steps and intermediates."
+  },
+  {
+    "id": "m3.2.S.2.5",
+    "value": "3.2.S.2.5",
+    "text": "3.2.S.2.5 — Process Validation and/or Evaluation",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Process validation studies and evaluation results demonstrating manufacturing consistency."
+  },
+  {
+    "id": "m3.2.S.2.6",
+    "value": "3.2.S.2.6",
+    "text": "3.2.S.2.6 — Manufacturing Process Development",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Description and discussion of manufacturing process development, including changes during development."
+  },
+  {
+    "id": "m3.2.S.3",
+    "value": "3.2.S.3",
+    "text": "3.2.S.3 — Characterization",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Characterization of the drug substance including structure elucidation and impurity identification."
+  },
+  {
+    "id": "m3.2.S.3.1",
+    "value": "3.2.S.3.1",
+    "text": "3.2.S.3.1 — Elucidation of Structure and Other Characteristics",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Evidence of structure (spectroscopic, chromatographic, physicochemical data) and other relevant characteristics."
+  },
+  {
+    "id": "m3.2.S.3.2",
+    "value": "3.2.S.3.2",
+    "text": "3.2.S.3.2 — Impurities",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Identification and characterization of impurities, degradation products, and residual solvents."
+  },
+  {
+    "id": "m3.2.S.4",
+    "value": "3.2.S.4",
+    "text": "3.2.S.4 — Control of Drug Substance",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Specifications, analytical procedures, and batch analyses for drug substance quality control."
+  },
+  {
+    "id": "m3.2.S.4.1",
+    "value": "3.2.S.4.1",
+    "text": "3.2.S.4.1 — Specification",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Drug substance specification including tests, acceptance criteria, and rationale."
+  },
+  {
+    "id": "m3.2.S.4.2",
+    "value": "3.2.S.4.2",
+    "text": "3.2.S.4.2 — Analytical Procedures",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Detailed analytical procedures used for drug substance testing."
+  },
+  {
+    "id": "m3.2.S.4.3",
+    "value": "3.2.S.4.3",
+    "text": "3.2.S.4.3 — Validation of Analytical Procedures",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Analytical method validation reports per ICH Q2 guidelines."
+  },
+  {
+    "id": "m3.2.S.4.4",
+    "value": "3.2.S.4.4",
+    "text": "3.2.S.4.4 — Batch Analyses",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Results of batch analyses for representative drug substance batches."
+  },
+  {
+    "id": "m3.2.S.4.5",
+    "value": "3.2.S.4.5",
+    "text": "3.2.S.4.5 — Justification of Specification",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Justification for the proposed drug substance specification and acceptance criteria."
+  },
+  {
+    "id": "m3.2.S.5",
+    "value": "3.2.S.5",
+    "text": "3.2.S.5 — Reference Standards or Materials",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Information on reference standards and reference materials used in drug substance testing."
+  },
+  {
+    "id": "m3.2.S.6",
+    "value": "3.2.S.6",
+    "text": "3.2.S.6 — Container Closure Systems",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Description of the container closure system(s) used for drug substance storage and shipping."
+  },
+  {
+    "id": "m3.2.S.7",
+    "value": "3.2.S.7",
+    "text": "3.2.S.7 — Stability",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Drug substance stability data, summary, conclusions, and post-approval protocols."
+  },
+  {
+    "id": "m3.2.S.7.1",
+    "value": "3.2.S.7.1",
+    "text": "3.2.S.7.1 — Stability Summary and Conclusions",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Summary of stability studies and conclusions supporting the proposed retest period or shelf life."
+  },
+  {
+    "id": "m3.2.S.7.2",
+    "value": "3.2.S.7.2",
+    "text": "3.2.S.7.2 — Post-Approval Stability Protocol and Stability Commitment",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Post-approval stability protocol and commitment for ongoing stability monitoring."
+  },
+  {
+    "id": "m3.2.S.7.3",
+    "value": "3.2.S.7.3",
+    "text": "3.2.S.7.3 — Stability Data",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Detailed stability study data supporting the proposed drug substance retest period."
+  },
+  {
+    "id": "m3.2.P",
+    "value": "3.2.P",
+    "text": "3.2.P — Drug Product",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Complete quality information for each drug product, organized by product name, dosage form, and manufacturer."
+  },
+  {
+    "id": "m3.2.P.1",
+    "value": "3.2.P.1",
+    "text": "3.2.P.1 — Description and Composition of the Drug Product",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Description of the drug product, its composition, and the function of each component."
+  },
+  {
+    "id": "m3.2.P.2",
+    "value": "3.2.P.2",
+    "text": "3.2.P.2 — Pharmaceutical Development",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Pharmaceutical development studies including formulation development, overages, physicochemical/biological properties, and manufacturing process development."
+  },
+  {
+    "id": "m3.2.P.3",
+    "value": "3.2.P.3",
+    "text": "3.2.P.3 — Manufacture",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Drug product manufacturing information."
+  },
+  {
+    "id": "m3.2.P.3.1",
+    "value": "3.2.P.3.1",
+    "text": "3.2.P.3.1 — Manufacturer(s)",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Name, address, and responsibility of each drug product manufacturer."
+  },
+  {
+    "id": "m3.2.P.3.2",
+    "value": "3.2.P.3.2",
+    "text": "3.2.P.3.2 — Batch Formula",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Batch formula for manufacturing the drug product at the proposed batch size."
+  },
+  {
+    "id": "m3.2.P.3.3",
+    "value": "3.2.P.3.3",
+    "text": "3.2.P.3.3 — Description of Manufacturing Process and Process Controls",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Drug product manufacturing process description with flow diagram and process controls."
+  },
+  {
+    "id": "m3.2.P.3.4",
+    "value": "3.2.P.3.4",
+    "text": "3.2.P.3.4 — Controls of Critical Steps and Intermediates",
+    "depth": 4,
+    "type": "folder",
+    "desc": "In-process controls and tests for critical manufacturing steps and intermediates."
+  },
+  {
+    "id": "m3.2.P.3.5",
+    "value": "3.2.P.3.5",
+    "text": "3.2.P.3.5 — Process Validation and/or Evaluation",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Drug product process validation studies and evaluation results."
+  },
+  {
+    "id": "m3.2.P.4",
+    "value": "3.2.P.4",
+    "text": "3.2.P.4 — Control of Excipients",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Quality control information for excipients used in the drug product formulation."
+  },
+  {
+    "id": "m3.2.P.4.1",
+    "value": "3.2.P.4.1",
+    "text": "3.2.P.4.1 — Specification(s)",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Specifications for excipients including tests and acceptance criteria."
+  },
+  {
+    "id": "m3.2.P.4.2",
+    "value": "3.2.P.4.2",
+    "text": "3.2.P.4.2 — Analytical Procedures",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Analytical procedures used for excipient testing."
+  },
+  {
+    "id": "m3.2.P.4.3",
+    "value": "3.2.P.4.3",
+    "text": "3.2.P.4.3 — Validation of Analytical Procedures",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Validation of analytical methods used for excipient testing."
+  },
+  {
+    "id": "m3.2.P.4.4",
+    "value": "3.2.P.4.4",
+    "text": "3.2.P.4.4 — Justification of Specifications",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Justification for excipient specifications and acceptance criteria."
+  },
+  {
+    "id": "m3.2.P.4.5",
+    "value": "3.2.P.4.5",
+    "text": "3.2.P.4.5 — Excipients of Human or Animal Origin",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Information on excipients derived from human or animal sources, including adventitious agent safety."
+  },
+  {
+    "id": "m3.2.P.4.6",
+    "value": "3.2.P.4.6",
+    "text": "3.2.P.4.6 — Novel Excipients",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Full details on novel excipients not previously used in approved drug products."
+  },
+  {
+    "id": "m3.2.P.5",
+    "value": "3.2.P.5",
+    "text": "3.2.P.5 — Control of Drug Product",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Drug product quality control including specifications, analytical procedures, and batch data."
+  },
+  {
+    "id": "m3.2.P.5.1",
+    "value": "3.2.P.5.1",
+    "text": "3.2.P.5.1 — Specification(s)",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Drug product release and shelf-life specifications with tests and acceptance criteria."
+  },
+  {
+    "id": "m3.2.P.5.2",
+    "value": "3.2.P.5.2",
+    "text": "3.2.P.5.2 — Analytical Procedures",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Detailed analytical procedures used for drug product testing."
+  },
+  {
+    "id": "m3.2.P.5.3",
+    "value": "3.2.P.5.3",
+    "text": "3.2.P.5.3 — Validation of Analytical Procedures",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Validation reports for drug product analytical methods."
+  },
+  {
+    "id": "m3.2.P.5.4",
+    "value": "3.2.P.5.4",
+    "text": "3.2.P.5.4 — Batch Analyses",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Certificate of analysis and batch analytical results for representative drug product batches."
+  },
+  {
+    "id": "m3.2.P.5.5",
+    "value": "3.2.P.5.5",
+    "text": "3.2.P.5.5 — Characterization of Impurities",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Identification, qualification, and characterization of drug product impurities and degradation products."
+  },
+  {
+    "id": "m3.2.P.5.6",
+    "value": "3.2.P.5.6",
+    "text": "3.2.P.5.6 — Justification of Specification(s)",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Justification for the proposed drug product specifications and acceptance criteria."
+  },
+  {
+    "id": "m3.2.P.6",
+    "value": "3.2.P.6",
+    "text": "3.2.P.6 — Reference Standards or Materials",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Information on reference standards and reference materials used for drug product testing."
+  },
+  {
+    "id": "m3.2.P.7",
+    "value": "3.2.P.7",
+    "text": "3.2.P.7 — Container Closure System",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Description and specifications for the drug product container closure system, including suitability studies."
+  },
+  {
+    "id": "m3.2.P.8",
+    "value": "3.2.P.8",
+    "text": "3.2.P.8 — Stability",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Drug product stability data, conclusions, and post-approval protocols."
+  },
+  {
+    "id": "m3.2.P.8.1",
+    "value": "3.2.P.8.1",
+    "text": "3.2.P.8.1 — Stability Summary and Conclusion",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Summary of drug product stability studies and conclusions supporting the proposed shelf life."
+  },
+  {
+    "id": "m3.2.P.8.2",
+    "value": "3.2.P.8.2",
+    "text": "3.2.P.8.2 — Post-Approval Stability Protocol and Stability Commitment",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Post-approval stability protocol for ongoing monitoring and stability commitment."
+  },
+  {
+    "id": "m3.2.P.8.3",
+    "value": "3.2.P.8.3",
+    "text": "3.2.P.8.3 — Stability Data",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Detailed drug product stability study data under long-term, accelerated, and stress conditions."
+  },
+  {
+    "id": "m3.2.A",
+    "value": "3.2.A",
+    "text": "3.2.A — Appendices",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Quality appendices covering facilities, adventitious agents, and novel excipients."
+  },
+  {
+    "id": "m3.2.A.1",
+    "value": "3.2.A.1",
+    "text": "3.2.A.1 — Facilities and Equipment",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Detailed information on manufacturing facilities and major equipment."
+  },
+  {
+    "id": "m3.2.A.2",
+    "value": "3.2.A.2",
+    "text": "3.2.A.2 — Adventitious Agents Safety Evaluation",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Detailed adventitious agents safety evaluation for biological/biotechnology-derived products."
+  },
+  {
+    "id": "m3.2.A.3",
+    "value": "3.2.A.3",
+    "text": "3.2.A.3 — Novel Excipients",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Full CMC details for novel excipients not previously approved, provided in drug substance format."
+  },
+  {
+    "id": "m3.2.R",
+    "value": "3.2.R",
+    "text": "3.2.R — Regional Information",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Region-specific quality information (e.g., executed batch records, comparability protocols, methods validation packages)."
+  },
+  {
+    "id": "m3.3",
+    "value": "3.3",
+    "text": "3.3 — Literature References",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Published literature references cited in Module 3 quality documentation."
+  },
+  {
+    "id": "m4",
+    "value": "4",
+    "text": "4 — Nonclinical Study Reports",
+    "depth": 0,
+    "type": "folder",
+    "desc": "Nonclinical (preclinical) study reports covering pharmacology, pharmacokinetics, and toxicology. In v4.0, study reports are stored flat under 4.2 with section placement via Context of Use codes."
+  },
+  {
+    "id": "m4.2",
+    "value": "4.2",
+    "text": "4.2 — Study Reports",
+    "depth": 1,
+    "type": "folder",
+    "desc": "All nonclinical study reports. Physical storage is flat ({study-id}/ folders directly under 42-stud-rep/); the CoU code determines TOC section placement."
+  },
+  {
+    "id": "m4.2.1",
+    "value": "4.2.1",
+    "text": "4.2.1 — Pharmacology",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Nonclinical pharmacology studies evaluating the pharmacological activity and mechanism of action of the drug."
+  },
+  {
+    "id": "m4.2.1.1",
+    "value": "4.2.1.1",
+    "text": "4.2.1.1 — Primary Pharmacodynamics",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Studies evaluating the primary pharmacological effect of the drug related to its intended therapeutic indication."
+  },
+  {
+    "id": "m4.2.1.2",
+    "value": "4.2.1.2",
+    "text": "4.2.1.2 — Secondary Pharmacodynamics",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Studies evaluating pharmacological effects of the drug not related to the desired therapeutic effect."
+  },
+  {
+    "id": "m4.2.1.3",
+    "value": "4.2.1.3",
+    "text": "4.2.1.3 — Safety Pharmacology",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Studies evaluating potential undesirable pharmacological effects on physiological functions (cardiovascular, CNS, respiratory per ICH S7A/S7B)."
+  },
+  {
+    "id": "m4.2.1.4",
+    "value": "4.2.1.4",
+    "text": "4.2.1.4 — Pharmacodynamic Drug Interactions",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Nonclinical studies evaluating pharmacodynamic interactions between the drug and other substances."
+  },
+  {
+    "id": "m4.2.2",
+    "value": "4.2.2",
+    "text": "4.2.2 — Pharmacokinetics",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Nonclinical pharmacokinetic studies characterizing ADME properties and drug interactions."
+  },
+  {
+    "id": "m4.2.2.1",
+    "value": "4.2.2.1",
+    "text": "4.2.2.1 — Analytical Methods and Validation Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Reports on bioanalytical methods and their validation for nonclinical PK studies."
+  },
+  {
+    "id": "m4.2.2.2",
+    "value": "4.2.2.2",
+    "text": "4.2.2.2 — Absorption",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Nonclinical absorption studies including bioavailability, rate and extent of absorption."
+  },
+  {
+    "id": "m4.2.2.3",
+    "value": "4.2.2.3",
+    "text": "4.2.2.3 — Distribution",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Nonclinical distribution studies including tissue distribution, protein binding, and placental transfer."
+  },
+  {
+    "id": "m4.2.2.4",
+    "value": "4.2.2.4",
+    "text": "4.2.2.4 — Metabolism",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Nonclinical metabolism studies including metabolite identification, metabolic pathways, and enzyme induction/inhibition."
+  },
+  {
+    "id": "m4.2.2.5",
+    "value": "4.2.2.5",
+    "text": "4.2.2.5 — Excretion",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Nonclinical excretion studies including routes and rates of elimination, mass balance studies."
+  },
+  {
+    "id": "m4.2.2.6",
+    "value": "4.2.2.6",
+    "text": "4.2.2.6 — Pharmacokinetic Drug Interactions",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Nonclinical studies evaluating pharmacokinetic drug-drug interactions."
+  },
+  {
+    "id": "m4.2.2.7",
+    "value": "4.2.2.7",
+    "text": "4.2.2.7 — Other Pharmacokinetic Studies",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Other nonclinical PK studies not covered by the above categories."
+  },
+  {
+    "id": "m4.2.3",
+    "value": "4.2.3",
+    "text": "4.2.3 — Toxicology",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Nonclinical toxicology studies evaluating the safety profile of the drug. Keywords for species and route of administration are required for many sub-sections."
+  },
+  {
+    "id": "m4.2.3.1",
+    "value": "4.2.3.1",
+    "text": "4.2.3.1 — Single-Dose Toxicity",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Acute (single-dose) toxicity studies. Required keywords: study id, species, route of administration."
+  },
+  {
+    "id": "m4.2.3.2",
+    "value": "4.2.3.2",
+    "text": "4.2.3.2 — Repeat-Dose Toxicity",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Repeat-dose (subacute, subchronic, chronic) toxicity studies. Required keywords: study id, species, route of administration. Optional: duration."
+  },
+  {
+    "id": "m4.2.3.3",
+    "value": "4.2.3.3",
+    "text": "4.2.3.3 — Genotoxicity",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Genotoxicity studies evaluating potential mutagenic and clastogenic activity."
+  },
+  {
+    "id": "m4.2.3.3.1",
+    "value": "4.2.3.3.1",
+    "text": "4.2.3.3.1 — In Vitro",
+    "depth": 4,
+    "type": "folder",
+    "desc": "In vitro genotoxicity studies (e.g., Ames test, chromosomal aberration, mouse lymphoma assay)."
+  },
+  {
+    "id": "m4.2.3.3.2",
+    "value": "4.2.3.3.2",
+    "text": "4.2.3.3.2 — In Vivo",
+    "depth": 4,
+    "type": "folder",
+    "desc": "In vivo genotoxicity studies (e.g., micronucleus, comet assay, transgenic rodent models)."
+  },
+  {
+    "id": "m4.2.3.4",
+    "value": "4.2.3.4",
+    "text": "4.2.3.4 — Carcinogenicity",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Carcinogenicity studies evaluating tumorigenic potential."
+  },
+  {
+    "id": "m4.2.3.4.1",
+    "value": "4.2.3.4.1",
+    "text": "4.2.3.4.1 — Long-Term Studies",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Long-term (2-year) carcinogenicity studies. Required keyword: species."
+  },
+  {
+    "id": "m4.2.3.4.2",
+    "value": "4.2.3.4.2",
+    "text": "4.2.3.4.2 — Short or Medium-Term Studies",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Short or medium-term carcinogenicity studies (e.g., 6-month transgenic mouse models)."
+  },
+  {
+    "id": "m4.2.3.4.3",
+    "value": "4.2.3.4.3",
+    "text": "4.2.3.4.3 — Other Studies",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Other carcinogenicity-related studies not classified as long-term or short/medium-term."
+  },
+  {
+    "id": "m4.2.3.5",
+    "value": "4.2.3.5",
+    "text": "4.2.3.5 — Reproductive and Developmental Toxicity",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Studies evaluating effects on fertility, embryofetal development, and pre/postnatal development per ICH S5."
+  },
+  {
+    "id": "m4.2.3.5.1",
+    "value": "4.2.3.5.1",
+    "text": "4.2.3.5.1 — Fertility and Early Embryonic Development",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Studies evaluating effects on male and female fertility and early embryonic development (ICH S5 Segment I)."
+  },
+  {
+    "id": "m4.2.3.5.2",
+    "value": "4.2.3.5.2",
+    "text": "4.2.3.5.2 — Embryofetal Development",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Embryo-fetal development studies evaluating teratogenic potential (ICH S5 Segment II)."
+  },
+  {
+    "id": "m4.2.3.5.3",
+    "value": "4.2.3.5.3",
+    "text": "4.2.3.5.3 — Prenatal and Postnatal Development, Including Maternal Function",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Pre- and postnatal development studies evaluating effects on offspring and maternal function (ICH S5 Segment III)."
+  },
+  {
+    "id": "m4.2.3.5.4",
+    "value": "4.2.3.5.4",
+    "text": "4.2.3.5.4 — Studies in Which the Offspring (Juvenile Animals) Are Dosed and/or Further Evaluated",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Juvenile animal toxicity studies where offspring are directly dosed or further evaluated."
+  },
+  {
+    "id": "m4.2.3.6",
+    "value": "4.2.3.6",
+    "text": "4.2.3.6 — Local Tolerance",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Local tolerance studies evaluating irritation and sensitization at the site of drug application."
+  },
+  {
+    "id": "m4.2.3.7",
+    "value": "4.2.3.7",
+    "text": "4.2.3.7 — Other Toxicity Studies",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Other toxicity studies not covered by the standard ICH categories."
+  },
+  {
+    "id": "m4.2.3.7.1",
+    "value": "4.2.3.7.1",
+    "text": "4.2.3.7.1 — Antigenicity",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Studies evaluating the antigenic potential of the drug substance."
+  },
+  {
+    "id": "m4.2.3.7.2",
+    "value": "4.2.3.7.2",
+    "text": "4.2.3.7.2 — Immunotoxicity",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Studies evaluating effects on the immune system per ICH S8 guidelines."
+  },
+  {
+    "id": "m4.2.3.7.3",
+    "value": "4.2.3.7.3",
+    "text": "4.2.3.7.3 — Mechanistic Studies",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Mechanistic studies to understand specific toxicological findings observed in other studies."
+  },
+  {
+    "id": "m4.2.3.7.4",
+    "value": "4.2.3.7.4",
+    "text": "4.2.3.7.4 — Dependence",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Nonclinical dependence and abuse liability studies."
+  },
+  {
+    "id": "m4.2.3.7.5",
+    "value": "4.2.3.7.5",
+    "text": "4.2.3.7.5 — Metabolites",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Toxicity studies on disproportionate or unique human metabolites per ICH M3(R2)/MIST guidance."
+  },
+  {
+    "id": "m4.2.3.7.6",
+    "value": "4.2.3.7.6",
+    "text": "4.2.3.7.6 — Impurities",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Toxicity studies on drug substance or drug product impurities per ICH Q3A/Q3B."
+  },
+  {
+    "id": "m4.2.3.7.7",
+    "value": "4.2.3.7.7",
+    "text": "4.2.3.7.7 — Other",
+    "depth": 4,
+    "type": "folder",
+    "desc": "Other toxicity studies not classified elsewhere (e.g., phototoxicity, combination toxicity)."
+  },
+  {
+    "id": "m4.3",
+    "value": "4.3",
+    "text": "4.3 — Literature References",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Published literature references cited in Module 4 nonclinical study reports."
+  },
+  {
+    "id": "m5",
+    "value": "5",
+    "text": "5 — Clinical Study Reports",
+    "depth": 0,
+    "type": "folder",
+    "desc": "Clinical study reports and related information. In v4.0, study reports are stored flat under 5.3 with section placement via Context of Use codes."
+  },
+  {
+    "id": "m5.2",
+    "value": "5.2",
+    "text": "5.2 — Tabular Listing of All Clinical Studies",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Tabular listing of all clinical studies included in the application, providing a summary overview of the clinical development program."
+  },
+  {
+    "id": "m5.3",
+    "value": "5.3",
+    "text": "5.3 — Clinical Study Reports and Related Information",
+    "depth": 1,
+    "type": "folder",
+    "desc": "All clinical study reports organized by study type. Physical storage is flat ({study-id}/ folders directly under 53-clin-stud-rep/); the CoU code determines TOC section placement."
+  },
+  {
+    "id": "m5.3.1",
+    "value": "5.3.1",
+    "text": "5.3.1 — Reports of Biopharmaceutic Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Biopharmaceutic studies including bioavailability, bioequivalence, in vitro-in vivo correlation, and bioanalytical methods."
+  },
+  {
+    "id": "m5.3.1.1",
+    "value": "5.3.1.1",
+    "text": "5.3.1.1 — Bioavailability (BA) Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Bioavailability study reports and related information."
+  },
+  {
+    "id": "m5.3.1.2",
+    "value": "5.3.1.2",
+    "text": "5.3.1.2 — Comparative BA and Bioequivalence (BE) Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Comparative bioavailability and bioequivalence study reports (e.g., food effect, formulation comparison)."
+  },
+  {
+    "id": "m5.3.1.3",
+    "value": "5.3.1.3",
+    "text": "5.3.1.3 — In Vitro–In Vivo Correlation Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Reports establishing correlation between in vitro dissolution and in vivo bioavailability."
+  },
+  {
+    "id": "m5.3.1.4",
+    "value": "5.3.1.4",
+    "text": "5.3.1.4 — Reports of Bioanalytical and Analytical Methods for Human Studies",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Validation reports for bioanalytical and analytical methods used in clinical studies."
+  },
+  {
+    "id": "m5.3.2",
+    "value": "5.3.2",
+    "text": "5.3.2 — Reports of Studies Pertinent to PK Using Human Biomaterials",
+    "depth": 2,
+    "type": "folder",
+    "desc": "In vitro studies using human biomaterials to characterize PK properties (plasma protein binding, hepatic metabolism, drug interactions)."
+  },
+  {
+    "id": "m5.3.2.1",
+    "value": "5.3.2.1",
+    "text": "5.3.2.1 — Plasma Protein Binding Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Reports of plasma protein binding studies using human plasma."
+  },
+  {
+    "id": "m5.3.2.2",
+    "value": "5.3.2.2",
+    "text": "5.3.2.2 — Reports of Hepatic Metabolism and Drug Interaction Studies",
+    "depth": 3,
+    "type": "folder",
+    "desc": "In vitro hepatic metabolism studies including CYP enzyme identification and inhibition/induction potential."
+  },
+  {
+    "id": "m5.3.2.3",
+    "value": "5.3.2.3",
+    "text": "5.3.2.3 — Reports of Studies Using Other Human Biomaterials",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Studies using other human biomaterials not covered by plasma protein binding or hepatic metabolism."
+  },
+  {
+    "id": "m5.3.3",
+    "value": "5.3.3",
+    "text": "5.3.3 — Reports of Human Pharmacokinetic (PK) Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Clinical pharmacokinetic studies in healthy subjects and patients."
+  },
+  {
+    "id": "m5.3.3.1",
+    "value": "5.3.3.1",
+    "text": "5.3.3.1 — Healthy Subject PK and Initial Tolerability Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "PK and tolerability studies in healthy volunteers (Phase 1 first-in-human, single/multiple ascending dose)."
+  },
+  {
+    "id": "m5.3.3.2",
+    "value": "5.3.3.2",
+    "text": "5.3.3.2 — Patient PK and Initial Tolerability Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "PK and tolerability studies conducted in the target patient population."
+  },
+  {
+    "id": "m5.3.3.3",
+    "value": "5.3.3.3",
+    "text": "5.3.3.3 — Intrinsic Factor PK Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "PK studies evaluating the effect of intrinsic factors (age, sex, race, weight, renal/hepatic impairment, genetic polymorphism)."
+  },
+  {
+    "id": "m5.3.3.4",
+    "value": "5.3.3.4",
+    "text": "5.3.3.4 — Extrinsic Factor PK Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "PK studies evaluating the effect of extrinsic factors (food, drugs, smoking, etc.) on pharmacokinetics."
+  },
+  {
+    "id": "m5.3.3.5",
+    "value": "5.3.3.5",
+    "text": "5.3.3.5 — Population PK Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Population pharmacokinetic analyses and modeling reports."
+  },
+  {
+    "id": "m5.3.4",
+    "value": "5.3.4",
+    "text": "5.3.4 — Reports of Human Pharmacodynamic (PD) Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Clinical pharmacodynamic and PK/PD studies."
+  },
+  {
+    "id": "m5.3.4.1",
+    "value": "5.3.4.1",
+    "text": "5.3.4.1 — Healthy Subject PD and PK/PD Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Pharmacodynamic and PK/PD relationship studies in healthy volunteers."
+  },
+  {
+    "id": "m5.3.4.2",
+    "value": "5.3.4.2",
+    "text": "5.3.4.2 — Patient PD and PK/PD Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Pharmacodynamic and PK/PD relationship studies in the target patient population."
+  },
+  {
+    "id": "m5.3.5",
+    "value": "5.3.5",
+    "text": "5.3.5 — Reports of Efficacy and Safety Studies",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Pivotal and supportive efficacy/safety clinical studies. Required keyword: indication."
+  },
+  {
+    "id": "m5.3.5.1",
+    "value": "5.3.5.1",
+    "text": "5.3.5.1 — Study Reports of Controlled Clinical Studies Pertinent to the Claimed Indication",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Reports of controlled clinical studies (randomized, blinded, etc.) supporting the claimed indication. Required keyword: type of control."
+  },
+  {
+    "id": "m5.3.5.2",
+    "value": "5.3.5.2",
+    "text": "5.3.5.2 — Study Reports of Uncontrolled Clinical Studies",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Reports of uncontrolled clinical studies (open-label, single-arm) supporting the claimed indication."
+  },
+  {
+    "id": "m5.3.5.3",
+    "value": "5.3.5.3",
+    "text": "5.3.5.3 — Reports of Analyses of Data from More Than One Study",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Integrated analyses across multiple studies including Integrated Summary of Safety (ISS) and Integrated Summary of Efficacy (ISE)."
+  },
+  {
+    "id": "m5.3.5.4",
+    "value": "5.3.5.4",
+    "text": "5.3.5.4 — Other Study Reports",
+    "depth": 3,
+    "type": "folder",
+    "desc": "Other clinical study reports including antibacterial/antiviral microbiology, BIMO inspections, human factors validation, and special pathogen studies."
+  },
+  {
+    "id": "m5.3.6",
+    "value": "5.3.6",
+    "text": "5.3.6 — Reports of Postmarketing Experience",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Postmarketing safety experience reports including periodic adverse drug experience reports (PADERs)."
+  },
+  {
+    "id": "m5.3.7",
+    "value": "5.3.7",
+    "text": "5.3.7 — Case Report Forms and Individual Patient Listings",
+    "depth": 2,
+    "type": "folder",
+    "desc": "Individual case report forms and patient-level data listings as specified by ICH E3 section 16.3 and regional requirements."
+  },
+  {
+    "id": "m5.4",
+    "value": "5.4",
+    "text": "5.4 — Literature References",
+    "depth": 1,
+    "type": "folder",
+    "desc": "Published literature references cited in Module 5 clinical study reports."
+  }
+]

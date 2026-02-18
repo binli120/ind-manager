@@ -23,6 +23,17 @@ const s3Client = new S3Client({
 const ensureSlash = (p: string) => (p ? (p.endsWith("/") ? p : `${p}/`) : "")
 const normalizePath = (input: string) => input.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "")
 const sectionToFolder = (section: string) => section.replace(/\./g, "/")
+const sanitizePathSegment = (input: string) =>
+  input
+    .trim()
+    .replace(/[\\/]/g, " - ")
+    .replace(/\s+/g, " ")
+const sanitizePath = (input: string) =>
+  normalizePath(input)
+    .split("/")
+    .map(sanitizePathSegment)
+    .filter(Boolean)
+    .join("/")
 
 export async function POST(
   req: NextRequest,
@@ -54,7 +65,7 @@ export async function POST(
       return NextResponse.json({ error: "selectionPath and selectionType are required" }, { status: 400 })
     }
 
-    const baseName = (fileName || selectionPath.split("/").pop() || "").trim()
+    const baseName = sanitizePathSegment(fileName || selectionPath.split("/").pop() || "")
     if (!baseName) {
       return NextResponse.json({ error: "fileName is required" }, { status: 400 })
     }
@@ -77,7 +88,7 @@ export async function POST(
 
     const basePrefix = parsedPrefix ?? ensureSlash(`${company}/${projectName}`)
 
-    const selectionTextNormalized = normalizePath(body.selectionTextPath || selectionPath)
+    const selectionTextNormalized = sanitizePath(body.selectionTextPath || selectionPath)
 
     const logicalPath = selectionTextNormalized.includes("/")
       ? selectionTextNormalized

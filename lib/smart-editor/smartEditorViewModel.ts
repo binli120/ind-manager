@@ -199,6 +199,10 @@ const subsectionRowSchema: z.ZodType<SubsectionContent> = z.lazy(() =>
     subsections: z.array(subsectionRowSchema).optional(),
     isUserAdded: z.boolean().optional(),
     fullPath: z.string().optional(),
+    templateType: z.enum(["folder", "file"]).optional(),
+    description: z.string().optional(),
+    templateText: z.string().optional(),
+    templateDepth: z.number().optional(),
   }),
 );
 
@@ -212,6 +216,10 @@ const sectionRowSchema: z.ZodType<Section> = z.object({
   isCategory: z.boolean().optional(),
   isUserAdded: z.boolean().optional(),
   subsections: z.array(subsectionRowSchema).optional(),
+  templateType: z.enum(["folder", "file"]).optional(),
+  description: z.string().optional(),
+  templateText: z.string().optional(),
+  templateDepth: z.number().optional(),
 });
 
 const sectionRowsSchema = z.array(sectionRowSchema);

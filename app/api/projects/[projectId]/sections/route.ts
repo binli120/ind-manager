@@ -6,9 +6,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import type { Section, SubsectionContent } from "@/types/section";
 import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers";
+import {
+  findSectionTemplateEntryForName,
+  toTemplateDisplayTitle,
+} from "@/lib/section-list-mapping";
 
 const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx"];
 const IGNORE_SUFFIXES = [".pdf.tables", ".pdf.images"];
+const XML_FOLDER_REGEX = /\bxml(?:\s*files?)?\b/i;
 
 type TreeNode = {
   name: string;
@@ -83,6 +88,16 @@ function stripExtension(fileName: string) {
   return fileName.replace(/\.[^.]+$/, "");
 }
 
+function isXmlLikePathSegment(segment: string) {
+  const normalized = segment
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return normalized.includes(".xml") || XML_FOLDER_REGEX.test(normalized);
+}
+
 function extractSectionNumber(value?: string | null) {
   if (!value) return null;
   const trimmed = value.trim();
@@ -97,6 +112,9 @@ function resolveSectionNumber(raw: string, fallback?: string) {
   if (extracted) return extracted;
   return fallback ?? raw;
 }
+
+const resolveTemplateNode = (rawName: string) =>
+  findSectionTemplateEntryForName(rawName);
 
 function buildTree(keys: string[], prefix: string) {
   const nodes: TreeNode[] = [];
@@ -115,11 +133,22 @@ function buildTree(keys: string[], prefix: string) {
       return;
     }
 
+    // Hide XML-derived folders and any descendants from the section list.
+    if (parts.some((p) => isXmlLikePathSegment(p))) {
+      return;
+    }
+
     if (!parts.length) return;
 
     const isFile = parts[parts.length - 1].includes(".");
     const folders = isFile ? parts.slice(0, -1) : parts;
     const fileName = isFile ? parts[parts.length - 1] : null;
+
+    // Only build tree branches from supported document files.
+    // This hides XML-only folders and other non-document artifacts.
+    if (!isFile || !fileName || !isAllowedFile(fileName)) {
+      return;
+    }
 
     let parent: TreeNode | null = null;
     let currentList = nodes;
@@ -141,14 +170,10 @@ function buildTree(keys: string[], prefix: string) {
       currentList = node.children;
     });
 
-    if (fileName) {
-      if (isAllowedFile(fileName)) {
-        if (parent) {
-          (parent as TreeNode).files.push(fileName);
-        } else {
-          rootFiles.push(fileName);
-        }
-      }
+    if (parent) {
+      (parent as TreeNode).files.push(fileName);
+    } else {
+      rootFiles.push(fileName);
     }
   });
 
@@ -160,10 +185,12 @@ function fileToSubsection(
   parentPath: string,
   parentSectionNumber?: string
 ): SubsectionContent {
-  const number = resolveSectionNumber(
-    stripExtension(fileName),
-    parentSectionNumber
-  );
+  const stem = stripExtension(fileName);
+  const templateEntry = resolveTemplateNode(stem);
+  const number =
+    templateEntry?.value ??
+    resolveSectionNumber(stem, parentSectionNumber);
+
   return {
     id: `${parentPath}${fileName}`,
     subsectionNumber: number,
@@ -176,6 +203,10 @@ function fileToSubsection(
     status: "draft",
     isCategory: false,
     isUserAdded: false,
+    templateType: templateEntry?.type ?? "file",
+    description: templateEntry?.desc,
+    templateText: templateEntry?.text,
+    templateDepth: templateEntry?.depth,
   };
 }
 
@@ -183,18 +214,26 @@ function nodeToSubsection(
   node: TreeNode,
   parentSectionNumber?: string
 ): SubsectionContent {
-  const number = resolveSectionNumber(node.name, parentSectionNumber);
+  const templateEntry = resolveTemplateNode(node.name);
+  const number =
+    templateEntry?.value ??
+    resolveSectionNumber(node.name, parentSectionNumber);
+
   return {
     id: node.path,
     subsectionNumber: number,
-    title: node.name,
-    header: node.name,
+    title: templateEntry ? toTemplateDisplayTitle(templateEntry) : node.name,
+    header: templateEntry ? toTemplateDisplayTitle(templateEntry) : node.name,
     fullPath: node.path,
     content: "",
     isRequired: false,
     status: "draft",
-    isCategory: true,
+    isCategory: templateEntry ? templateEntry.type !== "file" : true,
     isUserAdded: false,
+    templateType: templateEntry?.type ?? "folder",
+    description: templateEntry?.desc,
+    templateText: templateEntry?.text,
+    templateDepth: templateEntry?.depth,
     subsections: [
       ...node.children.map((child) => nodeToSubsection(child, number)),
       ...node.files.map((file) => fileToSubsection(file, node.path, number)),
@@ -204,16 +243,22 @@ function nodeToSubsection(
 
 function treeToSections(nodes: TreeNode[], rootFiles: string[], prefix: string): Section[] {
   const sections: Section[] = nodes.map((node) => {
-    const number = resolveSectionNumber(node.name);
+    const templateEntry = resolveTemplateNode(node.name);
+    const number = templateEntry?.value ?? resolveSectionNumber(node.name);
+
     return {
       id: node.path,
       number,
-      title: node.name,
+      title: templateEntry ? toTemplateDisplayTitle(templateEntry) : node.name,
       parentSection: "",
       isRequired: false,
       status: "draft",
-      isCategory: true,
+      isCategory: templateEntry ? templateEntry.type !== "file" : true,
       isUserAdded: false,
+      templateType: templateEntry?.type ?? "folder",
+      description: templateEntry?.desc,
+      templateText: templateEntry?.text,
+      templateDepth: templateEntry?.depth,
       subsections: [
         ...node.children.map((child) => nodeToSubsection(child, number)),
         ...node.files.map((file) => fileToSubsection(file, node.path, number)),

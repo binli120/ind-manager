@@ -127,103 +127,112 @@ export function Sidebar({
     depth = 1,
     parentId: string | null = null
   ) => {
-    return subsections.map((subsection) => (
-      <div key={subsection.id}>
-        <Button
-          variant={
-            selectedSubsection?.id === subsection.id ? 'secondary' : 'ghost'
-          }
-          className={cn(
-            'w-full justify-start text-left h-auto py-2 px-3 transition-colors group',
-            selectedSubsection?.id === subsection.id &&
-              'bg-secondary text-secondary-foreground',
-            dragOverItem === subsection.id && 'border-t-2 border-blue-500',
-            draggedItem?.id === subsection.id && 'opacity-50'
-          )}
-          draggable={!subsection.isCategory}
-          onDragStart={(e) => handleDragStart(e, subsection, parentId)}
-          onDragOver={(e) => handleDragOver(e, subsection.id)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, subsection, parentId)}
-          onDragEnd={handleDragEnd}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelectSubsection(subsection);
-            if (subsection.isCategory && subsection.subsections) {
-              toggleExpanded(subsection.id);
-            }
-            if (!subsection.isCategory) {
-              setTimeout(() => {
-                const element = document.getElementById(
-                  `section-${subsection.subsectionNumber}`
-                );
-                if (element) {
-                  element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start',
-                  });
-                }
-              }, 100);
-            }
-          }}
-        >
-          <div
-            className='flex items-start gap-2 w-full'
-            title={(subsection as { fullPath?: string }).fullPath ?? subsection.title}
-          >
-            {!subsection.isCategory && (
-              <GripVertical className='h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab' />
-            )}
-            {subsection.isCategory && subsection.subsections ? (
-              expandedSections.has(subsection.id) ? (
-                <FolderOpen
-                  className={cn(
-                    'h-3.5 w-3.5 mt-0.5 flex-shrink-0',
-                    getStatusColor(subsection.status)
-                  )}
-                />
-              ) : (
-                <Folder
-                  className={cn(
-                    'h-3.5 w-3.5 mt-0.5 flex-shrink-0',
-                    getStatusColor(subsection.status)
-                  )}
-                />
-              )
-            ) : (
-              <FileText
-                className={cn(
-                  'h-3.5 w-3.5 mt-0.5 flex-shrink-0',
-                  getStatusColor(subsection.status)
-                )}
-              />
-            )}
-            <div className='flex-1 min-w-0'>
-              <div className='font-medium text-xs text-foreground'>
-                {subsection.subsectionNumber}
-              </div>
-              {subsection.title && subsection.isCategory && (
-                <div className='text-xs text-muted-foreground line-clamp-2 mt-0.5'>
-                  {subsection.title}
-                </div>
-              )}
-            </div>
-          </div>
-        </Button>
+    return subsections.map((subsection) => {
+      const isFolderNode =
+        subsection.templateType === "folder" ||
+        (subsection.isCategory === true && Boolean(subsection.subsections));
+      const tooltipText = [subsection.description, (subsection as { fullPath?: string }).fullPath]
+        .filter(Boolean)
+        .join("\n");
 
-        {subsection.isCategory &&
-          subsection.subsections &&
-          expandedSections.has(subsection.id) && (
-            <div className='ml-6 mt-1 space-y-1'>
-              {renderSubsections(
-                subsection.subsections,
-                depth + 1,
-                subsection.id
+      return (
+        <div key={subsection.id}>
+          <Button
+            variant={
+              selectedSubsection?.id === subsection.id ? 'secondary' : 'ghost'
+            }
+            className={cn(
+              'w-full justify-start text-left h-auto py-2 px-3 transition-colors group',
+              selectedSubsection?.id === subsection.id &&
+                'bg-secondary text-secondary-foreground',
+              dragOverItem === subsection.id && 'border-t-2 border-blue-500',
+              draggedItem?.id === subsection.id && 'opacity-50'
+            )}
+            draggable={!subsection.isCategory}
+            onDragStart={(e) => handleDragStart(e, subsection, parentId)}
+            onDragOver={(e) => handleDragOver(e, subsection.id)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, subsection, parentId)}
+            onDragEnd={handleDragEnd}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectSubsection(subsection);
+              if (subsection.isCategory && subsection.subsections) {
+                toggleExpanded(subsection.id);
+              }
+              if (!subsection.isCategory) {
+                setTimeout(() => {
+                  const element = document.getElementById(
+                    `section-${subsection.subsectionNumber}`
+                  );
+                  if (element) {
+                    element.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                    });
+                  }
+                }, 100);
+              }
+            }}
+          >
+            <div
+              className='flex items-start gap-2 w-full'
+              title={tooltipText || subsection.title}
+            >
+              {!subsection.isCategory && (
+                <GripVertical className='h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab' />
               )}
+              {isFolderNode ? (
+                expandedSections.has(subsection.id) ? (
+                  <FolderOpen
+                    className={cn(
+                      'h-3.5 w-3.5 mt-0.5 flex-shrink-0',
+                      getStatusColor(subsection.status)
+                    )}
+                  />
+                ) : (
+                  <Folder
+                    className={cn(
+                      'h-3.5 w-3.5 mt-0.5 flex-shrink-0',
+                      getStatusColor(subsection.status)
+                    )}
+                  />
+                )
+              ) : (
+                <FileText
+                  className={cn(
+                    'h-3.5 w-3.5 mt-0.5 flex-shrink-0',
+                    getStatusColor(subsection.status)
+                  )}
+                />
+              )}
+              <div className='flex-1 min-w-0'>
+                <div className='font-medium text-xs text-foreground'>
+                  {subsection.subsectionNumber}
+                </div>
+                {subsection.title && (
+                  <div className='text-xs text-muted-foreground line-clamp-2 mt-0.5'>
+                    {subsection.title}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-      </div>
-    ));
+          </Button>
+
+          {subsection.isCategory &&
+            subsection.subsections &&
+            expandedSections.has(subsection.id) && (
+              <div className='ml-6 mt-1 space-y-1'>
+                {renderSubsections(
+                  subsection.subsections,
+                  depth + 1,
+                  subsection.id
+                )}
+              </div>
+            )}
+        </div>
+      );
+    });
   };
 
   return (

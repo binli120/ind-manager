@@ -3,187 +3,81 @@
 // Email: blee@filynai.com
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Loader2, RefreshCw } from "lucide-react"
+import { ChevronRight, FileText, Folder, FolderOpen, Loader2 } from "lucide-react"
 import { useAppSelector } from "@/lib/store"
-import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
+import { getSectionTemplateEntries, type SectionTemplateEntry } from "@/lib/section-list-mapping"
+import { cn } from "@/lib/utils"
 
 type TemplateOption = {
   id: string
-  label: string
-  valuePath: string
+  value: string
+  text: string
+  desc?: string
   textPath: string
   parentTextPath: string
+  parentId: string | null
   depth: number
+  hasChildren: boolean
   type: "folder" | "file" | "unknown"
-  relativePath: string
-  parentPath: string
-  raw: unknown
+  raw: SectionTemplateEntry
 }
 
-const inferLabel = (item: Record<string, unknown>): string | null => {
-  const candidates = ["section", "number", "name", "title", "value", "text", "label", "id"]
-  for (const key of candidates) {
-    const val = item[key]
-    if (typeof val === "string" && val.trim()) return val.trim()
-    if (typeof val === "number") return String(val)
-  }
-  return null
-}
+const sanitizePathSegment = (value: string) =>
+  value
+    .trim()
+    .replace(/[\\/]/g, " - ")
+    .replace(/\s+/g, " ")
 
-const inferType = (item: Record<string, unknown>, hasChildren: boolean): TemplateOption["type"] => {
-  const rawType = item.type || item.kind || item.itemType || item.nodeType
-  if (typeof rawType === "string") {
-    const lowered = rawType.toLowerCase()
-    if (lowered.includes("folder") || lowered === "dir" || lowered === "directory") return "folder"
-    if (lowered.includes("file")) return "file"
-  }
-  if (item.isFolder === true || item.folder === true) return "folder"
-  if (hasChildren) return "folder"
-  return "file"
-}
+const toDocxBaseName = (value: string) =>
+  sanitizePathSegment(value).replace(/\.docx$/i, "").trim()
 
-const extractChildren = (item: Record<string, unknown>): unknown[] | null => {
-  const candidates = ["children", "items", "sections", "contents"]
-  for (const key of candidates) {
-    const val = item[key]
-    if (Array.isArray(val)) return val
-  }
-  return null
-}
+const toTemplateOptions = (entries: SectionTemplateEntry[]): TemplateOption[] => {
+  const result: TemplateOption[] = []
+  const stack: TemplateOption[] = []
 
-const normalizeSectionList = (payload: unknown): TemplateOption[] => {
-  if (!payload) return []
-
-  // Special-case flat list with depth (shape from /ncd/sectionList)
-  if (typeof payload === "object" && payload !== null && Array.isArray((payload as Record<string, unknown>).sections)) {
-    const items = (payload as { sections: unknown[] }).sections
-    const results: TemplateOption[] = []
-    const stack: { depth: number; valuePath: string; textPath: string }[] = []
-
-    items.forEach((entry, idx) => {
-      if (!entry || typeof entry !== "object") return
-      const obj = entry as Record<string, unknown>
-      const depth = Number.isFinite(obj.depth) ? (obj.depth as number) : 0
-      const label =
-        (typeof obj.text === "string" && obj.text.trim()) ||
-        inferLabel(obj) ||
-        (typeof obj.value === "string" && obj.value.trim()) ||
-        (typeof obj.id === "string" && obj.id.trim())
-      if (!label) return
-
-      // Trim leading indentation spaces from text if present
-      const cleanLabel = label.replace(/^\s+/, "")
-      const valuePart = (typeof obj.value === "string" && obj.value.trim()) || cleanLabel
-
-      while (stack.length && stack[stack.length - 1].depth >= depth) {
-        stack.pop()
-      }
-
-      const parent = stack[stack.length - 1]
-      const valuePath = parent ? [parent.valuePath, valuePart].filter(Boolean).join("/") : valuePart
-      const textPath = parent ? [parent.textPath, cleanLabel].filter(Boolean).join("/") : cleanLabel
-      const parentTextPath = parent ? parent.textPath : ""
-      const relativePath = valuePath
-      const parentPath = parent ? parent.valuePath : ""
-      const type = inferType(obj, false)
-
-      const option: TemplateOption = {
-        id: obj.id && typeof obj.id === "string" ? obj.id : `${relativePath}-${idx}`,
-        label: cleanLabel,
-        valuePath,
-        textPath,
-        parentTextPath,
-        depth,
-        type,
-        relativePath,
-        parentPath,
-        raw: entry,
-      }
-      results.push(option)
-      stack.push({ depth, valuePath, textPath })
-    })
-    return results
-  }
-
-  const results: TemplateOption[] = []
-
-  const visit = (entry: unknown, depth: number, ancestors: string[]) => {
-    if (typeof entry === "string" || typeof entry === "number") {
-      const label = typeof entry === "string" ? entry.trim() : String(entry)
-      if (!label) return
-      const pathParts = [...ancestors, label]
-      const relativePath = pathParts.join("/")
-      const parentPath = pathParts.slice(0, -1).join("/")
-      results.push({
-        id: `${relativePath || label}-${results.length}`,
-        label,
-        valuePath: relativePath,
-        textPath: relativePath,
-        parentTextPath: parentPath,
-        depth,
-        type: "file",
-        relativePath,
-        parentPath,
-        raw: entry,
-      })
-      return
+  entries.forEach((entry, idx) => {
+    const requestedDepth = Number.isFinite(entry.depth) ? Math.max(0, entry.depth) : 0
+    const depth = Math.min(requestedDepth, stack.length)
+    while (stack.length > depth) {
+      stack.pop()
     }
 
-    if (!entry || typeof entry !== "object") return
-    const obj = entry as Record<string, unknown>
-    const children = extractChildren(obj)
-    const label = inferLabel(obj)
-    if (!label) return
+    const parent = stack[stack.length - 1]
+    const safeText = sanitizePathSegment(entry.text)
+    const textPath = parent ? `${parent.textPath}/${safeText}` : safeText
 
-    const providedDepth = Number.isFinite(obj.depth) ? (obj.depth as number) : depth
-    const type = inferType(obj, Boolean(children && children.length))
-
-    const pathFromField = (() => {
-      const pathCandidate = obj.path || obj.fullPath || obj.s3Path || obj.location || obj.key
-      if (typeof pathCandidate === "string" && pathCandidate.trim()) return pathCandidate.trim().replace(/^\/+|\/+$/g, "")
-      return null
-    })()
-
-    const pathParts = pathFromField ? pathFromField.split("/").filter(Boolean) : [...ancestors, label]
-    const relativePath = pathParts.join("/")
-    const parentPath = pathParts.slice(0, -1).join("/")
-
-    results.push({
-      id: `${relativePath || label}-${results.length}`,
-      label,
-      valuePath: relativePath,
-      textPath: relativePath,
-      parentTextPath: parentPath,
-      depth: providedDepth,
-      type,
-      relativePath,
-      parentPath,
+    const option: TemplateOption = {
+      id: entry.id || `${entry.value}-${idx}`,
+      value: entry.value,
+      text: entry.text,
+      desc: entry.desc,
+      textPath,
+      parentTextPath: parent?.textPath ?? "",
+      parentId: parent?.id ?? null,
+      depth,
+      hasChildren: false,
+      type: entry.type,
       raw: entry,
-    })
-
-    if (children && children.length) {
-      children.forEach((child) => visit(child, providedDepth + 1, pathParts))
     }
-  }
+    result.push(option)
+    stack.push(option)
+  })
 
-  if (Array.isArray(payload)) {
-    payload.forEach((item) => visit(item, 0, []))
-    return results
-  }
+  const childCountByParent = new Map<string, number>()
+  result.forEach((opt) => {
+    if (!opt.parentId) return
+    childCountByParent.set(opt.parentId, (childCountByParent.get(opt.parentId) ?? 0) + 1)
+  })
 
-  if (typeof payload === "object") {
-    Object.values(payload).forEach((item) => visit(item, 0, []))
-    return results
-  }
-
-  return []
+  return result.map((opt) => ({
+    ...opt,
+    hasChildren: (childCountByParent.get(opt.id) ?? 0) > 0,
+  }))
 }
 
 interface AddFromTemplateDialogProps {
@@ -208,50 +102,43 @@ export function AddFromTemplateDialog({
   bucket,
 }: AddFromTemplateDialogProps) {
   const userId = useAppSelector((s) => s.auth.user?.id)
-  const [options, setOptions] = useState<TemplateOption[]>([])
+  const [options, setOptions] = useState<TemplateOption[]>(() => toTemplateOptions(getSectionTemplateEntries()))
   const [selectedId, setSelectedId] = useState<string | undefined>()
   const selected = useMemo(() => options.find((opt) => opt.id === selectedId), [options, selectedId])
+  const optionById = useMemo(
+    () => new Map(options.map((opt) => [opt.id, opt] as const)),
+    [options],
+  )
+  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set())
   const [fileName, setFileName] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchOptions = useCallback(async () => {
-    if (!userId) {
-      setError("Login required to load template sections.")
-      setOptions([])
-      return
-    }
-    setLoading(true)
-    setError(null)
-    try {
-      const response = await requestPdfAnalysisApi<unknown>({
-        path: "/ncd/sectionList",
-        method: "GET",
-        headers: { "user-id": userId },
-        userIdHeader: userId,
-        allowRedirects: false,
-        suppressErrorLog: true,
-      })
-      const normalized = normalizeSectionList(response)
-      setOptions(normalized)
-      if (!normalized.length) {
-        setError("No template sections available.")
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load template list."
-      setError(message)
-      toast.error(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [userId])
-
   useEffect(() => {
     if (!open) return
     setSelectedId(undefined)
+    setExpandedFolderIds(new Set())
     setFileName("")
-    void fetchOptions()
-  }, [open, fetchOptions])
+    setError(null)
+    const normalized = toTemplateOptions(getSectionTemplateEntries())
+    setOptions(normalized)
+    if (!normalized.length) {
+      setError("No template sections available.")
+    }
+  }, [open])
+
+  const visibleOptions = useMemo(
+    () =>
+      options.filter((opt) => {
+        let parentId = opt.parentId
+        while (parentId) {
+          if (!expandedFolderIds.has(parentId)) return false
+          parentId = optionById.get(parentId)?.parentId ?? null
+        }
+        return true
+      }),
+    [expandedFolderIds, optionById, options],
+  )
 
   const handleCreate = async () => {
     if (!selected) return
@@ -259,7 +146,7 @@ export function AddFromTemplateDialog({
       setError("Project is required to create a file.")
       return
     }
-    const baseName = selected.type === "folder" ? fileName.trim() : selected.label
+    const baseName = selected.type === "folder" ? toDocxBaseName(fileName) : toDocxBaseName(selected.text)
     if (!baseName) return
     const finalName = baseName.toLowerCase().endsWith(".docx") ? baseName : `${baseName}.docx`
 
@@ -273,7 +160,7 @@ export function AddFromTemplateDialog({
           ...(userId ? { "user-id": userId } : {}),
         },
         body: JSON.stringify({
-          selectionPath: selected.relativePath,
+          selectionPath: selected.value,
           selectionTextPath: selected.textPath,
           selectionType: selected.type === "folder" ? "folder" : "file",
           fileName: finalName,
@@ -294,7 +181,7 @@ export function AddFromTemplateDialog({
       }
 
       const payload = (await res.json().catch(() => ({}))) as { key?: string }
-      onCreate(selected.relativePath || selected.label, payload.key)
+      onCreate(selected.value, payload.key)
       toast.success(`Created ${finalName}`)
       onOpenChange(false)
     } catch (err) {
@@ -308,50 +195,83 @@ export function AddFromTemplateDialog({
 
   const canSubmit = Boolean(selected && (selected.type !== "folder" || fileName.trim()) && !loading)
 
-const renderOptionLabel = (opt: TemplateOption) => (
-  <span className="flex items-center gap-2" style={{ paddingLeft: `${opt.depth * 12}px` }}>
-    <span className="text-muted-foreground text-xs uppercase tracking-wide">
-      {opt.type === "folder" ? "Folder" : "File"}
-    </span>
-    <span className="font-mono text-sm text-foreground">{opt.label}</span>
-    <span className="text-muted-foreground text-[11px]">({opt.valuePath})</span>
-  </span>
-)
+  const handleTreeItemClick = (opt: TemplateOption) => {
+    setSelectedId(opt.id)
+    if (opt.type !== "folder") return
+    setExpandedFolderIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(opt.id)) {
+        next.delete(opt.id)
+      } else {
+        next.add(opt.id)
+      }
+      return next
+    })
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[480px] max-h-[85vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Select Template Section</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="space-y-3 overflow-hidden">
           <p className="text-sm text-muted-foreground">
-            Choose a template section to add a new editable block to your workspace. Sections use the numeric identifier
-            (e.g., 2.4.1.1).
+            Choose from the configured section template. Clicking uses the mapped section number (`value`) for API calls.
           </p>
-          <div className="flex items-center gap-2">
-            <Select value={selectedId} onValueChange={setSelectedId} disabled={loading || !options.length}>
-              <SelectTrigger className="w-full">
-                <SelectValue
-                  placeholder={loading ? "Loading sections…" : "Select a template section"}
-                  className="flex items-center gap-2"
-                >
-                  {selected ? renderOptionLabel(selected) : null}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <ScrollArea className="max-h-64">
-                  {options.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id} className="flex items-center gap-2">
-                      {renderOptionLabel(opt)}
-                    </SelectItem>
-                  ))}
-                </ScrollArea>
-              </SelectContent>
-            </Select>
-            <Button variant="ghost" size="icon" onClick={() => fetchOptions()} disabled={loading} title="Refresh list">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            </Button>
+          <div className="rounded-md border border-border max-h-64 overflow-y-auto overscroll-contain">
+            <div className="p-1">
+              {visibleOptions.map((opt) => {
+                const isSelected = selectedId === opt.id
+                const isFolder = opt.type === "folder"
+                const isExpanded = expandedFolderIds.has(opt.id)
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => handleTreeItemClick(opt)}
+                    className={cn(
+                      "w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted/70",
+                      isSelected && "bg-violet-600/20 text-violet-900 dark:text-violet-200",
+                    )}
+                    style={{ paddingLeft: `${8 + opt.depth * 14}px` }}
+                    title={opt.desc ?? opt.text}
+                    disabled={loading}
+                  >
+                    <span className="flex items-center gap-2 min-w-0">
+                      {isFolder ? (
+                        <>
+                          {opt.hasChildren ? (
+                            <ChevronRight
+                              className={cn(
+                                "h-3.5 w-3.5 flex-shrink-0 transition-transform",
+                                isExpanded && "rotate-90",
+                              )}
+                            />
+                          ) : (
+                            <span className="h-3.5 w-3.5 flex-shrink-0" />
+                          )}
+                          {isExpanded ? (
+                            <FolderOpen className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                          ) : (
+                            <Folder className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <span className="h-3.5 w-3.5 flex-shrink-0" />
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        </>
+                      )}
+                      <span className="truncate">{opt.text}</span>
+                    </span>
+                  </button>
+                )
+              })}
+              {!loading && !visibleOptions.length && (
+                <div className="px-2 py-2 text-sm text-muted-foreground">No template sections available.</div>
+              )}
+            </div>
           </div>
           {selected?.type === "folder" && (
             <div className="space-y-2">
