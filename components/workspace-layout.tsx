@@ -22,9 +22,9 @@ import {
 } from '@/lib/store/slices';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
+function WorkspaceLayoutComponent({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
   const pathname = usePathname();
   const { sidebarOpen, commentsPanelOpen, currentView } = useAppSelector(
@@ -60,23 +60,23 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     setShowNoProjectDialog(shouldLockWorkspace);
   }, [shouldLockWorkspace]);
 
-  const handleToggleSidebar = () => {
+  const handleToggleSidebar = useCallback(() => {
     dispatch(setSidebarOpen(!sidebarOpen));
-  };
+  }, [dispatch, sidebarOpen]);
 
-  const handleToggleComments = () => {
+  const handleToggleComments = useCallback(() => {
     dispatch(setCommentsPanelOpen(!commentsPanelOpen));
-  };
+  }, [commentsPanelOpen, dispatch]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     dispatch(logoutUser());
-  };
+  }, [dispatch]);
 
-  const handleNotify = () => {
+  const handleNotify = useCallback(() => {
     // Placeholder hook for future notification implementation
     console.info('Notify project manager placeholder');
     dispatch(logoutUser());
-  };
+  }, [dispatch]);
 
   const isAuthPage = pathname?.startsWith('/auth/') || pathname === '/login';
   if (isAuthPage) {
@@ -151,3 +151,6 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     </>
   );
 }
+
+export const WorkspaceLayout = memo(WorkspaceLayoutComponent);
+WorkspaceLayout.displayName = 'WorkspaceLayout';

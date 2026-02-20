@@ -3,18 +3,18 @@
 // Email: blee@filynai.com
 "use client"
 
-import { useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { CheckCircle2, Clock, AlertTriangle, FileText, Search, Calendar, Phone, Eye, Edit3 } from "lucide-react"
 
-export function PostSubmissionView() {
+function PostSubmissionViewComponent() {
   const [activeTab, setActiveTab] = useState<"correspondence" | "timeline" | "actions">("correspondence")
   const [selectedCorrespondence, setSelectedCorrespondence] = useState("info-request")
 
-  const correspondenceItems = [
+  const correspondenceItems = useMemo(() => [
     {
       id: "acknowledgment",
       type: "Acknowledgment Letter",
@@ -52,15 +52,24 @@ export function PostSubmissionView() {
       responseRequired: true,
       daysToRespond: 28,
     },
-  ]
+  ], [])
 
-  const selectedItem = correspondenceItems.find((item) => item.id === selectedCorrespondence)
+  const selectedItem = useMemo(
+    () => correspondenceItems.find((item) => item.id === selectedCorrespondence),
+    [correspondenceItems, selectedCorrespondence],
+  )
 
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: "correspondence", label: "Correspondence", active: activeTab === "correspondence" },
     { id: "timeline", label: "Timeline", active: activeTab === "timeline" },
     { id: "actions", label: "Actions", active: activeTab === "actions" },
-  ]
+  ], [activeTab])
+  const handleTabChange = useCallback((tabId: "correspondence" | "timeline" | "actions") => {
+    setActiveTab(tabId)
+  }, [])
+  const handleSelectCorrespondence = useCallback((itemId: string) => {
+    setSelectedCorrespondence(itemId)
+  }, [])
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -114,7 +123,7 @@ export function PostSubmissionView() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
+              onClick={() => handleTabChange(tab.id as typeof activeTab)}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 tab.active
                   ? "border-purple-600 text-purple-600"
@@ -147,7 +156,7 @@ export function PostSubmissionView() {
                 {correspondenceItems.map((item) => (
                   <div
                     key={item.id}
-                    onClick={() => setSelectedCorrespondence(item.id)}
+                    onClick={() => handleSelectCorrespondence(item.id)}
                     className={`p-4 rounded-lg border cursor-pointer transition-colors ${
                       selectedCorrespondence === item.id
                         ? "border-purple-200 bg-purple-50"
@@ -278,3 +287,6 @@ export function PostSubmissionView() {
     </div>
   )
 }
+
+export const PostSubmissionView = memo(PostSubmissionViewComponent)
+PostSubmissionView.displayName = "PostSubmissionView"

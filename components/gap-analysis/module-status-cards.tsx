@@ -3,7 +3,7 @@
 // Email: blee@filynai.com
 "use client"
 
-import { useState } from "react"
+import { memo, useCallback, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -36,8 +36,17 @@ interface ModuleStatusCardsProps {
   onSectionClick?: (moduleId: number, sectionId: string) => void
 }
 
-export function ModuleStatusCards({ modules, onSectionClick }: ModuleStatusCardsProps) {
+function ModuleStatusCardsComponent({ modules, onSectionClick }: ModuleStatusCardsProps) {
   const [expandedModule, setExpandedModule] = useState<number | null>(null)
+  const handleToggleModule = useCallback((moduleId: number) => {
+    setExpandedModule((prev) => (prev === moduleId ? null : moduleId))
+  }, [])
+  const handleSectionClick = useCallback(
+    (moduleId: number, sectionId: string) => {
+      onSectionClick?.(moduleId, sectionId)
+    },
+    [onSectionClick],
+  )
 
   const getProgressColor = (progress: number) => {
     if (progress === 100) return "bg-success"
@@ -169,7 +178,7 @@ export function ModuleStatusCards({ modules, onSectionClick }: ModuleStatusCards
                 variant="ghost"
                 size="sm"
                 className="w-full justify-between"
-                onClick={() => setExpandedModule(isExpanded ? null : module.id)}
+                onClick={() => handleToggleModule(module.id)}
               >
                 <span className="text-xs">View Sections</span>
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -181,7 +190,7 @@ export function ModuleStatusCards({ modules, onSectionClick }: ModuleStatusCards
                   {module.sectionsDetail.map((section) => (
                     <button
                       key={section.id}
-                      onClick={() => onSectionClick?.(module.id, section.id)}
+                      onClick={() => handleSectionClick(module.id, section.id)}
                       className="w-full flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors group"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -206,3 +215,6 @@ export function ModuleStatusCards({ modules, onSectionClick }: ModuleStatusCards
     </div>
   )
 }
+
+export const ModuleStatusCards = memo(ModuleStatusCardsComponent)
+ModuleStatusCards.displayName = "ModuleStatusCards"

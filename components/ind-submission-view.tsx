@@ -3,13 +3,13 @@
 // Email: blee@filynai.com
 "use client"
 
+import { memo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, Clock, AlertCircle } from "lucide-react"
 
-export function IndSubmissionView() {
-  const checklistItems = [
+const checklistItems = [
     {
       title: "eCTD Validation",
       status: "Complete",
@@ -46,27 +46,29 @@ export function IndSubmissionView() {
       required: true,
       description: "Notification system ready for submission updates",
     },
-  ]
+]
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Complete":
-        return <CheckCircle className="h-4 w-4 text-green-600" />
-      case "Pending":
-        return <Clock className="h-4 w-4 text-yellow-600" />
-      default:
-        return <AlertCircle className="h-4 w-4 text-red-600" />
-    }
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "Complete":
+      return <CheckCircle className="h-4 w-4 text-green-600" />
+    case "Pending":
+      return <Clock className="h-4 w-4 text-yellow-600" />
+    default:
+      return <AlertCircle className="h-4 w-4 text-red-600" />
   }
+}
 
-  const getStatusBadge = (status: string) => {
-    const variant = status === "Complete" ? "default" : status === "Pending" ? "secondary" : "destructive"
-    return (
-      <Badge variant={variant} className="ml-auto">
-        {status}
-      </Badge>
-    )
-  }
+const getStatusBadge = (status: string) => {
+  const variant = status === "Complete" ? "default" : status === "Pending" ? "secondary" : "destructive"
+  return (
+    <Badge variant={variant} className="ml-auto">
+      {status}
+    </Badge>
+  )
+}
+
+function IndSubmissionViewComponent() {
 
   return (
     <div className="flex-1 p-6 space-y-6">
@@ -171,3 +173,6 @@ export function IndSubmissionView() {
     </div>
   )
 }
+
+export const IndSubmissionView = memo(IndSubmissionViewComponent)
+IndSubmissionView.displayName = "IndSubmissionView"

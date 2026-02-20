@@ -8,7 +8,6 @@ import { OnboardingTour } from '@/components/section-editor/onboarding-tour';
 import { PdfUploadDialog } from '@/components/section-editor/pdf-upload-dialog';
 import { SectionEditor } from '@/components/section-editor/section-editor';
 import { Sidebar } from '@/components/section-editor/sidebar';
-import { TiptapEditor } from '@/components/section-editor/tiptap-editor';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,12 +40,37 @@ import {
 import { upsertSectionPath } from '@/lib/section-tree';
 import type { Section, SubsectionContent } from '@/types/section';
 import { HelpCircle, Loader2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+
+const TiptapEditor = dynamic(
+  () =>
+    import('@/components/section-editor/tiptap-editor').then(
+      (mod) => mod.TiptapEditor,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className='h-[400px] rounded-lg border border-border bg-muted/30 animate-pulse' />
+    ),
+  },
+);
+
+const PdfPreviewFrame = dynamic(
+  () =>
+    import('@/components/pdf-preview-frame').then((mod) => mod.PdfPreviewFrame),
+  {
+    ssr: false,
+    loading: () => (
+      <div className='h-[80vh] rounded-md border border-border bg-muted/30 animate-pulse' />
+    ),
+  },
+);
 
 // Default empty template; actual sections are fetched from S3.
 // No hardcoded template; always load from S3
 
-export function SmartEditorView() {
+function SmartEditorViewComponent() {
   const { selectedProjectId, currentProject } = useProject();
   const { tenants, selectedTenantId } = useTenant();
   const [sectionData, setSectionData] = useState<Section[]>([]);
@@ -286,159 +310,182 @@ export function SmartEditorView() {
     loadFile();
   }, [isSelectedFile, selectedSubsection, selectedProjectId]);
 
-  const handleSelectSection = (section: Section) => {
-    setSelectedSection(section);
-    setSelectedSubsection(null);
-  };
-
-  const handleSelectSubsection = (subsection: SubsectionContent) => {
-    setSelectedSubsection(subsection);
-    const parentSection = findParentSectionForSubsection({
-      sections: sectionData,
-      subsectionId: subsection.id,
-    });
-
-    if (
-      parentSection &&
-      selectedSection &&
-      parentSection.id !== selectedSection.id
-    ) {
-      setSelectedSection(parentSection);
-    }
-  };
-
-  const handleAddSubsection = (subsectionNumber: string, header: string) => {
-    console.log('[v0] Adding subsection:', subsectionNumber, header);
-    if (!selectedSection) return;
-
-    const { sections: nextSections, nextSelectedSubsection } =
-      addSubsectionForSelection({
-        sections: sectionData,
-        selectedSectionId: selectedSection.id,
-        selectedSubsection,
-        subsectionNumber,
-        header,
-      });
-
-    setSectionData(nextSections);
-
-    if (nextSelectedSubsection) {
-      setTimeout(() => {
-        setSelectedSubsection(nextSelectedSubsection);
-        setTimeout(() => {
-          const element = document.getElementById(
-            `section-${subsectionNumber}`,
-          );
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
-      }, 50);
-    } else {
-      setTimeout(() => {
-        const element = document.getElementById(`section-${subsectionNumber}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-    }
-  };
-
-  const handleCreateFromTemplate = (
-    templateNumber: string,
-    createdKey?: string,
-  ) => {
-    const result = upsertSectionPath(sectionData, templateNumber);
-
-    if (createdKey) {
-      const relKey = toRelativeS3Key(createdKey);
-      result.leaf.fullPath = relKey;
-    }
-
-    setSectionData(result.sections);
-    if (treeCacheKey) {
-      saveTreeCache(treeCacheKey, result.sections);
-    }
-    setSelectedSection(result.section);
-    setSelectedSubsection(result.leaf);
-    setTreeRetryKey((k) => k + 1); // refresh from S3 to reflect real file
-    setTimeout(() => {
-      const element = document.getElementById(
-        `section-${result.leaf.subsectionNumber}`,
-      );
+  const scrollToSection = useCallback((sectionNumber: string, delay = 100) => {
+    window.setTimeout(() => {
+      const element = document.getElementById(`section-${sectionNumber}`);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-    }, 120);
-  };
+    }, delay);
+  }, []);
 
-  const handleCloseTour = () => {
+  const handleSelectSection = useCallback((section: Section) => {
+    setSelectedSection(section);
+    setSelectedSubsection(null);
+  }, []);
+
+  const handleSelectSubsection = useCallback(
+    (subsection: SubsectionContent) => {
+      setSelectedSubsection(subsection);
+      const parentSection = findParentSectionForSubsection({
+        sections: sectionData,
+        subsectionId: subsection.id,
+      });
+
+      if (
+        parentSection &&
+        selectedSection &&
+        parentSection.id !== selectedSection.id
+      ) {
+        setSelectedSection(parentSection);
+      }
+    },
+    [sectionData, selectedSection],
+  );
+
+  const handleAddSubsection = useCallback(
+    (subsectionNumber: string, header: string) => {
+      console.log('[v0] Adding subsection:', subsectionNumber, header);
+      if (!selectedSection) return;
+
+      const { sections: nextSections, nextSelectedSubsection } =
+        addSubsectionForSelection({
+          sections: sectionData,
+          selectedSectionId: selectedSection.id,
+          selectedSubsection,
+          subsectionNumber,
+          header,
+        });
+
+      setSectionData(nextSections);
+
+      if (nextSelectedSubsection) {
+        window.setTimeout(() => {
+          setSelectedSubsection(nextSelectedSubsection);
+          scrollToSection(subsectionNumber);
+        }, 50);
+      } else {
+        scrollToSection(subsectionNumber);
+      }
+    },
+    [scrollToSection, sectionData, selectedSection, selectedSubsection],
+  );
+
+  const handleCreateFromTemplate = useCallback(
+    (templateNumber: string, createdKey?: string) => {
+      const result = upsertSectionPath(sectionData, templateNumber);
+
+      if (createdKey) {
+        const relKey = toRelativeS3Key(createdKey);
+        result.leaf.fullPath = relKey;
+      }
+
+      setSectionData(result.sections);
+      if (treeCacheKey) {
+        saveTreeCache(treeCacheKey, result.sections);
+      }
+      setSelectedSection(result.section);
+      setSelectedSubsection(result.leaf);
+      setTreeRetryKey((k) => k + 1);
+      scrollToSection(result.leaf.subsectionNumber, 120);
+    },
+    [scrollToSection, sectionData, treeCacheKey],
+  );
+
+  const handleCloseTour = useCallback(() => {
     setShowTour(false);
     localStorage.setItem('hasSeenOnboardingTour', 'true');
     setHasSeenTour(true);
-  };
+  }, [setHasSeenTour]);
 
-  const handleStartTour = () => {
+  const handleStartTour = useCallback(() => {
     setShowTour(true);
-  };
+  }, []);
 
-  const handleUploadComplete = (sectionNumber: string, fileName: string) => {
+  const handleUploadComplete = useCallback((sectionNumber: string, fileName: string) => {
     console.log('[v0] PDF uploaded:', fileName, 'Section:', sectionNumber);
     const newSection = buildUploadedSection({ sectionNumber, fileName });
     setSectionData((prev) => [...prev, newSection]);
-  };
+  }, []);
 
-  const handleDeleteSubsection = (subsectionId: string) => {
-    console.log('[v0] Deleting subsection:', subsectionId);
+  const handleDeleteSubsection = useCallback(
+    (subsectionId: string) => {
+      console.log('[v0] Deleting subsection:', subsectionId);
 
-    setSectionData((prevSections) =>
-      deleteSubsectionFromSection({
-        sections: prevSections,
-        selectedSectionId: selectedSection?.id ?? null,
-        subsectionId,
-      }),
-    );
+      setSectionData((prevSections) =>
+        deleteSubsectionFromSection({
+          sections: prevSections,
+          selectedSectionId: selectedSection?.id ?? null,
+          subsectionId,
+        }),
+      );
 
-    // If the deleted subsection was selected, clear the selection
-    if (selectedSubsection?.id === subsectionId) {
-      setSelectedSubsection(null);
-    }
-  };
+      if (selectedSubsection?.id === subsectionId) {
+        setSelectedSubsection(null);
+      }
+    },
+    [selectedSection?.id, selectedSubsection?.id],
+  );
 
-  const handleReorderSubsections = (
-    draggedId: string,
-    targetId: string,
-    parentId: string | null,
-  ) => {
-    console.log(
-      '[v0] Reordering:',
-      draggedId,
-      'to',
-      targetId,
-      'parent:',
-      parentId,
-    );
-
-    setSectionData((prevSections) =>
-      reorderSubsectionsInSection({
-        sections: prevSections,
-        selectedSectionId: selectedSection?.id ?? null,
+  const handleReorderSubsections = useCallback(
+    (draggedId: string, targetId: string, parentId: string | null) => {
+      console.log(
+        '[v0] Reordering:',
         draggedId,
+        'to',
         targetId,
-      }),
-    );
-  };
+        'parent:',
+        parentId,
+      );
+
+      setSectionData((prevSections) =>
+        reorderSubsectionsInSection({
+          sections: prevSections,
+          selectedSectionId: selectedSection?.id ?? null,
+          draggedId,
+          targetId,
+        }),
+      );
+    },
+    [selectedSection?.id],
+  );
+
+  const selectedSectionForSidebar = useMemo(
+    () => selectedSection ?? sectionData[0] ?? ({} as Section),
+    [selectedSection, sectionData],
+  );
+
+  const selectedFileHtml = useMemo(
+    () => (fileMode === 'md' && fileText ? markdownToHtml(fileText) : ''),
+    [fileMode, fileText],
+  );
+
+  const selectedEditorSectionNumber = useMemo(
+    () =>
+      toSectionNumber(selectedSubsection?.subsectionNumber) ||
+      toSectionNumber(selectedSection?.number) ||
+      selectedSubsection?.subsectionNumber,
+    [selectedSection?.number, selectedSubsection?.subsectionNumber],
+  );
+
+  const handleRetryTree = useCallback(() => setTreeRetryKey((k) => k + 1), []);
+  const handleOpenUploadDialog = useCallback(() => setShowUploadDialog(true), []);
+  const handleOpenAddFromTemplate = useCallback(
+    () => setShowAddFromTemplate(true),
+    [],
+  );
+  const handleReadOnlyEditorChange = useCallback(() => {}, []);
 
   return (
     <div className='flex h-full w-full bg-background overflow-hidden'>
       <Sidebar
         sections={sectionData}
-        selectedSection={selectedSection ?? sectionData[0] ?? ({} as Section)}
+        selectedSection={selectedSectionForSidebar}
         selectedSubsection={selectedSubsection}
         onSelectSection={handleSelectSection}
         onSelectSubsection={handleSelectSubsection}
-        onUploadPdf={() => setShowUploadDialog(true)}
-        onAddFromTemplate={() => setShowAddFromTemplate(true)}
+        onUploadPdf={handleOpenUploadDialog}
+        onAddFromTemplate={handleOpenAddFromTemplate}
         onReorderSubsections={handleReorderSubsections}
       />
       <div className='flex-1 flex flex-col relative'>
@@ -475,7 +522,7 @@ export function SmartEditorView() {
               <Button
                 variant='outline'
                 size='sm'
-                onClick={() => setTreeRetryKey((k) => k + 1)}
+                onClick={handleRetryTree}
               >
                 Retry
               </Button>
@@ -523,25 +570,17 @@ export function SmartEditorView() {
                 </div>
                 <TiptapEditor
                   key={selectedSubsection?.id}
-                  content={markdownToHtml(fileText)}
-                  onChange={() => {}}
+                  content={selectedFileHtml}
+                  onChange={handleReadOnlyEditorChange}
                   readOnly={false}
                   hideToolbar={false}
-                  sectionNumber={
-                    toSectionNumber(selectedSubsection?.subsectionNumber) ||
-                    toSectionNumber(selectedSection?.number) ||
-                    selectedSubsection?.subsectionNumber
-                  }
+                  sectionNumber={selectedEditorSectionNumber}
                 />
               </div>
             )}
             {fileMode === 'pdf' && fileUrl && (
               <div className='rounded-md border border-border overflow-hidden'>
-                <iframe
-                  src={fileUrl}
-                  className='w-full h-[80vh] border-0'
-                  title='PDF Preview'
-                />
+                <PdfPreviewFrame src={fileUrl} />
               </div>
             )}
             {fileMode !== 'md' && fileMode !== 'pdf' && !fileLoading && (
@@ -582,3 +621,6 @@ export function SmartEditorView() {
     </div>
   );
 }
+
+export const SmartEditorView = memo(SmartEditorViewComponent);
+SmartEditorView.displayName = 'SmartEditorView';

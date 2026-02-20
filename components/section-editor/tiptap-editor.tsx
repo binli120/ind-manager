@@ -4,7 +4,7 @@
 "use client"
 
 import { useEditor, EditorContent } from "@tiptap/react"
-import { useState, useEffect, useRef } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 import StarterKit from "@tiptap/starter-kit"
 import TextAlign from "@tiptap/extension-text-align"
 import { Table } from "@tiptap/extension-table"
@@ -64,7 +64,7 @@ interface TiptapEditorProps {
   placeholder?: string
 }
 
-export function TiptapEditor({
+function TiptapEditorComponent({
   content,
   onChange,
   materialsCount = 0,
@@ -228,7 +228,7 @@ export function TiptapEditor({
     setIsEditorEmpty(editor.getText().trim().length === 0)
   }, [content, editor])
 
-  const handleSaveComment = (commentText: string) => {
+  const handleSaveComment = useCallback((commentText: string) => {
     const newComment: Comment = {
       id: `comment-${Date.now()}`,
       position: currentCursorPosition,
@@ -237,7 +237,7 @@ export function TiptapEditor({
       timestamp: new Date(),
     }
 
-    setComments([...comments, newComment])
+    setComments((prev) => [...prev, newComment])
     setShowCommentPopup(false)
 
     if (editor) {
@@ -250,13 +250,13 @@ export function TiptapEditor({
         )
         .run()
     }
-  }
+  }, [currentCursorPosition, editor])
 
-  const handleInsertTable = (rows: number, cols: number) => {
+  const handleInsertTable = useCallback((rows: number, cols: number) => {
     if (editor) {
       editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run()
     }
-  }
+  }, [editor])
 
   useEffect(() => {
     return () => {
@@ -541,3 +541,6 @@ export function TiptapEditor({
     </>
   )
 }
+
+export const TiptapEditor = memo(TiptapEditorComponent)
+TiptapEditor.displayName = "TiptapEditor"

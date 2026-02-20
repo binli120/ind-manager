@@ -4,7 +4,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { memo, useCallback, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -106,7 +106,7 @@ const recentIssues: Issue[] = [
   },
 ]
 
-export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) {
+function RecentIssuesTableComponent({ lastAnalysisDate }: RecentIssuesTableProps) {
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
 
   const getSeverityIcon = (severity: Issue["severity"]) => {
@@ -131,11 +131,22 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
     }
   }
 
-  const handleDocumentClick = (documentPath: string) => {
+  const handleDocumentClick = useCallback((documentPath: string) => {
     // Navigate to document editor/viewer
     console.log("[v0] Opening document:", documentPath)
     alert(`Opening document viewer for: ${documentPath}`)
-  }
+  }, [])
+  const handleIssueSelect = useCallback((issue: Issue) => {
+    setSelectedIssue(issue)
+  }, [])
+  const handleIssueDialogOpenChange = useCallback((open: boolean) => {
+    if (!open) setSelectedIssue(null)
+  }, [])
+  const handleCloseIssue = useCallback(() => setSelectedIssue(null), [])
+  const handleOpenIssueDocument = useCallback(() => {
+    if (!selectedIssue) return
+    handleDocumentClick(selectedIssue.documentPath)
+  }, [handleDocumentClick, selectedIssue])
 
   return (
     <>
@@ -162,7 +173,7 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
                     {issue.time}
                   </TableCell>
                   <TableCell
-                    onClick={() => setSelectedIssue(issue)}
+                    onClick={() => handleIssueSelect(issue)}
                     className="font-medium hover:text-primary transition-colors max-w-0"
                   >
                     <div className="text-sm line-clamp-2 break-words">
@@ -183,7 +194,7 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
       </Card>
 
       {/* Issue Detail Dialog */}
-      <Dialog open={selectedIssue !== null} onOpenChange={(open) => !open && setSelectedIssue(null)}>
+      <Dialog open={selectedIssue !== null} onOpenChange={handleIssueDialogOpenChange}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <div className="flex items-start justify-between">
@@ -217,13 +228,13 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
               <Button
                 variant="link"
                 className="h-auto p-0 text-sm font-medium"
-                onClick={() => selectedIssue && handleDocumentClick(selectedIssue.documentPath)}
+                onClick={handleOpenIssueDocument}
               >
                 {selectedIssue?.documentName}
                 <ExternalLink className="w-3 h-3 ml-1" />
               </Button>
             </div>
-            <Button variant="outline" onClick={() => setSelectedIssue(null)}>
+            <Button variant="outline" onClick={handleCloseIssue}>
               Close
             </Button>
           </DialogFooter>
@@ -232,3 +243,6 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
     </>
   )
 }
+
+export const RecentIssuesTable = memo(RecentIssuesTableComponent)
+RecentIssuesTable.displayName = "RecentIssuesTable"

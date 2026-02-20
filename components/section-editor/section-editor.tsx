@@ -3,12 +3,10 @@
 // Email: blee@filynai.com
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { TiptapEditor } from "@/components/section-editor/tiptap-editor"
 import { TemplateDialog, flattenRows } from "@/components/section-editor/template-dialog"
 import { MaterialsDialog } from "@/components/section-editor/materials-dialog"
 import { MyMaterialsDialog } from "@/components/section-editor/my-materials-dialog"
@@ -23,6 +21,14 @@ import { extractSectionNumber } from "@/lib/section-editor/section-number"
 import { useAppDispatch, useAppSelector } from "@/lib/store"
 import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 import { fetchSectionList } from "@/lib/store/slices/sectionListSlice"
+
+const TiptapEditor = dynamic(
+  () => import("@/components/section-editor/tiptap-editor").then((mod) => mod.TiptapEditor),
+  {
+    ssr: false,
+    loading: () => <div className="h-[400px] rounded-lg border border-border bg-muted/30 animate-pulse" />,
+  },
+)
 
 const escapeHtml = (value: string) =>
   value
@@ -124,7 +130,7 @@ interface SectionEditorProps {
   onSelectSubsection: (subsection: SubsectionContent) => void
 }
 
-function SubsectionEditor({
+function SubsectionEditorComponent({
   subsection,
   fallbackSectionNumber,
   onSave,
@@ -262,20 +268,23 @@ function SubsectionEditor({
     }
   }, [subsection.isUserAdded, isAnimating])
 
-  const handleTableInsert = (rows: number, cols: number) => {
-    console.log(`[v0] Inserting table: ${rows}x${cols} for section ${subsection.subsectionNumber}`)
-  }
+  const handleTableInsert = useCallback(
+    (rows: number, cols: number) => {
+      console.log(`[v0] Inserting table: ${rows}x${cols} for section ${subsection.subsectionNumber}`)
+    },
+    [subsection.subsectionNumber],
+  )
 
-  const getStatusBadge = () => {
+  const statusBadge = useMemo(() => {
     if (subsection.status === "accepted") {
       return (
         <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Accepted</Badge>
       )
     }
     return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400">Draft</Badge>
-  }
+  }, [subsection.status])
 
-  const getEditorBackground = () => {
+  const editorBackground = useMemo(() => {
     const colors = [
       "bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20",
       "bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/20 dark:to-pink-950/20",
@@ -284,11 +293,11 @@ function SubsectionEditor({
       "bg-gradient-to-br from-cyan-50/50 to-sky-50/50 dark:from-cyan-950/20 dark:to-sky-950/20",
     ]
     return colors[index % colors.length]
-  }
+  }, [index])
 
   const isSection265 = subsection.subsectionNumber === "2.6.5"
 
-  const handleAiGenerate = async () => {
+  const handleAiGenerate = useCallback(async () => {
     const sectionNumber = "2.4.1"
     setShowAiDialog(true)
     setAiLoading(true)
@@ -320,9 +329,9 @@ function SubsectionEditor({
     } finally {
       setAiLoading(false)
     }
-  }
+  }, [])
 
-  const handleAiInsert = () => {
+  const handleAiInsert = useCallback(() => {
     if (!aiText) return
     const insertContent = `<p>${aiText.replace(/\n/g, "<br>")}</p>`
     const selection = document.getSelection()
@@ -347,9 +356,9 @@ function SubsectionEditor({
     setContent(newContent)
     setShowAiDialog(false)
     setAiText(null)
-  }
+  }, [aiText, content])
 
-  const handleInsertMaterials = (selected: MaterialItem[]) => {
+  const handleInsertMaterials = useCallback((selected: MaterialItem[]) => {
     const topicsHtml = selected
       .filter(isTopicMaterial)
       .map((item) => buildTopicHtml(item.data))
@@ -378,9 +387,9 @@ function SubsectionEditor({
     })
 
     setContent(newContent)
-  }
+  }, [content])
 
-  const resolveSectionFromList = (payload: unknown): string | null => {
+  const resolveSectionFromList = useCallback((payload: unknown): string | null => {
     if (!payload || typeof payload !== "object") return null
     const sections = Array.isArray((payload as Record<string, unknown>).sections)
       ? ((payload as Record<string, unknown>).sections as unknown[])
@@ -399,9 +408,9 @@ function SubsectionEditor({
       }
     }
     return null
-  }
+  }, [subsection.title])
 
-  const handleOpenTemplate = async () => {
+  const handleOpenTemplate = useCallback(() => {
     setTemplateResolveError(null)
     const direct = effectiveSectionNumber
     if (direct) {
@@ -418,12 +427,27 @@ function SubsectionEditor({
     }
 
     setTemplateResolveError("Could not resolve section number from section list.")
-  }
+  }, [effectiveSectionNumber, resolveSectionFromList, sectionList])
+
+  const handleOpenDeleteDialog = useCallback(() => setShowDeleteDialog(true), [])
+  const handleOpenMaterialsDialog = useCallback(() => setShowMaterialsDialog(true), [])
+  const handleOpenTableInsert = useCallback(() => setShowTableInsert(true), [])
+  const handleOpenMyMaterials = useCallback(() => setShowMyMaterialsDialog(true), [])
+  const handleSaveSubsection = useCallback(() => onSave(subsection.id), [onSave, subsection.id])
+  const handleApproveSubsection = useCallback(() => onApprove(subsection.id), [onApprove, subsection.id])
+  const handleDeleteSubsection = useCallback(() => onDelete(subsection.id), [onDelete, subsection.id])
+  const handleTemplateUnavailable = useCallback(() => setTemplateDisabled(true), [])
+  const handleTemplateAvailable = useCallback(() => setTemplateDisabled(false), [])
+  const handleMaterialsChange = useCallback((items: MaterialItem[]) => {
+    setMaterials(items)
+    setMaterialsCount(items.length)
+  }, [])
+  const handleCloseAiDialog = useCallback(() => setShowAiDialog(false), [])
 
   return (
     <div
       id={`section-${subsection.subsectionNumber}`}
-      className={`border-2 border-border rounded-lg ${getEditorBackground()} mb-8 shadow-sm ${
+      className={`border-2 border-border rounded-lg ${editorBackground} mb-8 shadow-sm ${
         isAnimating ? "animate-in slide-in-from-bottom-4 fade-in duration-500" : ""
       }`}
     >
@@ -441,7 +465,7 @@ function SubsectionEditor({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowDeleteDialog(true)}
+                onClick={handleOpenDeleteDialog}
                 className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
                 title="Delete this element"
               >
@@ -450,7 +474,7 @@ function SubsectionEditor({
             )}
           </div>
           <div className="flex items-center gap-2" data-tour="status">
-            {getStatusBadge()}
+            {statusBadge}
           </div>
         </div>
 
@@ -479,11 +503,11 @@ function SubsectionEditor({
             )}
             View & Edit Template
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowMaterialsDialog(true)} className="text-xs">
+          <Button variant="outline" size="sm" onClick={handleOpenMaterialsDialog} className="text-xs">
             Materials ({materialsCount})
           </Button>
           {isSection265 && (
-            <Button variant="outline" size="sm" onClick={() => setShowTableInsert(true)} className="text-xs">
+            <Button variant="outline" size="sm" onClick={handleOpenTableInsert} className="text-xs">
               Select Table
             </Button>
           )}
@@ -498,7 +522,7 @@ function SubsectionEditor({
           content={content}
           onChange={setContent}
           materialsCount={materialsCount}
-          onOpenMaterials={() => setShowMyMaterialsDialog(true)}
+          onOpenMaterials={handleOpenMyMaterials}
           onAiGenerate={handleAiGenerate}
           aiGenerating={aiLoading}
           sectionNumber={effectiveSectionNumber}
@@ -510,13 +534,13 @@ function SubsectionEditor({
         <div className="flex items-center justify-between">
           <div className="text-xs text-muted-foreground">Section {effectiveSectionNumber}</div>
           <div className="flex gap-3">
-            <Button variant="outline" className="gap-2 bg-transparent" onClick={() => onSave(subsection.id)}>
+            <Button variant="outline" className="gap-2 bg-transparent" onClick={handleSaveSubsection}>
               <Save className="h-4 w-4" />
               Save
             </Button>
             <Button
               className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={() => onApprove(subsection.id)}
+              onClick={handleApproveSubsection}
             >
               <CheckCircle2 className="h-4 w-4" />
               Accept
@@ -533,8 +557,8 @@ function SubsectionEditor({
           number: resolvedSection || effectiveSectionNumber,
           title: subsection.title,
         }}
-        onUnavailable={() => setTemplateDisabled(true)}
-        onAvailable={() => setTemplateDisabled(false)}
+        onUnavailable={handleTemplateUnavailable}
+        onAvailable={handleTemplateAvailable}
       />
 
       <MaterialsDialog
@@ -545,10 +569,7 @@ function SubsectionEditor({
         subsectionTitle={subsection.title}
         sectionNumber="4"
         materials={materials}
-        onMaterialsChange={(items) => {
-          setMaterials(items)
-          setMaterialsCount(items.length)
-        }}
+        onMaterialsChange={handleMaterialsChange}
         onMaterialsCountChange={setMaterialsCount}
       />
 
@@ -571,7 +592,7 @@ function SubsectionEditor({
         open={showDeleteDialog}
         onOpenChangeAction={setShowDeleteDialog}
         subsectionNumber={effectiveSectionNumber}
-        onConfirm={() => onDelete(subsection.id)}
+        onConfirm={handleDeleteSubsection}
       />
 
       <Dialog open={showAiDialog} onOpenChange={setShowAiDialog}>
@@ -594,7 +615,7 @@ function SubsectionEditor({
             )}
           </div>
           <div className="flex gap-2 justify-end pt-2">
-            <Button variant="outline" onClick={() => setShowAiDialog(false)} disabled={aiLoading}>
+            <Button variant="outline" onClick={handleCloseAiDialog} disabled={aiLoading}>
               Cancel
             </Button>
             <Button onClick={handleAiInsert} disabled={aiLoading || !aiText}>
@@ -607,7 +628,10 @@ function SubsectionEditor({
   )
 }
 
-export function SectionEditor({
+const SubsectionEditor = memo(SubsectionEditorComponent)
+SubsectionEditor.displayName = "SubsectionEditor"
+
+function SectionEditorComponent({
   section,
   selectedSubsection,
   onAddSubsection,
@@ -627,61 +651,82 @@ export function SectionEditor({
     void dispatch(fetchSectionList({ userId }))
   }, [dispatch, userId, sectionList, sectionListLoading, sectionListError])
 
-  const findParentSubsection = (subsection: SubsectionContent | null): SubsectionContent | null => {
-    if (!subsection) return null
+  const findParentSubsection = useCallback(
+    (subsection: SubsectionContent | null): SubsectionContent | null => {
+      if (!subsection) return null
 
-    const checkNested = (subs: SubsectionContent[]): SubsectionContent | null => {
-      for (const sub of subs) {
-        if (sub.subsections) {
-          if (sub.subsections.some((s) => s.id === subsection.id)) {
-            return sub
+      const checkNested = (subs: SubsectionContent[]): SubsectionContent | null => {
+        for (const sub of subs) {
+          if (sub.subsections) {
+            if (sub.subsections.some((s) => s.id === subsection.id)) {
+              return sub
+            }
+            const found = checkNested(sub.subsections)
+            if (found) return found
           }
-          const found = checkNested(sub.subsections)
-          if (found) return found
         }
+        return null
       }
-      return null
-    }
 
-    return checkNested(section.subsections || [])
-  }
+      return checkNested(section.subsections || [])
+    },
+    [section.subsections],
+  )
 
-  const parentSubsection = findParentSubsection(selectedSubsection)
+  const parentSubsection = useMemo(
+    () => findParentSubsection(selectedSubsection),
+    [findParentSubsection, selectedSubsection],
+  )
   const isViewingCategorySubsection = selectedSubsection?.isCategory === true
 
-  let mainHeader = `${section.number} ${section.title}`
-  let subHeader: string | null = null
+  const { mainHeader, subHeader } = useMemo(() => {
+    let computedMainHeader = `${section.number} ${section.title}`
+    let computedSubHeader: string | null = null
 
-  if (selectedSubsection) {
-    if (parentSubsection) {
-      mainHeader = `${parentSubsection.subsectionNumber} ${parentSubsection.title}`
-      subHeader = `${selectedSubsection.subsectionNumber} ${selectedSubsection.title}`
-    } else if (selectedSubsection.isCategory) {
-      mainHeader = `${selectedSubsection.subsectionNumber} ${selectedSubsection.title}`
-    } else {
-      subHeader = `${selectedSubsection.subsectionNumber} ${selectedSubsection.title}`
+    if (selectedSubsection) {
+      if (parentSubsection) {
+        computedMainHeader = `${parentSubsection.subsectionNumber} ${parentSubsection.title}`
+        computedSubHeader = `${selectedSubsection.subsectionNumber} ${selectedSubsection.title}`
+      } else if (selectedSubsection.isCategory) {
+        computedMainHeader = `${selectedSubsection.subsectionNumber} ${selectedSubsection.title}`
+      } else {
+        computedSubHeader = `${selectedSubsection.subsectionNumber} ${selectedSubsection.title}`
+      }
     }
-  }
 
-  const subsectionsToShow = selectedSubsection
-    ? isViewingCategorySubsection
-      ? selectedSubsection.subsections || []
-      : parentSubsection
-        ? parentSubsection.subsections || []
-        : [selectedSubsection]
-    : section.subsections || []
+    return { mainHeader: computedMainHeader, subHeader: computedSubHeader }
+  }, [parentSubsection, section.number, section.title, selectedSubsection])
 
-  const baseSectionNumber = selectedSubsection
-    ? isViewingCategorySubsection
-      ? selectedSubsection.subsectionNumber
-      : parentSubsection
-        ? parentSubsection.subsectionNumber
-        : section.number
-    : section.number
-
-  const inlineEditorSubsections = subsectionsToShow.filter(
-    (subsection) => !subsection.isCategory && !subsection.fullPath,
+  const subsectionsToShow = useMemo(
+    () =>
+      selectedSubsection
+        ? isViewingCategorySubsection
+          ? selectedSubsection.subsections || []
+          : parentSubsection
+            ? parentSubsection.subsections || []
+            : [selectedSubsection]
+        : section.subsections || [],
+    [isViewingCategorySubsection, parentSubsection, section.subsections, selectedSubsection],
   )
+
+  const baseSectionNumber = useMemo(
+    () =>
+      selectedSubsection
+        ? isViewingCategorySubsection
+          ? selectedSubsection.subsectionNumber
+          : parentSubsection
+            ? parentSubsection.subsectionNumber
+            : section.number
+        : section.number,
+    [isViewingCategorySubsection, parentSubsection, section.number, selectedSubsection],
+  )
+
+  const inlineEditorSubsections = useMemo(
+    () => subsectionsToShow.filter((subsection) => !subsection.isCategory && !subsection.fullPath),
+    [subsectionsToShow],
+  )
+  const noopSubsectionAction = useCallback((() => {}) as (id: string) => void, [])
+  const handleOpenAddDialog = useCallback(() => setShowAddDialog(true), [])
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-background">
@@ -721,7 +766,7 @@ export function SectionEditor({
                   ))}
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setShowAddDialog(true)} className="gap-2">
+              <Button variant="outline" size="sm" onClick={handleOpenAddDialog} className="gap-2">
                 <FileText className="h-4 w-4" />
                 Add new element
               </Button>
@@ -732,7 +777,7 @@ export function SectionEditor({
         {subsectionsToShow.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground mb-4">No content available for this section.</p>
-            <Button variant="outline" onClick={() => setShowAddDialog(true)} className="gap-2">
+            <Button variant="outline" onClick={handleOpenAddDialog} className="gap-2">
               <FileText className="h-4 w-4" />
               Add first element
             </Button>
@@ -749,8 +794,8 @@ export function SectionEditor({
               <SubsectionEditor
                 subsection={subsection}
                 fallbackSectionNumber={baseSectionNumber}
-                onSave={() => {}}
-                onApprove={() => {}}
+                onSave={noopSubsectionAction}
+                onApprove={noopSubsectionAction}
                 onDelete={onDeleteSubsection}
                 index={index}
                 total={inlineEditorSubsections.length}
@@ -770,3 +815,6 @@ export function SectionEditor({
     </div>
   )
 }
+
+export const SectionEditor = memo(SectionEditorComponent)
+SectionEditor.displayName = "SectionEditor"

@@ -3,6 +3,7 @@
 // Email: blee@filynai.com
 "use client";
 
+import { memo } from "react";
 import GapAnalysisDashboard from "@/components/gap-analysis/gap-analysis-dashboard";
 
 interface GapAnalysisViewProps {
@@ -19,6 +20,9 @@ interface GapAnalysisViewProps {
   ) => void;
 }
 
-export function GapAnalysisView({}: GapAnalysisViewProps) {
+function GapAnalysisViewComponent({}: GapAnalysisViewProps) {
   return <GapAnalysisDashboard />;
 }
+
+export const GapAnalysisView = memo(GapAnalysisViewComponent);
+GapAnalysisView.displayName = "GapAnalysisView";

@@ -3,7 +3,7 @@
 // Email: blee@filynai.com
 "use client"
 
-import { useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -36,6 +36,9 @@ interface Document {
   isOverdue?: boolean
 }
 
+export const ReviewCenterView = memo(ReviewCenterViewComponent)
+ReviewCenterView.displayName = "ReviewCenterView"
+
 interface Comment {
   id: string
   author: string
@@ -45,11 +48,11 @@ interface Comment {
   avatar: string
 }
 
-export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: string) => void }) {
+function ReviewCenterViewComponent({ onViewChange }: { onViewChange?: (view: string) => void }) {
   const [selectedDocument, setSelectedDocument] = useState<string>("doc1")
   const [newComment, setNewComment] = useState("")
 
-  const documents: Document[] = [
+  const documents = useMemo<Document[]>(() => [
     {
       id: "doc1",
       title: "ONX-2019 Phase 1 Dose...",
@@ -83,9 +86,9 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
       commentCount: 5,
       isOverdue: true,
     },
-  ]
+  ], [])
 
-  const comments: Comment[] = [
+  const comments = useMemo<Comment[]>(() => [
     {
       id: "1",
       author: "Dr. Smith",
@@ -121,7 +124,14 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
       timestamp: "Yesterday",
       avatar: "W",
     },
-  ]
+  ], [])
+
+  const handleBackToWorkspace = useCallback(() => {
+    onViewChange?.("workspace")
+  }, [onViewChange])
+  const handleSelectDocument = useCallback((documentId: string) => {
+    setSelectedDocument(documentId)
+  }, [])
 
   const getStatusColor = (status: Document["status"]) => {
     switch (status) {
@@ -143,7 +153,7 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onViewChange?.("workspace")}
+            onClick={handleBackToWorkspace}
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -183,7 +193,7 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
                 className={`cursor-pointer transition-all hover:shadow-md ${
                   selectedDocument === doc.id ? "ring-2 ring-primary" : ""
                 }`}
-                onClick={() => setSelectedDocument(doc.id)}
+                onClick={() => handleSelectDocument(doc.id)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">

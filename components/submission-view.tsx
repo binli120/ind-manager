@@ -3,16 +3,16 @@
 // Email: blee@filynai.com
 "use client"
 
-import { useState } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Clock, FileText, Upload, Shield, Send, Mail, Eye } from "lucide-react"
 
-export function SubmissionView() {
+function SubmissionViewComponent() {
   const [activeTab, setActiveTab] = useState<"process" | "acknowledgment" | "tracking">("process")
 
-  const checklistItems = [
+  const checklistItems = useMemo(() => [
     {
       title: "eCTD Validation",
       status: "Complete",
@@ -55,9 +55,9 @@ export function SubmissionView() {
       icon: Clock,
       description: "Notify team members",
     },
-  ]
+  ], [])
 
-  const submissionSteps = [
+  const submissionSteps = useMemo(() => [
     {
       step: 1,
       title: "Login to FDA ESG",
@@ -93,13 +93,16 @@ export function SubmissionView() {
       status: "pending",
       icon: Mail,
     },
-  ]
+  ], [])
 
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: "process", label: "Submission Process", active: activeTab === "process" },
     { id: "acknowledgment", label: "Acknowledgment", active: activeTab === "acknowledgment" },
     { id: "tracking", label: "Tracking", active: activeTab === "tracking" },
-  ]
+  ], [activeTab])
+  const handleTabChange = useCallback((tabId: "process" | "acknowledgment" | "tracking") => {
+    setActiveTab(tabId)
+  }, [])
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50/50 min-h-0">
@@ -127,7 +130,7 @@ export function SubmissionView() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
+              onClick={() => handleTabChange(tab.id as typeof activeTab)}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 tab.active
                   ? "border-purple-600 text-purple-600"
@@ -290,3 +293,6 @@ export function SubmissionView() {
     </div>
   )
 }
+
+export const SubmissionView = memo(SubmissionViewComponent)
+SubmissionView.displayName = "SubmissionView"

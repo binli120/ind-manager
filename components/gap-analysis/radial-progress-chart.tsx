@@ -3,7 +3,7 @@
 // Email: blee@filynai.com
 'use client';
 
-import { useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import {
   Cell,
   Legend,
@@ -33,15 +33,25 @@ const getModuleColor = (progress: number) => {
   return '#ef4444'; // Red
 };
 
-export function RadialProgressChart({ modules }: RadialProgressChartProps) {
+function RadialProgressChartComponent({ modules }: RadialProgressChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
 
-  const data = modules.map((module) => ({
-    name: `Module ${module.id}`,
-    value: module.progress,
-    issues: module.issues,
-    color: getModuleColor(module.progress),
-  }));
+  const data = useMemo(
+    () =>
+      modules.map((module) => ({
+        name: `Module ${module.id}`,
+        value: module.progress,
+        issues: module.issues,
+        color: getModuleColor(module.progress),
+      })),
+    [modules],
+  );
+  const handleMouseEnter = useCallback((_: unknown, index: number) => {
+    setActiveIndex(index);
+  }, []);
+  const handleMouseLeave = useCallback(() => {
+    setActiveIndex(undefined);
+  }, []);
 
   //console.log("[v0] Chart data with colors:", data)
 
@@ -94,8 +104,8 @@ export function RadialProgressChart({ modules }: RadialProgressChartProps) {
             dataKey='value'
             activeIndex={activeIndex}
             activeShape={renderActiveShape}
-            onMouseEnter={(_, index) => setActiveIndex(index)}
-            onMouseLeave={() => setActiveIndex(undefined)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
@@ -116,3 +126,6 @@ export function RadialProgressChart({ modules }: RadialProgressChartProps) {
     </div>
   );
 }
+
+export const RadialProgressChart = memo(RadialProgressChartComponent);
+RadialProgressChart.displayName = 'RadialProgressChart';

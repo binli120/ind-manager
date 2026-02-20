@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { AlertCircle, AlertTriangle, Info } from "lucide-react"
-import { useMemo } from "react"
+import { memo, useCallback, useMemo } from "react"
 
 interface Module {
   id: number
@@ -58,7 +58,13 @@ const generateIssues = (moduleId: number, count: number) => {
   })
 }
 
-export function IssueDetailDialog({ open, onClose, module }: IssueDetailDialogProps) {
+function IssueDetailDialogComponent({ open, onClose, module }: IssueDetailDialogProps) {
+  const handleDialogOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (!isOpen) onClose()
+    },
+    [onClose],
+  )
   const issues = useMemo(
     () => {
       if (!module || !open) return []
@@ -68,8 +74,6 @@ export function IssueDetailDialog({ open, onClose, module }: IssueDetailDialogPr
   )
 
   if (!module) return null
-
-
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
@@ -88,7 +92,7 @@ export function IssueDetailDialog({ open, onClose, module }: IssueDetailDialogPr
   }
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>{module.name}</DialogTitle>
@@ -131,3 +135,6 @@ export function IssueDetailDialog({ open, onClose, module }: IssueDetailDialogPr
     </Dialog>
   )
 }
+
+export const IssueDetailDialog = memo(IssueDetailDialogComponent)
+IssueDetailDialog.displayName = "IssueDetailDialog"
