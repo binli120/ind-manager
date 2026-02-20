@@ -28,6 +28,7 @@ import {
   FolderKanban,
 } from "lucide-react"
 import type { MaterialItem, TableData, ImageData, TopicData } from "./my-materials-dialog"
+import { sanitizeHtml } from "@/lib/utils/sanitize-html"
 
 interface AssetsSectionImage {
   id?: string
@@ -572,7 +573,7 @@ export function MaterialsDialog({
                             </div>
                             {topic.content ? (
                               <div className="text-sm text-muted-foreground leading-relaxed line-clamp-8">
-                                <div dangerouslySetInnerHTML={{ __html: topic.content }} />
+                                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(topic.content) }} />
                               </div>
                             ) : (
                               <p className="text-xs text-muted-foreground">No text content</p>
@@ -664,7 +665,7 @@ export function MaterialsDialog({
                                       ) : tbl.html ? (
                                         <div
                                           className="text-[11px] text-muted-foreground leading-relaxed"
-                                          dangerouslySetInnerHTML={{ __html: tbl.html }}
+                                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(tbl.html) }}
                                         />
                                       ) : (
                                         <p className="text-[11px] text-muted-foreground">Table preview unavailable.</p>

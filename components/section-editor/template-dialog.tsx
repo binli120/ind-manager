@@ -17,6 +17,7 @@ import { requestPdfAnalysisApi } from "@/lib/store/api/pdfAnalysisApi"
 import { useAppSelector } from "@/lib/store"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { sanitizeHtml } from "@/lib/utils/sanitize-html"
 
 interface TemplateDialogProps {
   section: {
@@ -1016,7 +1017,7 @@ export function TemplateDialog({ section, open, onOpenChange, onUnavailable, onA
                   </div>
 
                   <div className="border rounded-lg p-4 overflow-x-auto">
-                    <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: tableContent }} />
+                    <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(tableContent) }} />
                   </div>
                 </div>
               )}

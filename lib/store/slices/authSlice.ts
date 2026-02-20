@@ -1,20 +1,27 @@
 // Copyright@ filynai.com
 // Author: Bin Lee
 // Email: blee@filynai.com
-import {
-  createSlice,
-  createAsyncThunk,
-  type PayloadAction,
-} from "@reduxjs/toolkit";
-import { createBrowserClient } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/client";
-import type { Session } from "@supabase/supabase-js";
 import { auth_text } from "@/utils/constants";
 import {
-  authProfileRowSchema,
-  mapSupabaseUserToAuthUser,
-  type AuthUser as User,
-} from "@/lib/store/mappers/authUserMapper";
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
+import type { Session } from "@supabase/supabase-js";
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string | null;
+  avatar?: string | null;
+  privilege?: string;
+  role?: string | null;
+  permissions?: string[] | null;
+  teamId?: string;
+  createdAt: string;
+  lastLoginAt?: string;
+}
 
 interface AuthState {
   user: User | null;
@@ -34,10 +41,10 @@ const initialState: AuthState = {
 };
 
 const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error) return error.message
-  if (typeof error === "string") return error
-  return "Unknown error"
-}
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  return "Unknown error";
+};
 
 // Async thunks for authentication
 export const loginUser = createAsyncThunk(
@@ -47,7 +54,7 @@ export const loginUser = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createBrowserClient();
+      const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -67,10 +74,17 @@ export const loginUser = createAsyncThunk(
           console.warn("Profile fetch error:", profileError);
         }
 
-        const user = mapSupabaseUserToAuthUser({
-          authUser: data.user,
-          profile: profile ? authProfileRowSchema.parse(profile) : null,
-        });
+        const user: User = {
+          id: data.user.id,
+          email: data.user.email!,
+          name: profile?.name || data.user.user_metadata?.name,
+          avatar: profile?.avatar_url,
+          // role: profile?.role || "user",
+          // permissions: profile?.permissions || [],
+          // teamId: profile?.team_id,
+          createdAt: data.user.created_at,
+          lastLoginAt: data.user.last_sign_in_at,
+        };
 
         return { user, session: data.session };
       }
@@ -93,13 +107,12 @@ export const signUpUser = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const supabase = createBrowserClient();
+      const supabase = createClient();
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
             window.location.origin,
           data: {
             name: name || "",
@@ -110,7 +123,10 @@ export const signUpUser = createAsyncThunk(
       //Email already registered
       if (error) {
         const msg = error.message?.toLowerCase() || "";
-        if (msg.includes("already registered") || msg.includes("user already exists")) {
+        if (
+          msg.includes("already registered") ||
+          msg.includes("user already exists")
+        ) {
           return rejectWithValue(auth_text.email_registered);
         }
         return rejectWithValue(error.message || auth_text.sign_up_failed);
@@ -129,7 +145,7 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      const supabase = createBrowserClient();
+      const supabase = createClient();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       return true;
@@ -138,12 +154,14 @@ export const logoutUser = createAsyncThunk(
     }
   },
 );
-
+/**
+ * Get the current user.
+ */
 export const getCurrentUser = createAsyncThunk(
   "auth/getCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
-      const supabase = createBrowserClient();
+      const supabase = createClient();
       const {
         data: { session },
         error: sessionError,
@@ -165,17 +183,27 @@ export const getCurrentUser = createAsyncThunk(
           console.warn("Profile fetch error:", profileError);
         }
 
-        const userData = mapSupabaseUserToAuthUser({
-          authUser: user,
-          profile: profile ? authProfileRowSchema.parse(profile) : null,
-        });
+        const userData: User = {
+          id: user.id,
+          email: user.email!,
+          name: profile?.name || user.user_metadata?.name,
+          avatar: profile?.avatar_url,
+          privilege: user.user_metadata?.privilege || 'user',
+          role: profile?.submission_role,
+          // permissions: profile?.permissions || [],
+          // teamId: profile?.team_id,
+          createdAt: user.created_at,
+          lastLoginAt: user.last_sign_in_at,
+        };
 
         return { user: userData, session };
       }
 
       return null;
     } catch (error: unknown) {
-      return rejectWithValue(getErrorMessage(error) || "Failed to get current user");
+      return rejectWithValue(
+        getErrorMessage(error) || "Failed to get current user",
+      );
     }
   },
 );
@@ -211,12 +239,18 @@ const handleClearError = (state: AuthState) => {
   state.error = null;
 };
 
-const handleSetUser = (state: AuthState, action: PayloadAction<User | null>) => {
+const handleSetUser = (
+  state: AuthState,
+  action: PayloadAction<User | null>,
+) => {
   state.user = action.payload;
   state.isAuthenticated = !!action.payload;
 };
 
-const handleSetSession = (state: AuthState, action: PayloadAction<Session | null>) => {
+const handleSetSession = (
+  state: AuthState,
+  action: PayloadAction<Session | null>,
+) => {
   state.session = action.payload;
 };
 
@@ -315,6 +349,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, setUser, setLoading, setSession, clearAuth } = authSlice.actions;
-export type { User };
+export const { clearError, setUser, setLoading, setSession, clearAuth } =
+  authSlice.actions;
 export default authSlice.reducer;

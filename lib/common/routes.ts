@@ -11,7 +11,7 @@ export const ROUTES = {
     project: "/projects",
     Calendar: "/calendar",
     Submission: {
-        IND: "/submission/ind",
+        IND: "/submission/IND",
         acknowledge: "/submission/acknowledge",
         post: "/submission/post",
     },
@@ -23,6 +23,6 @@ export const ROUTES = {
         gapScoring: "/analysis/gap_scoring",
     },
     design: {
-        designPage: "/design/design-system",
+        designPage: "/design/system",
     },
 };
