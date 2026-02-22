@@ -32,8 +32,11 @@ next-env.d.ts
 .npmrc
 .npmrc
 
-#supabase
-/supabase
+# supabase
+/supabase/*
+!/supabase/config.toml
+!/supabase/migrations/
+!/supabase/migrations/**
 
 #vscode
 .vscode

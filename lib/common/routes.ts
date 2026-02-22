@@ -23,6 +23,6 @@ export const ROUTES = {
         gapScoring: "/analysis/gap_scoring",
     },
     design: {
-        designPage: "/design/design-system",
+        designPage: "/design/system",
     },
 };
