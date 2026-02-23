@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { ProjectsView } from '@/components/projects-view';
 
 export default function ProjectsPage() {

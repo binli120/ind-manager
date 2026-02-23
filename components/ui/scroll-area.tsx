@@ -1,9 +1,8 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 'use client'
 
-// Author: Bin Lee (blee@filynai.com)
+// Author: Bin Lee (binlee120@gmail.com)
 // Description: Creates styled scroll area components for consistent overflow behavior.
 
 import * as React from 'react'

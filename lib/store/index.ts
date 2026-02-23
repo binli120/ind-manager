@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { configureStore } from "@reduxjs/toolkit"
 import { type TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
 import authSlice from "./slices/authSlice"

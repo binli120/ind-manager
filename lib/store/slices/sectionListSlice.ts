@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import { getSectionListPayload } from "@/lib/section-list-mapping"
 

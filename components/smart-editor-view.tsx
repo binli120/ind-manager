@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 'use client';
 
 import { AddFromTemplateDialog } from '@/components/section-editor/add-from-template-dialog';
@@ -41,7 +40,7 @@ import {
 import { upsertSectionPath } from '@/lib/section-tree';
 import type { Section, SubsectionContent } from '@/types/section';
 import { HelpCircle, Loader2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 // Default empty template; actual sections are fetched from S3.
 // No hardcoded template; always load from S3
@@ -286,12 +285,12 @@ export function SmartEditorView() {
     loadFile();
   }, [isSelectedFile, selectedSubsection, selectedProjectId]);
 
-  const handleSelectSection = (section: Section) => {
+  const handleSelectSection = useCallback((section: Section) => {
     setSelectedSection(section);
     setSelectedSubsection(null);
-  };
+  }, []);
 
-  const handleSelectSubsection = (subsection: SubsectionContent) => {
+  const handleSelectSubsection = useCallback((subsection: SubsectionContent) => {
     setSelectedSubsection(subsection);
     const parentSection = findParentSectionForSubsection({
       sections: sectionData,
@@ -305,9 +304,9 @@ export function SmartEditorView() {
     ) {
       setSelectedSection(parentSection);
     }
-  };
+  }, [sectionData, selectedSection]);
 
-  const handleAddSubsection = (subsectionNumber: string, header: string) => {
+  const handleAddSubsection = useCallback((subsectionNumber: string, header: string) => {
     console.log('[v0] Adding subsection:', subsectionNumber, header);
     if (!selectedSection) return;
 
@@ -342,9 +341,9 @@ export function SmartEditorView() {
         }
       }, 100);
     }
-  };
+  }, [sectionData, selectedSection, selectedSubsection]);
 
-  const handleCreateFromTemplate = (
+  const handleCreateFromTemplate = useCallback((
     templateNumber: string,
     createdKey?: string,
   ) => {
@@ -370,25 +369,25 @@ export function SmartEditorView() {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 120);
-  };
+  }, [sectionData, treeCacheKey]);
 
-  const handleCloseTour = () => {
+  const handleCloseTour = useCallback(() => {
     setShowTour(false);
     localStorage.setItem('hasSeenOnboardingTour', 'true');
     setHasSeenTour(true);
-  };
+  }, [setHasSeenTour]);
 
-  const handleStartTour = () => {
+  const handleStartTour = useCallback(() => {
     setShowTour(true);
-  };
+  }, []);
 
-  const handleUploadComplete = (sectionNumber: string, fileName: string) => {
+  const handleUploadComplete = useCallback((sectionNumber: string, fileName: string) => {
     console.log('[v0] PDF uploaded:', fileName, 'Section:', sectionNumber);
     const newSection = buildUploadedSection({ sectionNumber, fileName });
     setSectionData((prev) => [...prev, newSection]);
-  };
+  }, []);
 
-  const handleDeleteSubsection = (subsectionId: string) => {
+  const handleDeleteSubsection = useCallback((subsectionId: string) => {
     console.log('[v0] Deleting subsection:', subsectionId);
 
     setSectionData((prevSections) =>
@@ -403,9 +402,9 @@ export function SmartEditorView() {
     if (selectedSubsection?.id === subsectionId) {
       setSelectedSubsection(null);
     }
-  };
+  }, [selectedSection?.id, selectedSubsection?.id]);
 
-  const handleReorderSubsections = (
+  const handleReorderSubsections = useCallback((
     draggedId: string,
     targetId: string,
     parentId: string | null,
@@ -427,7 +426,21 @@ export function SmartEditorView() {
         targetId,
       }),
     );
-  };
+  }, [selectedSection?.id]);
+
+  const handleRetryTree = useCallback(() => {
+    setTreeRetryKey((k) => k + 1);
+  }, []);
+
+  const handleOpenUploadDialog = useCallback(() => {
+    setShowUploadDialog(true);
+  }, []);
+
+  const handleOpenAddFromTemplateDialog = useCallback(() => {
+    setShowAddFromTemplate(true);
+  }, []);
+
+  const handleEditorChange = useCallback(() => {}, []);
 
   return (
     <div className='flex h-full w-full bg-background overflow-hidden'>
@@ -437,8 +450,8 @@ export function SmartEditorView() {
         selectedSubsection={selectedSubsection}
         onSelectSection={handleSelectSection}
         onSelectSubsection={handleSelectSubsection}
-        onUploadPdf={() => setShowUploadDialog(true)}
-        onAddFromTemplate={() => setShowAddFromTemplate(true)}
+        onUploadPdf={handleOpenUploadDialog}
+        onAddFromTemplate={handleOpenAddFromTemplateDialog}
         onReorderSubsections={handleReorderSubsections}
       />
       <div className='flex-1 flex flex-col relative'>
@@ -475,7 +488,7 @@ export function SmartEditorView() {
               <Button
                 variant='outline'
                 size='sm'
-                onClick={() => setTreeRetryKey((k) => k + 1)}
+                onClick={handleRetryTree}
               >
                 Retry
               </Button>
@@ -524,7 +537,7 @@ export function SmartEditorView() {
                 <TiptapEditor
                   key={selectedSubsection?.id}
                   content={markdownToHtml(fileText)}
-                  onChange={() => {}}
+                  onChange={handleEditorChange}
                   readOnly={false}
                   hideToolbar={false}
                   sectionNumber={

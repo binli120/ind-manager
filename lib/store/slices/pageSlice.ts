@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface PageState {

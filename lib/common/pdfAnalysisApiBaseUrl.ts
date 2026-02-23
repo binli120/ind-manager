@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 
 const LOCAL_PDF_ANALYSIS_API_BASE_URL = "http://localhost:8000";
 

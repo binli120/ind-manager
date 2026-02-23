@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { ReduxProvider } from '@/components/providers/redux-provider';
 import { ThemeProvider } from '@/components/theme-provider';

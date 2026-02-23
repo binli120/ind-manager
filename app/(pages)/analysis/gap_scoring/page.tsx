@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { GapScoringView } from '@/components/gap-scoring-view';
 
 export default function GapScoringPage() {

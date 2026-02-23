@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LoggerOptions {

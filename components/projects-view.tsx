@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -34,75 +33,14 @@ import {
 } from "lucide-react";
 import { useProjectsViewController } from "@/hooks/useProjectsViewController";
 import { ProjectForm } from "./ui/projects/project-form";
-
-//IM-61: Add status info
-const statusOptions = [
-  { header: "Pre-Submission" },
-  { value: "draft", label: "Draft" },
-  { value: "pre-ind-meeting-requested", label: "Pre-IND Meeting Requested " },
-  { value: "pre-ind-meeting-completed", label: "Pre-IND Meeting Completed " },
-  { header: "Submission & Review" },
-  { value: "submitted", label: "Submitted " },
-  { value: "under-review", label: "Under Review " },
-  { value: "active", label: "Active " },
-  { header: "Hold States" },
-  { value: "clinical-hold-complete", label: "Clinical Hold - Complete " },
-  { value: "clinical-hold-partial", label: "Clinical Hold - Partial " },
-  { header: "Other States" },
-  { value: "inactive", label: "Inactive - No subjects enrolled for 2+ years OR on clinical hold for ≥1 year" },
-  { value: "withdrawn", label: "Withdrawn - (can be reactivated)" },
-  { value: "terminated", label: "Terminated - (serious deficiencies or inactive ≥5 years)" },
-];
-
-const statusConfig = {
-  // Pre-Submission
-  draft: { label: "Draft", color: "bg-slate-100 text-slate-800 border-slate-200" },
-  "pre-ind-meeting-requested": {
-    label: "Pre-IND Requested",
-    color: "bg-amber-100 text-amber-800 border-amber-200",
-  },
-  "pre-ind-meeting-completed": {
-    label: "Pre-IND Completed",
-    color: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  },
-
-  // Submission & Review
-  submitted: { label: "Submitted", color: "bg-blue-100 text-blue-800 border-blue-200" },
-  "under-review": { label: "Under Review", color: "bg-indigo-100 text-indigo-800 border-indigo-200" },
-  active: { label: "Active", color: "bg-green-100 text-green-800 border-green-200" },
-
-  // Hold States
-  "clinical-hold-complete": {
-    label: "Clinical Hold - Complete",
-    color: "bg-red-100 text-red-800 border-red-200",
-  },
-  "clinical-hold-partial": {
-    label: "Clinical Hold - Partial",
-    color: "bg-orange-100 text-orange-800 border-orange-200",
-  },
-
-  // Other States
-  inactive: { label: "Inactive", color: "bg-slate-100 text-slate-800 border-slate-200" },
-  withdrawn: { label: "Withdrawn", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  terminated: { label: "Terminated", color: "bg-rose-100 text-rose-800 border-rose-200" },
-};
-
-
-
-const priorityOptions = [
-  { value: "all", label: "All Priority" },
-  { value: "critical", label: "Critical" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
-];
-
-const priorityConfig = {
-  low: { label: "Low", color: "bg-gray-100 text-gray-600" },
-  medium: { label: "Medium", color: "bg-amber-100 text-amber-700" },
-  high: { label: "High", color: "bg-orange-100 text-orange-700" },
-  critical: { label: "Critical", color: "bg-red-100 text-red-700" },
-};
+import { useCallback, type ChangeEvent, type MouseEvent } from "react";
+import {
+  PROJECT_PRIORITY_BADGE_CONFIG,
+  PROJECT_PRIORITY_FILTER_OPTIONS,
+  PROJECT_STATUS_BADGE_CONFIG,
+  PROJECT_STATUS_FILTER_OPTIONS,
+  isProjectStatusFilterHeader,
+} from "@/lib/projects/constants";
 
 export function ProjectsView() {
   const {
@@ -133,6 +71,50 @@ export function ProjectsView() {
     goToPreviousPage,
     goToNextPage,
   } = useProjectsViewController();
+
+  const handleSearchInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    handleSearchChange(event.target.value);
+  }, [handleSearchChange]);
+
+  const handleGridViewModeChange = useCallback(() => {
+    handleViewModeChange("grid");
+  }, [handleViewModeChange]);
+
+  const handleListViewModeChange = useCallback(() => {
+    handleViewModeChange("list");
+  }, [handleViewModeChange]);
+
+  const handleEditProjectClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    const projectId = event.currentTarget.dataset.projectId;
+    if (projectId) {
+      openEditDialog(projectId);
+    }
+  }, [openEditDialog]);
+
+  const handleDeleteProjectClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    const projectId = event.currentTarget.dataset.projectId;
+    if (projectId) {
+      handleDeleteProject(projectId);
+    }
+  }, [handleDeleteProject]);
+
+  const handleResumeMouseEnter = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    if (event.currentTarget.dataset.enabled === "true") {
+      event.currentTarget.style.backgroundColor = "#7c3aed";
+    }
+  }, []);
+
+  const handleResumeMouseLeave = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    if (event.currentTarget.dataset.enabled === "true") {
+      event.currentTarget.style.backgroundColor = "#8b5cf6";
+    }
+  }, []);
+
+  const handleResumeClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    if (event.currentTarget.dataset.enabled === "true") {
+      console.log("Resume clicked");
+    }
+  }, []);
 
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50/50">
@@ -165,7 +147,7 @@ export function ProjectsView() {
               <Input
                 placeholder="Search projects..."
                 value={filters.search}
-                onChange={(e) => handleSearchChange(e.target.value)}
+                onChange={handleSearchInputChange}
                 className="pl-10 bg-background border-border shadow-sm"
               />
             </div>
@@ -179,8 +161,8 @@ export function ProjectsView() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                {statusOptions.map((opt, idx) =>
-                  opt.header ? (
+                {PROJECT_STATUS_FILTER_OPTIONS.map((opt, idx) =>
+                  isProjectStatusFilterHeader(opt) ? (
                     <div key={`hdr-${idx}`} className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide cursor-default select-none">
                       {opt.header}
                     </div>
@@ -201,7 +183,7 @@ export function ProjectsView() {
                 <SelectValue placeholder="All Priority" />
               </SelectTrigger>
                <SelectContent>
-                {priorityOptions.map((opt) => (
+                {PROJECT_PRIORITY_FILTER_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -214,7 +196,7 @@ export function ProjectsView() {
             <Button
               variant={viewMode === "grid" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleViewModeChange("grid")}
+              onClick={handleGridViewModeChange}
               className="shadow-sm"
             >
               <Grid3X3 className="w-4 h-4" />
@@ -222,7 +204,7 @@ export function ProjectsView() {
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleViewModeChange("list")}
+              onClick={handleListViewModeChange}
               className="shadow-sm"
             >
               <List className="w-4 h-4" />
@@ -261,14 +243,14 @@ export function ProjectsView() {
                           </h3>
                           <div className="flex flex-wrap gap-2">
                              <Badge
-                                className={`${statusConfig[project.status].color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[240px]`}
+                                className={`${PROJECT_STATUS_BADGE_CONFIG[project.status].color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[240px]`}
                               >
-                                {statusConfig[project.status].label}
+                                {PROJECT_STATUS_BADGE_CONFIG[project.status].label}
                               </Badge>
                               <Badge
-                                className={`${priorityConfig[project.priority].color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[160px]`}
+                                className={`${PROJECT_PRIORITY_BADGE_CONFIG[project.priority].color} text-xs px-2 py-1 leading-tight whitespace-normal break-words max-w-[160px]`}
                               >
-                                {priorityConfig[project.priority].label}
+                                {PROJECT_PRIORITY_BADGE_CONFIG[project.priority].label}
                              </Badge>
                           </div>
                         </div>
@@ -387,7 +369,8 @@ export function ProjectsView() {
                           variant="ghost"
                           size="sm"
                           className="flex-1 hover:bg-accent/10 hover:text-accent"
-                          onClick={() => openEditDialog(project.id)}
+                          data-project-id={project.id}
+                          onClick={handleEditProjectClick}
                         >
                           <Edit3 className="w-4 h-4 mr-2" />
                           Edit
@@ -396,6 +379,7 @@ export function ProjectsView() {
                 
                       <button
                         disabled={!isResumeEnabled}
+                        data-enabled={String(isResumeEnabled)}
                         style={{
                           backgroundColor: isResumeEnabled ? "#8b5cf6" : "#e5e7eb",
                           color: isResumeEnabled ? "#ffffff" : "#9ca3af",
@@ -414,15 +398,9 @@ export function ProjectsView() {
                           flex: "1",
                           minHeight: "32px",
                         }}
-                        onMouseEnter={(e) => {
-                          if (isResumeEnabled) e.currentTarget.style.backgroundColor = "#7c3aed";
-                        }}
-                        onMouseLeave={(e) => {
-                          if (isResumeEnabled) e.currentTarget.style.backgroundColor = "#8b5cf6";
-                        }}
-                        onClick={() => {
-                          if (isResumeEnabled) console.log("Resume clicked");
-                        }}
+                        onMouseEnter={handleResumeMouseEnter}
+                        onMouseLeave={handleResumeMouseLeave}
+                        onClick={handleResumeClick}
                       >
                         <Play className="w-4 h-4" style={{ color: isResumeEnabled ? "#ffffff" : "#9ca3af" }} />
                         <span style={{ color: isResumeEnabled ? "#ffffff" : "#9ca3af" }}>Resume</span>
@@ -433,7 +411,8 @@ export function ProjectsView() {
                           variant="ghost"
                           size="sm"
                           className="hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => handleDeleteProject(project.id)}
+                          data-project-id={project.id}
+                          onClick={handleDeleteProjectClick}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

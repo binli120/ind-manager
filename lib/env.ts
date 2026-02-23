@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { createLogger } from "@/lib/common/logger";
 
 const logger = createLogger({ module: "env" });

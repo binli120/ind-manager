@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 
 export const extractSectionNumber = (value?: string | null) => {
   if (!value) return null;

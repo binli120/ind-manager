@@ -1,11 +1,9 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 "use client";
 
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/lib/store";
+import { useCallback, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/lib/store";
 import {
   hydrateSelectedProjectFromStorage,
   setSelectedProjectId,
@@ -13,14 +11,14 @@ import {
 
 
 export function useProject() {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const {
     projects,
     currentProject,
     selectedProjectId,
     isLoading,
     error,
-  } = useSelector((s: RootState) => s.projects);
+  } = useAppSelector((s) => s.projects);
 
   // Hydrate once on mount
   useEffect(() => {
@@ -28,9 +26,9 @@ export function useProject() {
   }, [dispatch]);
 
   // Setter that also persists via reducer
-  const setProject = (id: string | null) => {
+  const setProject = useCallback((id: string | null) => {
     dispatch(setSelectedProjectId(id));
-  };
+  }, [dispatch]);
 
   return {
     projects,

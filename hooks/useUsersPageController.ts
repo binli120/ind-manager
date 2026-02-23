@@ -1,8 +1,6 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 
-import { authServices } from "@/lib/auth/auth-services";
 import { fetchProjects } from "@/lib/supabase/projects";
 import {
   deleteUser,
@@ -28,9 +26,11 @@ import type {
   UserPrivilege,
   UserStatusFilter,
 } from "@/lib/users/types";
+import { useAppSelector } from "@/lib/store";
 import { useEffect, useMemo, useState } from "react";
 
 export function useUsersPageController() {
+  const authUser = useAppSelector((state) => state.auth.user);
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<UserStatusFilter>("all");
@@ -58,11 +58,16 @@ export function useUsersPageController() {
     let isActive = true;
 
     const initializeUserData = async () => {
-      const authData = await authServices.getUser();
-      const authUser = authData.data?.user;
-      if (!authUser || !isActive) return;
+      if (!authUser?.id) {
+        if (!isActive) return;
+        setUsers([]);
+        setAvailableProjects([]);
+        setTenants([]);
+        setCompanies([]);
+        return;
+      }
 
-      const privilege = normalizeUserPrivilege(authUser.user_metadata?.privilege);
+      const privilege = normalizeUserPrivilege(authUser.privilege);
       setCurrentUserPrivilege(privilege);
 
       const targetTenantId: string | undefined = undefined;
@@ -85,7 +90,7 @@ export function useUsersPageController() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [authUser?.id, authUser?.privilege]);
 
   const filteredUsers = useMemo(
     () =>

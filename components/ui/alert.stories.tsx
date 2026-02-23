@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import type { Meta, StoryObj } from '@storybook/react-webpack5'
 import { CircleAlert, Info, Terminal } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from './alert'

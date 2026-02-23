@@ -1,4 +1,3 @@
-// Copyright@ filynai.com
 
 import { NextRequest, NextResponse } from "next/server"
 import { getLimiter, type RateLimitTier } from "./rate-limit-config"

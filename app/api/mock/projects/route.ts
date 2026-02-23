@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { NextResponse, type NextRequest } from "next/server";
 import type { Project, ProjectMember } from "@/lib/store/slices";
 import mockProjects from "@/mock/data/projects.json";

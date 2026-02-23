@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { GapAnalysisView } from '@/components/gap-analysis-view';
 
 export default function GapAnalysisPage() {

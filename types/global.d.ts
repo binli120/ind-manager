@@ -1,7 +1,6 @@
 // src/types/global.d.ts
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 
 import type * as Sentry from "@sentry/browser"; // or '@sentry/react' if you use the React SDK
 

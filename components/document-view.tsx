@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 'use client';
 
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 import { fetchUserDocuments } from '@/lib/store/slices';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 //import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CommentsPanel } from '@/components/comments-panel';
 import { DataTable } from '@/components/data-table';
@@ -70,6 +69,18 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
     }
   }, [dispatch, user?.id]);
 
+  const handleDocumentAuthoringClick = useCallback(() => {
+    onViewChange?.('document-authoring');
+  }, [onViewChange]);
+
+  const handleReviewCenterClick = useCallback(() => {
+    onViewChange?.('review-center');
+  }, [onViewChange]);
+
+  const handleGapAnalysisClick = useCallback(() => {
+    onViewChange?.('gap-analysis');
+  }, [onViewChange]);
+
   const documentMetadata = currentDocument
     ? [
         {
@@ -119,7 +130,7 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
         <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-6'>
           <Card
             className='hover:shadow-md transition-shadow cursor-pointer'
-            onClick={() => onViewChange?.('document-authoring')}
+            onClick={handleDocumentAuthoringClick}
           >
             <CardContent className='p-6'>
               <div className='flex items-center gap-3'>
@@ -138,7 +149,7 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
 
           <Card
             className='hover:shadow-md transition-shadow cursor-pointer'
-            onClick={() => onViewChange?.('review-center')}
+            onClick={handleReviewCenterClick}
           >
             <CardContent className='p-6'>
               <div className='flex items-center gap-3'>
@@ -155,7 +166,7 @@ export function DocumentView({ onViewChange }: DocumentViewProps) {
 
           <Card
             className='hover:shadow-md transition-shadow cursor-pointer'
-            onClick={() => onViewChange?.('gap-analysis')}
+            onClick={handleGapAnalysisClick}
           >
             <CardContent className='p-6'>
               <div className='flex items-center gap-3'>

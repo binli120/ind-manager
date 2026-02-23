@@ -1,9 +1,8 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 "use client"
 
-// Author: Bin Lee (blee@filynai.com)
+// Author: Bin Lee (binlee120@gmail.com)
 // Description: Styled wrapper around Radix separator used for layout dividers.
 
 import * as React from "react"

@@ -1,12 +1,10 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 
 "use client";
 
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/lib/store";
+import { useCallback, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/lib/store";
 import {
   hydrateSelectedTenantFromStorage,
   setSelectedTenantId,
@@ -15,17 +13,17 @@ import {
 /**
  */
 export function useTenant() {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const { tenants, currentTenant, selectedTenantId, isLoading, error } =
-    useSelector((s: RootState) => s.tenants);
+    useAppSelector((s) => s.tenants);
 
   useEffect(() => {
     dispatch(hydrateSelectedTenantFromStorage());
   }, [dispatch]);
 
-  const setTenant = (id: string | null) => {
+  const setTenant = useCallback((id: string | null) => {
     dispatch(setSelectedTenantId(id));
-  };
+  }, [dispatch]);
 
   return { tenants, currentTenant, selectedTenantId, isLoading, error, setTenant };
 }

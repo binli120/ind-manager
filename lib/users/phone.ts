@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 
 const PHONE_DIGITS_COUNT = 10;
 const PHONE_PATTERN = /^\d{3}-\d{3}-\d{4}$/;

@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default async function Page({

@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 //recommand import { v4 as uuidv4 } from 'uuid'

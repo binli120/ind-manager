@@ -1,9 +1,8 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 "use client"
 
-import { useState } from "react"
+import { useCallback, useState, type MouseEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -48,6 +47,13 @@ interface Comment {
 export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: string) => void }) {
   const [selectedDocument, setSelectedDocument] = useState<string>("doc1")
   const [newComment, setNewComment] = useState("")
+  const handleBackToWorkspace = useCallback(() => {
+    onViewChange?.("workspace")
+  }, [onViewChange])
+  const handleSelectDocument = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const documentId = event.currentTarget.dataset.documentId
+    if (documentId) setSelectedDocument(documentId)
+  }, [])
 
   const documents: Document[] = [
     {
@@ -143,7 +149,7 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onViewChange?.("workspace")}
+            onClick={handleBackToWorkspace}
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -180,10 +186,11 @@ export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: strin
             {documents.map((doc) => (
               <Card
                 key={doc.id}
+                data-document-id={doc.id}
                 className={`cursor-pointer transition-all hover:shadow-md ${
                   selectedDocument === doc.id ? "ring-2 ring-primary" : ""
                 }`}
-                onClick={() => setSelectedDocument(doc.id)}
+                onClick={handleSelectDocument}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">

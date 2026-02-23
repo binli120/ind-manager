@@ -1,7 +1,6 @@
 // useForm.ts
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 
 import { useCallback, useState } from "react";
 

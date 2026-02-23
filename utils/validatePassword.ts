@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 export function validatePassword(password: string, confirmPassword: string): string | null {
   if (password !== confirmPassword) {
     return 'Passwords do not match';

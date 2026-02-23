@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 
 import { createBrowserClient } from '@/lib/supabase';
 import { fetchSampleUsers } from '@/lib/examples/supabase-example-service';

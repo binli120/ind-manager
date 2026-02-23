@@ -1,4 +1,3 @@
-// Copyright@ filynai.com
 
 /**
  * In-memory fixed-window rate limiter.

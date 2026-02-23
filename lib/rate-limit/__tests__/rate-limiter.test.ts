@@ -1,4 +1,3 @@
-// Copyright@ filynai.com
 
 import { RateLimiter } from "../rate-limiter"
 

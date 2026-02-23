@@ -1,9 +1,8 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 "use client"
 
-import { useState } from "react"
+import { useCallback, useState, type MouseEvent } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +12,14 @@ import { CheckCircle2, Clock, AlertTriangle, FileText, Search, Calendar, Phone, 
 export function PostSubmissionView() {
   const [activeTab, setActiveTab] = useState<"correspondence" | "timeline" | "actions">("correspondence")
   const [selectedCorrespondence, setSelectedCorrespondence] = useState("info-request")
+  const handleTabClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    const tabId = event.currentTarget.dataset.tabId as typeof activeTab | undefined
+    if (tabId) setActiveTab(tabId)
+  }, [])
+  const handleSelectCorrespondence = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const correspondenceId = event.currentTarget.dataset.correspondenceId
+    if (correspondenceId) setSelectedCorrespondence(correspondenceId)
+  }, [])
 
   const correspondenceItems = [
     {
@@ -114,7 +121,8 @@ export function PostSubmissionView() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
+              data-tab-id={tab.id}
+              onClick={handleTabClick}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 tab.active
                   ? "border-purple-600 text-purple-600"
@@ -147,7 +155,8 @@ export function PostSubmissionView() {
                 {correspondenceItems.map((item) => (
                   <div
                     key={item.id}
-                    onClick={() => setSelectedCorrespondence(item.id)}
+                    data-correspondence-id={item.id}
+                    onClick={handleSelectCorrespondence}
                     className={`p-4 rounded-lg border cursor-pointer transition-colors ${
                       selectedCorrespondence === item.id
                         ? "border-purple-200 bg-purple-50"

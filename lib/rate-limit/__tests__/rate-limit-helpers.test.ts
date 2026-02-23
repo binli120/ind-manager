@@ -1,7 +1,6 @@
 /**
  * @jest-environment node
  */
-// Copyright@ filynai.com
 
 import { NextRequest } from "next/server"
 import {

@@ -1,6 +1,5 @@
-// Copyright@ filynai.com
 // Author: Bin Lee
-// Email: blee@filynai.com
+// Email: binlee120@gmail.com
 'use client';
 
 import { Header } from '@/components/header';
@@ -19,7 +18,7 @@ import { useAppDispatch, useAppSelector } from '@/lib/store';
 import { setCommentsPanelOpen, setSidebarOpen } from '@/lib/store/slices/uiSlice';
 import { authServices } from '@/lib/auth/auth-services';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isAdminEmail } from '@/lib/utils';
 
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
@@ -90,26 +89,26 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     setCurrentUserPrivilege('user');
   }, [user?.privilege, user?.role, user?.email]);
 
-  const handleToggleSidebar = () => {
+  const handleToggleSidebar = useCallback(() => {
     dispatch(setSidebarOpen(!sidebarOpen));
-  };
+  }, [dispatch, sidebarOpen]);
 
-  const handleToggleComments = () => {
+  const handleToggleComments = useCallback(() => {
     dispatch(setCommentsPanelOpen(!commentsPanelOpen));
-  };
+  }, [commentsPanelOpen, dispatch]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await authServices.signOut();
     window.location.href = '/login';
-  };
+  }, []);
 
-  const handleNotify = () => {
+  const handleNotify = useCallback(() => {
     const subject = encodeURIComponent('Project assignment request');
     const body = encodeURIComponent(
       `Hi team,\n\nI do not have any project assigned in the IND workspace.\nPlease assign one to my account (${user?.email ?? 'user email unknown'}).\n\nThanks!`
     );
     window.location.href = `mailto:pm@filynai.com?subject=${subject}&body=${body}`;
-  };
+  }, [user?.email]);
 
   const isAuthPage = pathname?.startsWith('/auth/') || pathname === '/login' || pathname === '/register';
 
