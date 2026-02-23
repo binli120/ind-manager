@@ -23,29 +23,34 @@ export function AnalysisProgress({ modules }: AnalysisProgressProps) {
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
+    setCurrentModule(0)
+    setProgress(0)
+
     const totalModules = modules.length
     if (totalModules === 0) {
-      return 
+      return
     }
     const timePerModule = 8000 / totalModules
-   
+    const progressIncrement = 100 / totalModules / 10
+    let currentProgress = 0
+
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        const nextProgress = Math.min(100, prev + 100 / totalModules / 10 )
-        const moduleIndex = Math.min(
-          Math.floor((nextProgress / 100) * totalModules),
+      currentProgress = Math.min(100, currentProgress + progressIncrement)
+      setProgress(currentProgress)
+      setCurrentModule(
+        Math.min(
+          Math.floor((currentProgress / 100) * totalModules),
           totalModules - 1,
-        )
-        setCurrentModule(moduleIndex)
-        if (nextProgress === 100) {
-          clearInterval(interval)
-        }
-        return nextProgress
-      })
+        ),
+      )
+
+      if (currentProgress === 100) {
+        clearInterval(interval)
+      }
     }, timePerModule / 10)
 
     return () => clearInterval(interval)
-  }, [modules.length, progress])
+  }, [modules.length])
 
   if (modules.length === 0) {
     return (

@@ -4,7 +4,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { memo, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -106,7 +106,7 @@ const recentIssues: Issue[] = [
   },
 ]
 
-export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) {
+function RecentIssuesTableComponent({ lastAnalysisDate }: RecentIssuesTableProps) {
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
 
   const getSeverityIcon = (severity: Issue["severity"]) => {
@@ -232,3 +232,6 @@ export function RecentIssuesTable({ lastAnalysisDate }: RecentIssuesTableProps) 
     </>
   )
 }
+
+export const RecentIssuesTable = memo(RecentIssuesTableComponent)
+RecentIssuesTable.displayName = "RecentIssuesTable"

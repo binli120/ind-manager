@@ -4,6 +4,7 @@
 "use client"
 
 import { CheckCircle2, Circle, Clock, Trophy } from "lucide-react"
+import { memo } from "react"
 import { cn } from "@/lib/utils"
 
 interface Milestone {
@@ -67,7 +68,7 @@ interface SubmissionTimelineProps {
   className?: string
 }
 
-export function SubmissionTimeline({ milestones = defaultMilestones, className }: SubmissionTimelineProps) {
+function SubmissionTimelineComponent({ milestones = defaultMilestones, className }: SubmissionTimelineProps) {
   return (
     <div className={cn("relative", className)}>
       <div className="flex items-start justify-between gap-4">
@@ -175,3 +176,6 @@ export function SubmissionTimeline({ milestones = defaultMilestones, className }
     </div>
   )
 }
+
+export const SubmissionTimeline = memo(SubmissionTimelineComponent)
+SubmissionTimeline.displayName = "SubmissionTimeline"

@@ -3,7 +3,7 @@
 // Email: blee@filynai.com
 "use client"
 
-import { useState } from "react"
+import { memo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -36,7 +36,7 @@ interface ModuleStatusCardsProps {
   onSectionClick?: (moduleId: number, sectionId: string) => void
 }
 
-export function ModuleStatusCards({ modules, onSectionClick }: ModuleStatusCardsProps) {
+function ModuleStatusCardsComponent({ modules, onSectionClick }: ModuleStatusCardsProps) {
   const [expandedModule, setExpandedModule] = useState<number | null>(null)
 
   const getProgressColor = (progress: number) => {
@@ -206,3 +206,6 @@ export function ModuleStatusCards({ modules, onSectionClick }: ModuleStatusCards
     </div>
   )
 }
+
+export const ModuleStatusCards = memo(ModuleStatusCardsComponent)
+ModuleStatusCards.displayName = "ModuleStatusCards"

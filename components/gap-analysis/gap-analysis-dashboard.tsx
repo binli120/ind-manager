@@ -3,7 +3,7 @@
 // Email: blee@filynai.com
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -221,6 +221,7 @@ export default function GapAnalysisDashboard() {
   const [selectedModule, setSelectedModule] = useState<number | null>(null)
   const [lastAnalysisDate, setLastAnalysisDate] = useState<Date>(new Date())
   const analysisTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const modules = mockData.modules
 
   useEffect(() => {
     return () => {
@@ -231,7 +232,7 @@ export default function GapAnalysisDashboard() {
     }
   }, [])
 
-  const handleRunAnalysis = () => {
+  const handleRunAnalysis = useCallback(() => {
     if (analysisTimeoutRef.current) {
       clearTimeout(analysisTimeoutRef.current)
     }
@@ -242,12 +243,24 @@ export default function GapAnalysisDashboard() {
       setLastAnalysisDate(new Date())
       analysisTimeoutRef.current = null
     }, 8000)
-  }
+  }, [])
 
-
-  const handleExportReport = () => {
+  const handleExportReport = useCallback(() => {
     alert("Exporting comprehensive gap analysis report...")
-  }
+  }, [])
+
+  const handleSectionClick = useCallback((moduleId: number) => {
+    setSelectedModule(moduleId)
+  }, [])
+
+  const handleCloseIssueDialog = useCallback(() => {
+    setSelectedModule(null)
+  }, [])
+
+  const selectedModuleData = useMemo(() => {
+    if (selectedModule === null) return null
+    return modules.find((module) => module.id === selectedModule) ?? null
+  }, [modules, selectedModule])
 
   return (
     <div className="min-h-screen bg-background p-6 space-y-6">
@@ -282,7 +295,7 @@ export default function GapAnalysisDashboard() {
       </div>
 
       {/* Analysis Progress */}
-      {isAnalyzing && <AnalysisProgress modules={mockData.modules} />}
+      {isAnalyzing && <AnalysisProgress modules={modules} />}
 
       {/* Submission Timeline */}
       <Card>
@@ -307,7 +320,7 @@ export default function GapAnalysisDashboard() {
             <CardDescription>Overall completion by module</CardDescription>
           </CardHeader>
           <CardContent>
-            <RadialProgressChart modules={mockData.modules} />
+            <RadialProgressChart modules={modules} />
           </CardContent>
         </Card>
       </div>
@@ -322,10 +335,8 @@ export default function GapAnalysisDashboard() {
         </CardHeader>
         <CardContent>
           <ModuleStatusCards
-            modules={mockData.modules}
-            onSectionClick={(moduleId) => {
-              setSelectedModule(moduleId)
-            }}
+            modules={modules}
+            onSectionClick={handleSectionClick}
           />
         </CardContent>
       </Card>
@@ -333,12 +344,8 @@ export default function GapAnalysisDashboard() {
       {/* Issue Detail Dialog */}
       <IssueDetailDialog
         open={selectedModule !== null}
-        onClose={() => setSelectedModule(null)}
-        module={
-          selectedModule !== null
-            ? mockData.modules.find((m) => m.id === selectedModule) ?? null
-            : null
-        }
+        onClose={handleCloseIssueDialog}
+        module={selectedModuleData}
       />
     </div>
   )
