@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useProjectsViewController } from "@/hooks/useProjectsViewController";
 import { ProjectForm } from "./ui/projects/project-form";
+import { useCallback, type ChangeEvent, type MouseEvent } from "react";
 
 //IM-61: Add status info
 const statusOptions = [
@@ -134,6 +135,50 @@ export function ProjectsView() {
     goToNextPage,
   } = useProjectsViewController();
 
+  const handleSearchInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    handleSearchChange(event.target.value);
+  }, [handleSearchChange]);
+
+  const handleGridViewModeChange = useCallback(() => {
+    handleViewModeChange("grid");
+  }, [handleViewModeChange]);
+
+  const handleListViewModeChange = useCallback(() => {
+    handleViewModeChange("list");
+  }, [handleViewModeChange]);
+
+  const handleEditProjectClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    const projectId = event.currentTarget.dataset.projectId;
+    if (projectId) {
+      openEditDialog(projectId);
+    }
+  }, [openEditDialog]);
+
+  const handleDeleteProjectClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    const projectId = event.currentTarget.dataset.projectId;
+    if (projectId) {
+      handleDeleteProject(projectId);
+    }
+  }, [handleDeleteProject]);
+
+  const handleResumeMouseEnter = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    if (event.currentTarget.dataset.enabled === "true") {
+      event.currentTarget.style.backgroundColor = "#7c3aed";
+    }
+  }, []);
+
+  const handleResumeMouseLeave = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    if (event.currentTarget.dataset.enabled === "true") {
+      event.currentTarget.style.backgroundColor = "#8b5cf6";
+    }
+  }, []);
+
+  const handleResumeClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    if (event.currentTarget.dataset.enabled === "true") {
+      console.log("Resume clicked");
+    }
+  }, []);
+
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50/50">
       {/* Header */}
@@ -165,7 +210,7 @@ export function ProjectsView() {
               <Input
                 placeholder="Search projects..."
                 value={filters.search}
-                onChange={(e) => handleSearchChange(e.target.value)}
+                onChange={handleSearchInputChange}
                 className="pl-10 bg-background border-border shadow-sm"
               />
             </div>
@@ -214,7 +259,7 @@ export function ProjectsView() {
             <Button
               variant={viewMode === "grid" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleViewModeChange("grid")}
+              onClick={handleGridViewModeChange}
               className="shadow-sm"
             >
               <Grid3X3 className="w-4 h-4" />
@@ -222,7 +267,7 @@ export function ProjectsView() {
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleViewModeChange("list")}
+              onClick={handleListViewModeChange}
               className="shadow-sm"
             >
               <List className="w-4 h-4" />
@@ -387,7 +432,8 @@ export function ProjectsView() {
                           variant="ghost"
                           size="sm"
                           className="flex-1 hover:bg-accent/10 hover:text-accent"
-                          onClick={() => openEditDialog(project.id)}
+                          data-project-id={project.id}
+                          onClick={handleEditProjectClick}
                         >
                           <Edit3 className="w-4 h-4 mr-2" />
                           Edit
@@ -396,6 +442,7 @@ export function ProjectsView() {
                 
                       <button
                         disabled={!isResumeEnabled}
+                        data-enabled={String(isResumeEnabled)}
                         style={{
                           backgroundColor: isResumeEnabled ? "#8b5cf6" : "#e5e7eb",
                           color: isResumeEnabled ? "#ffffff" : "#9ca3af",
@@ -414,15 +461,9 @@ export function ProjectsView() {
                           flex: "1",
                           minHeight: "32px",
                         }}
-                        onMouseEnter={(e) => {
-                          if (isResumeEnabled) e.currentTarget.style.backgroundColor = "#7c3aed";
-                        }}
-                        onMouseLeave={(e) => {
-                          if (isResumeEnabled) e.currentTarget.style.backgroundColor = "#8b5cf6";
-                        }}
-                        onClick={() => {
-                          if (isResumeEnabled) console.log("Resume clicked");
-                        }}
+                        onMouseEnter={handleResumeMouseEnter}
+                        onMouseLeave={handleResumeMouseLeave}
+                        onClick={handleResumeClick}
                       >
                         <Play className="w-4 h-4" style={{ color: isResumeEnabled ? "#ffffff" : "#9ca3af" }} />
                         <span style={{ color: isResumeEnabled ? "#ffffff" : "#9ca3af" }}>Resume</span>
@@ -433,7 +474,8 @@ export function ProjectsView() {
                           variant="ghost"
                           size="sm"
                           className="hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => handleDeleteProject(project.id)}
+                          data-project-id={project.id}
+                          onClick={handleDeleteProjectClick}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

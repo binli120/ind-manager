@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 import { fetchUserDocuments } from '@/lib/store/slices';
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 //import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CommentsPanel } from '@/components/comments-panel';
 import { DataTable } from '@/components/data-table';
@@ -56,7 +56,7 @@ export interface DocumentViewProps {
   noDocument?: boolean;
 }
 
-function DocumentViewComponent({ onViewChange }: DocumentViewProps) {
+export function DocumentView({ onViewChange }: DocumentViewProps) {
   const dispatch = useAppDispatch();
   const { currentDocument, isLoading } = useAppSelector(
     (state) => state.documents
@@ -70,47 +70,45 @@ function DocumentViewComponent({ onViewChange }: DocumentViewProps) {
     }
   }, [dispatch, user?.id]);
 
-  const documentMetadata = useMemo(
-    () =>
-      currentDocument
-        ? [
-            {
-              label: 'Document Status',
-              value: currentDocument.status,
-              icon: FileText,
-              status: 'draft',
-            },
-            {
-              label: 'Document Owner',
-              value: currentDocument.ownerName || 'Unknown',
-              icon: User,
-            },
-            { label: 'My Roles', value: 'Author', icon: Users },
-            {
-              label: 'Due Date',
-              value: currentDocument.dueDate || 'Not set',
-              icon: Calendar,
-            },
-            {
-              label: 'Last Modified',
-              value: currentDocument.lastModified || 'Unknown',
-              icon: Clock,
-            },
-            { label: 'Active Users', value: '1 active', icon: Users },
-          ]
-        : [],
-    [currentDocument],
-  );
-
-  const handleOpenDocumentAuthoring = useCallback(() => {
+  const handleDocumentAuthoringClick = useCallback(() => {
     onViewChange?.('document-authoring');
   }, [onViewChange]);
-  const handleOpenReviewCenter = useCallback(() => {
+
+  const handleReviewCenterClick = useCallback(() => {
     onViewChange?.('review-center');
   }, [onViewChange]);
-  const handleOpenGapAnalysis = useCallback(() => {
+
+  const handleGapAnalysisClick = useCallback(() => {
     onViewChange?.('gap-analysis');
   }, [onViewChange]);
+
+  const documentMetadata = currentDocument
+    ? [
+        {
+          label: 'Document Status',
+          value: currentDocument.status,
+          icon: FileText,
+          status: 'draft',
+        },
+        {
+          label: 'Document Owner',
+          value: currentDocument.ownerName || 'Unknown',
+          icon: User,
+        },
+        { label: 'My Roles', value: 'Author', icon: Users },
+        {
+          label: 'Due Date',
+          value: currentDocument.dueDate || 'Not set',
+          icon: Calendar,
+        },
+        {
+          label: 'Last Modified',
+          value: currentDocument.lastModified || 'Unknown',
+          icon: Clock,
+        },
+        { label: 'Active Users', value: '1 active', icon: Users },
+      ]
+    : [];
 
   return (
     <div className='flex-1 overflow-y-auto'>
@@ -133,7 +131,7 @@ function DocumentViewComponent({ onViewChange }: DocumentViewProps) {
         <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-6'>
           <Card
             className='hover:shadow-md transition-shadow cursor-pointer'
-            onClick={handleOpenDocumentAuthoring}
+            onClick={handleDocumentAuthoringClick}
           >
             <CardContent className='p-6'>
               <div className='flex items-center gap-3'>
@@ -152,7 +150,7 @@ function DocumentViewComponent({ onViewChange }: DocumentViewProps) {
 
           <Card
             className='hover:shadow-md transition-shadow cursor-pointer'
-            onClick={handleOpenReviewCenter}
+            onClick={handleReviewCenterClick}
           >
             <CardContent className='p-6'>
               <div className='flex items-center gap-3'>
@@ -169,7 +167,7 @@ function DocumentViewComponent({ onViewChange }: DocumentViewProps) {
 
           <Card
             className='hover:shadow-md transition-shadow cursor-pointer'
-            onClick={handleOpenGapAnalysis}
+            onClick={handleGapAnalysisClick}
           >
             <CardContent className='p-6'>
               <div className='flex items-center gap-3'>
@@ -310,6 +308,3 @@ function DocumentViewComponent({ onViewChange }: DocumentViewProps) {
     </div>
   );
 }
-
-export const DocumentView = memo(DocumentViewComponent);
-DocumentView.displayName = 'DocumentView';

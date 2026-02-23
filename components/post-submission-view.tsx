@@ -3,18 +3,26 @@
 // Email: blee@filynai.com
 "use client"
 
-import { memo, useCallback, useMemo, useState } from "react"
+import { useCallback, useState, type MouseEvent } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { CheckCircle2, Clock, AlertTriangle, FileText, Search, Calendar, Phone, Eye, Edit3 } from "lucide-react"
 
-function PostSubmissionViewComponent() {
+export function PostSubmissionView() {
   const [activeTab, setActiveTab] = useState<"correspondence" | "timeline" | "actions">("correspondence")
   const [selectedCorrespondence, setSelectedCorrespondence] = useState("info-request")
+  const handleTabClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    const tabId = event.currentTarget.dataset.tabId as typeof activeTab | undefined
+    if (tabId) setActiveTab(tabId)
+  }, [])
+  const handleSelectCorrespondence = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const correspondenceId = event.currentTarget.dataset.correspondenceId
+    if (correspondenceId) setSelectedCorrespondence(correspondenceId)
+  }, [])
 
-  const correspondenceItems = useMemo(() => [
+  const correspondenceItems = [
     {
       id: "acknowledgment",
       type: "Acknowledgment Letter",
@@ -52,24 +60,15 @@ function PostSubmissionViewComponent() {
       responseRequired: true,
       daysToRespond: 28,
     },
-  ], [])
+  ]
 
-  const selectedItem = useMemo(
-    () => correspondenceItems.find((item) => item.id === selectedCorrespondence),
-    [correspondenceItems, selectedCorrespondence],
-  )
+  const selectedItem = correspondenceItems.find((item) => item.id === selectedCorrespondence)
 
-  const tabs = useMemo(() => [
+  const tabs = [
     { id: "correspondence", label: "Correspondence", active: activeTab === "correspondence" },
     { id: "timeline", label: "Timeline", active: activeTab === "timeline" },
     { id: "actions", label: "Actions", active: activeTab === "actions" },
-  ], [activeTab])
-  const handleTabChange = useCallback((tabId: "correspondence" | "timeline" | "actions") => {
-    setActiveTab(tabId)
-  }, [])
-  const handleSelectCorrespondence = useCallback((itemId: string) => {
-    setSelectedCorrespondence(itemId)
-  }, [])
+  ]
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -123,7 +122,8 @@ function PostSubmissionViewComponent() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => handleTabChange(tab.id as typeof activeTab)}
+              data-tab-id={tab.id}
+              onClick={handleTabClick}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 tab.active
                   ? "border-purple-600 text-purple-600"
@@ -156,7 +156,8 @@ function PostSubmissionViewComponent() {
                 {correspondenceItems.map((item) => (
                   <div
                     key={item.id}
-                    onClick={() => handleSelectCorrespondence(item.id)}
+                    data-correspondence-id={item.id}
+                    onClick={handleSelectCorrespondence}
                     className={`p-4 rounded-lg border cursor-pointer transition-colors ${
                       selectedCorrespondence === item.id
                         ? "border-purple-200 bg-purple-50"
@@ -287,6 +288,3 @@ function PostSubmissionViewComponent() {
     </div>
   )
 }
-
-export const PostSubmissionView = memo(PostSubmissionViewComponent)
-PostSubmissionView.displayName = "PostSubmissionView"

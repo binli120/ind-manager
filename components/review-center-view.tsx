@@ -3,7 +3,7 @@
 // Email: blee@filynai.com
 "use client"
 
-import { memo, useCallback, useMemo, useState } from "react"
+import { useCallback, useState, type MouseEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -36,9 +36,6 @@ interface Document {
   isOverdue?: boolean
 }
 
-export const ReviewCenterView = memo(ReviewCenterViewComponent)
-ReviewCenterView.displayName = "ReviewCenterView"
-
 interface Comment {
   id: string
   author: string
@@ -48,11 +45,18 @@ interface Comment {
   avatar: string
 }
 
-function ReviewCenterViewComponent({ onViewChange }: { onViewChange?: (view: string) => void }) {
+export function ReviewCenterView({ onViewChange }: { onViewChange?: (view: string) => void }) {
   const [selectedDocument, setSelectedDocument] = useState<string>("doc1")
   const [newComment, setNewComment] = useState("")
+  const handleBackToWorkspace = useCallback(() => {
+    onViewChange?.("workspace")
+  }, [onViewChange])
+  const handleSelectDocument = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    const documentId = event.currentTarget.dataset.documentId
+    if (documentId) setSelectedDocument(documentId)
+  }, [])
 
-  const documents = useMemo<Document[]>(() => [
+  const documents: Document[] = [
     {
       id: "doc1",
       title: "ONX-2019 Phase 1 Dose...",
@@ -86,9 +90,9 @@ function ReviewCenterViewComponent({ onViewChange }: { onViewChange?: (view: str
       commentCount: 5,
       isOverdue: true,
     },
-  ], [])
+  ]
 
-  const comments = useMemo<Comment[]>(() => [
+  const comments: Comment[] = [
     {
       id: "1",
       author: "Dr. Smith",
@@ -124,14 +128,7 @@ function ReviewCenterViewComponent({ onViewChange }: { onViewChange?: (view: str
       timestamp: "Yesterday",
       avatar: "W",
     },
-  ], [])
-
-  const handleBackToWorkspace = useCallback(() => {
-    onViewChange?.("workspace")
-  }, [onViewChange])
-  const handleSelectDocument = useCallback((documentId: string) => {
-    setSelectedDocument(documentId)
-  }, [])
+  ]
 
   const getStatusColor = (status: Document["status"]) => {
     switch (status) {
@@ -190,10 +187,11 @@ function ReviewCenterViewComponent({ onViewChange }: { onViewChange?: (view: str
             {documents.map((doc) => (
               <Card
                 key={doc.id}
+                data-document-id={doc.id}
                 className={`cursor-pointer transition-all hover:shadow-md ${
                   selectedDocument === doc.id ? "ring-2 ring-primary" : ""
                 }`}
-                onClick={() => handleSelectDocument(doc.id)}
+                onClick={handleSelectDocument}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">

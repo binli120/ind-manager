@@ -3,7 +3,7 @@
 // Email: blee@filynai.com
 "use client"
 
-import { useState } from "react"
+import { useCallback, useState, type ChangeEvent, type MouseEvent } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -64,15 +64,44 @@ export function CalendarView() {
     },
   ]
 
-  const navigateMonth = (direction: "prev" | "next") => {
-    const newMonth = new Date(currentMonth)
-    if (direction === "prev") {
-      newMonth.setMonth(newMonth.getMonth() - 1)
-    } else {
-      newMonth.setMonth(newMonth.getMonth() + 1)
-    }
-    setCurrentMonth(newMonth)
-  }
+  const navigateMonth = useCallback((direction: "prev" | "next") => {
+    setCurrentMonth((previousMonth) => {
+      const nextMonth = new Date(previousMonth)
+      if (direction === "prev") {
+        nextMonth.setMonth(nextMonth.getMonth() - 1)
+      } else {
+        nextMonth.setMonth(nextMonth.getMonth() + 1)
+      }
+      return nextMonth
+    })
+  }, [])
+
+  const handleViewModeClick = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    const mode = event.currentTarget.dataset.mode as "Month" | "Week" | "Day" | undefined
+    if (mode) setViewMode(mode)
+  }, [])
+
+  const handleYearChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
+    const year = Number.parseInt(event.target.value, 10)
+    if (Number.isNaN(year)) return
+    setCurrentMonth((previousMonth) => {
+      const nextMonth = new Date(previousMonth)
+      nextMonth.setFullYear(year)
+      return nextMonth
+    })
+  }, [])
+
+  const handlePreviousMonth = useCallback(() => {
+    navigateMonth("prev")
+  }, [navigateMonth])
+
+  const handleNextMonth = useCallback(() => {
+    navigateMonth("next")
+  }, [navigateMonth])
+
+  const handleTodayClick = useCallback(() => {
+    setCurrentMonth(new Date())
+  }, [])
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50/50 min-h-0">
@@ -105,7 +134,8 @@ export function CalendarView() {
               {["Month", "Week", "Day"].map((mode) => (
                 <button
                   key={mode}
-                  onClick={() => setViewMode(mode as typeof viewMode)}
+                  data-mode={mode}
+                  onClick={handleViewModeClick}
                   className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                     viewMode === mode ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
                   }`}
@@ -137,11 +167,7 @@ export function CalendarView() {
                     <span className="text-sm font-medium ml-4">Year:</span>
                     <select
                       value={currentMonth.getFullYear()}
-                      onChange={(e) => {
-                        const newMonth = new Date(currentMonth)
-                        newMonth.setFullYear(Number.parseInt(e.target.value))
-                        setCurrentMonth(newMonth)
-                      }}
+                      onChange={handleYearChange}
                       className="text-sm border border-gray-300 rounded px-2 py-1"
                     >
                       <option value="2024">2024</option>
@@ -150,13 +176,13 @@ export function CalendarView() {
                     </select>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => navigateMonth("prev")}>
+                    <Button variant="outline" size="sm" onClick={handlePreviousMonth}>
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())}>
+                    <Button variant="outline" size="sm" onClick={handleTodayClick}>
                       Today
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => navigateMonth("next")}>
+                    <Button variant="outline" size="sm" onClick={handleNextMonth}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
