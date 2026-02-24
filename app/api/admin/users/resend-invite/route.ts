@@ -4,17 +4,10 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { resolveAuthEmailRedirectUrl } from "@/lib/auth/auth-redirect"
+import { isAdminUser } from "@/lib/auth/is-admin-user"
 import { createClient } from "@/lib/supabase/server"
 import type { Database } from "@/lib/supabase/schema"
 import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers"
-
-const adminPrivileges = [
-  "system_admin",
-  "user_manager",
-  "admin",
-  "system_administrator",
-] as const
-type AdminPrivilege = (typeof adminPrivileges)[number]
 
 const SERVICE_ROLE_ENV_KEYS = [
   "SUPABASE_SERVICE_ROLE_KEY",
@@ -30,35 +23,6 @@ const normalizePrivilege = (value: unknown) => {
     return value
   }
   return "user"
-}
-
-const isAdminUser = async ({
-  supabase,
-  userId,
-  privilege,
-  role,
-}: {
-  supabase: Awaited<ReturnType<typeof createClient>>
-  userId: string
-  privilege: string
-  role: string
-}) => {
-  if (
-    adminPrivileges.includes(privilege as AdminPrivilege) ||
-    adminPrivileges.includes(role as AdminPrivilege)
-  ) {
-    return true
-  }
-
-  const { data } = await supabase
-    .from("users")
-    .select("submission_role")
-    .eq("id", userId)
-    .maybeSingle()
-  const submissionRole = (data as { submission_role?: string } | null)
-    ?.submission_role
-
-  return submissionRole === "system_administrator"
 }
 
 export async function POST(request: NextRequest) {

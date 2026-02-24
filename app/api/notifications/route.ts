@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { isAdminUser } from "@/lib/auth/is-admin-user";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers";
 import {
@@ -6,42 +7,6 @@ import {
   type DispatchNotificationResult,
 } from "@/lib/notifications/server";
 import { dispatchNotificationRequestSchema } from "@/lib/notifications/types";
-
-const adminPrivileges = [
-  "system_admin",
-  "user_manager",
-  "admin",
-  "system_administrator",
-] as const;
-
-type AdminPrivilege = (typeof adminPrivileges)[number];
-
-async function isAdminUser(args: {
-  supabase: Awaited<ReturnType<typeof createClient>>;
-  userId: string;
-  privilege: string;
-  role: string;
-}) {
-  const { supabase, userId, privilege, role } = args;
-
-  if (
-    adminPrivileges.includes(privilege as AdminPrivilege) ||
-    adminPrivileges.includes(role as AdminPrivilege)
-  ) {
-    return true;
-  }
-
-  const { data } = await supabase
-    .from("users")
-    .select("submission_role")
-    .eq("id", userId)
-    .maybeSingle();
-
-  return (
-    (data as { submission_role?: string } | null)?.submission_role ===
-    "system_administrator"
-  );
-}
 
 async function isProjectMember(args: {
   supabase: Awaited<ReturnType<typeof createClient>>;
