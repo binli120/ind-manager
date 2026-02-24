@@ -2,7 +2,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers";
 import { dispatchNotification, extractMentionHandles } from "@/lib/notifications/server";
-import { mentionNotificationRequestSchema } from "@/lib/notifications/types";
+import {
+  mentionNotificationRequestSchema,
+  NotificationScope,
+  NotificationSourceType,
+  NotificationType,
+} from "@/lib/notifications/types";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -47,9 +52,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await dispatchNotification(user.id, {
-      scope: "user",
-      sourceType: "mention",
-      type: "document_comment",
+      scope: NotificationScope.User,
+      sourceType: NotificationSourceType.Mention,
+      type: NotificationType.DocumentComment,
       title: input.title ?? "You were mentioned in a comment",
       body: input.content.slice(0, 600),
       actionUrl: input.actionUrl,

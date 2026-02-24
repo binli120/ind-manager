@@ -17,7 +17,7 @@ const userProfileSchema = z.object({
   name: z.string().optional(),
   avatar_url: z.string().url().optional(),
   phone: z.string().optional(),
-  status: z.string().optional(),
+  status: z.enum(["pending", "active", "inactive", "invited", "suspended"]).optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -95,8 +95,7 @@ export async function POST(request: NextRequest) {
     // Create or update user profile
     const { data, error } = await supabase
       .from("users")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .upsert({ id: user.id, email: user.email, ...(userData as any) })
+      .upsert({ id: user.id, email: user.email, ...userData })
       .select()
 
     if (error) {

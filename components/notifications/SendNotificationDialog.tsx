@@ -23,9 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  NotificationScope,
+  NotificationSourceType,
+  NotificationType,
+} from "@/lib/notifications/types";
+import { useAppDispatch } from "@/lib/store";
+import { sendNotification } from "@/lib/store/slices/notificationsSlice";
 import { isAdminEmail } from "@/lib/utils";
-
-type Scope = "system" | "project" | "user";
 
 type CurrentUser = {
   id: string;
@@ -61,9 +66,12 @@ type Props = {
 };
 
 export function SendNotificationDialog({ currentUser, projects }: Props) {
+  const dispatch = useAppDispatch();
   const isAdmin = canSendGlobal(currentUser);
   const [open, setOpen] = React.useState(false);
-  const [scope, setScope] = React.useState<Scope>("system");
+  const [scope, setScope] = React.useState<NotificationScope>(
+    NotificationScope.System,
+  );
   const [projectId, setProjectId] = React.useState<string>(projects[0]?.id ?? "");
   const [target, setTarget] = React.useState("");
   const [title, setTitle] = React.useState("");
@@ -77,7 +85,7 @@ export function SendNotificationDialog({ currentUser, projects }: Props) {
 
   React.useEffect(() => {
     if (!isAdmin) {
-      setScope("project");
+      setScope(NotificationScope.Project);
     }
   }, [isAdmin]);
 
@@ -105,49 +113,42 @@ export function SendNotificationDialog({ currentUser, projects }: Props) {
       return;
     }
 
-    if (scope === "project" && !projectId) {
+    if (scope === NotificationScope.Project && !projectId) {
       setError("Select a project.");
       return;
     }
 
-    if (scope === "user" && !target.trim()) {
+    if (scope === NotificationScope.User && !target.trim()) {
       setError("Provide a user target such as @janedoe or a user ID.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/notifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          scope,
-          sourceType: "manual",
-          type: scope === "user" ? "document_comment" : "system_alert",
-          title: title.trim(),
-          body: body.trim() || undefined,
-          actionUrl: actionUrl.trim() || undefined,
-          projectId: scope === "project" ? projectId : undefined,
-          target: scope === "user" ? target.trim() : undefined,
-          channels: {
-            inApp: sendInApp,
-            email: sendEmail,
+      const payload = await dispatch(
+        sendNotification({
+          refreshUserId: currentUser.id,
+          request: {
+            scope,
+            sourceType: NotificationSourceType.Manual,
+            type:
+              scope === NotificationScope.User
+                ? NotificationType.DocumentComment
+                : NotificationType.SystemAlert,
+            title: title.trim(),
+            body: body.trim() || undefined,
+            actionUrl: actionUrl.trim() || undefined,
+            projectId:
+              scope === NotificationScope.Project ? projectId : undefined,
+            target: scope === NotificationScope.User ? target.trim() : undefined,
+            channels: {
+              inApp: sendInApp,
+              email: sendEmail,
+            },
+            skipActor: true,
           },
-          skipActor: true,
         }),
-      });
-
-      const payload = (await response.json().catch(() => ({}))) as {
-        error?: string;
-        recipients?: number;
-        unresolvedHandles?: string[];
-      };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "Failed to send notification");
-      }
+      ).unwrap();
 
       const unresolved =
         Array.isArray(payload.unresolvedHandles) && payload.unresolvedHandles.length > 0
@@ -165,6 +166,8 @@ export function SendNotificationDialog({ currentUser, projects }: Props) {
       const message =
         submitError instanceof Error
           ? submitError.message
+          : typeof submitError === "string"
+            ? submitError
           : "Failed to send notification";
       setError(message);
     } finally {
@@ -201,20 +204,26 @@ export function SendNotificationDialog({ currentUser, projects }: Props) {
             <Label htmlFor="notify-scope">Scope</Label>
             <Select
               value={scope}
-              onValueChange={(value) => setScope(value as Scope)}
+              onValueChange={(value) => setScope(value as NotificationScope)}
             >
               <SelectTrigger id="notify-scope" className="w-full">
                 <SelectValue placeholder="Select scope" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="system">System-wide (all users)</SelectItem>
-                <SelectItem value="project">Project user group</SelectItem>
-                <SelectItem value="user">Single user</SelectItem>
+                <SelectItem value={NotificationScope.System}>
+                  System-wide (all users)
+                </SelectItem>
+                <SelectItem value={NotificationScope.Project}>
+                  Project user group
+                </SelectItem>
+                <SelectItem value={NotificationScope.User}>
+                  Single user
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {scope === "project" && (
+          {scope === NotificationScope.Project && (
             <div className="grid gap-2">
               <Label htmlFor="notify-project">Project</Label>
               <Select value={projectId} onValueChange={setProjectId}>
@@ -233,7 +242,7 @@ export function SendNotificationDialog({ currentUser, projects }: Props) {
             </div>
           )}
 
-          {scope === "user" && (
+          {scope === NotificationScope.User && (
             <div className="grid gap-2">
               <Label htmlFor="notify-target">Target user</Label>
               <Input

@@ -19,7 +19,7 @@ const updateUserSchema = z.object({
   name: z.string().optional(),
   avatar_url: z.string().url().optional(),
   phone: z.string().optional(),
-  status: z.string().optional(),
+  status: z.enum(["pending", "active", "inactive", "invited", "suspended"]).optional(),
 })
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -117,8 +117,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     // Update user profile
       const { data, error } = await supabase
         .from("users")
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .update({ ...(userData as any), updated_at: new Date().toISOString() })
+        .update(userData)
         .eq("id", id)
         .select()
 

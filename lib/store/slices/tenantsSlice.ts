@@ -32,9 +32,7 @@ export const fetchUserTenants = createAsyncThunk<
   { userId: string },
   { rejectValue: string }
 >("tenants/fetchUserTenants", async ({ userId }, { rejectWithValue }) => {
-  // Supabase types don't expose tenantid on users in this project; using any to avoid strict errors.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createClient() as any;
+  const supabase = createClient();
 
   const { data: userRowRaw, error: userError } = await supabase
     .from("users")
@@ -62,8 +60,7 @@ export const fetchTenantDetails = createAsyncThunk<
   { tenantId: string },
   { rejectValue: string }
 >("tenants/fetchTenantDetails", async ({ tenantId }, { rejectWithValue }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createClient() as any;
+  const supabase = createClient();
 
   const { data, error } = await supabase
     .from("tenants")

@@ -7,23 +7,32 @@ export enum NotificationRecipientAction {
   Restore = "restore",
 }
 
+export enum NotificationScope {
+  System = "system",
+  Project = "project",
+  User = "user",
+}
+
+export enum NotificationSourceType {
+  Manual = "manual",
+  Mention = "mention",
+  SystemWriter = "system_writer",
+}
+
+export enum NotificationType {
+  DocumentComment = "document_comment",
+  TaskAssignment = "task_assignment",
+  DeadlineReminder = "deadline_reminder",
+  SystemAlert = "system_alert",
+}
+
 export const notificationRecipientActionSchema = z.nativeEnum(
   NotificationRecipientAction,
 );
 
-export const notificationScopeSchema = z.enum(["system", "project", "user"]);
-export const notificationSourceTypeSchema = z.enum([
-  "manual",
-  "mention",
-  "system_writer",
-]);
-
-export const notificationTypeSchema = z.enum([
-  "document_comment",
-  "task_assignment",
-  "deadline_reminder",
-  "system_alert",
-]);
+export const notificationScopeSchema = z.nativeEnum(NotificationScope);
+export const notificationSourceTypeSchema = z.nativeEnum(NotificationSourceType);
+export const notificationTypeSchema = z.nativeEnum(NotificationType);
 
 export const notificationChannelsSchema = z.object({
   inApp: z.boolean().default(true),
@@ -33,8 +42,8 @@ export const notificationChannelsSchema = z.object({
 export const dispatchNotificationRequestSchema = z
   .object({
     scope: notificationScopeSchema,
-    sourceType: notificationSourceTypeSchema.default("manual"),
-    type: notificationTypeSchema.default("system_alert"),
+    sourceType: notificationSourceTypeSchema.default(NotificationSourceType.Manual),
+    type: notificationTypeSchema.default(NotificationType.SystemAlert),
     title: z.string().trim().min(1).max(200),
     body: z.string().trim().max(2000).optional(),
     actionUrl: z.string().trim().url().max(2000).optional(),
@@ -50,7 +59,7 @@ export const dispatchNotificationRequestSchema = z
     skipActor: z.boolean().default(true),
   })
   .superRefine((value, ctx) => {
-    if (value.scope === "project" && !value.projectId) {
+    if (value.scope === NotificationScope.Project && !value.projectId) {
       ctx.addIssue({
         code: "custom",
         message: "projectId is required for project scope",
@@ -58,7 +67,7 @@ export const dispatchNotificationRequestSchema = z
       });
     }
 
-    if (value.scope === "user") {
+    if (value.scope === NotificationScope.User) {
       const hasIds = Boolean(value.targetUserIds?.length);
       const hasHandles = Boolean(value.targetHandles?.length);
       const hasTarget = Boolean(value.target?.trim().length);

@@ -19,7 +19,7 @@ const requestSchema = z.object({
   data: z
     .object({
       select: z.string().optional(),
-      values: z.record(z.any()).optional(),
+      values: z.record(z.unknown()).optional(),
       limit: z.number().int().positive().optional(),
       order: z
         .object({
@@ -187,9 +187,7 @@ export async function POST(request: NextRequest) {
 
   switch (action) {
     case "select": {
-      // Tenants table not in generated types; fall back to untyped call.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = supabase.from<any, any>(table).select(selectClause)
+      let query = supabase.from(table as "users" | "tenants").select(selectClause)
 
       if (validatedFilters) {
         Object.entries(validatedFilters).forEach(([key, value]) => {
@@ -227,8 +225,9 @@ export async function POST(request: NextRequest) {
       if (!validatedFilters || Object.keys(validatedFilters).length === 0) {
         return NextResponse.json({ error: "Filters are required for update" }, { status: 400 })
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let updateQuery = supabase.from<any, any>(table).update(sanitized.value)
+      let updateQuery = supabase
+        .from(table as "users" | "tenants")
+        .update(sanitized.value as Record<string, unknown>)
 
       Object.entries(validatedFilters).forEach(([key, value]) => {
         updateQuery = updateQuery.eq(key, value)

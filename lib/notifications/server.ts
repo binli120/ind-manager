@@ -1,6 +1,9 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/schema";
-import type { DispatchNotificationRequest } from "@/lib/notifications/types";
+import {
+  NotificationScope,
+  type DispatchNotificationRequest,
+} from "@/lib/notifications/types";
 
 const SERVICE_ROLE_ENV_KEYS = [
   "SUPABASE_SERVICE_ROLE_KEY",
@@ -28,6 +31,12 @@ type Recipient = {
   email: string | null;
   name: string | null;
 };
+
+type NotificationRecipientUpdate =
+  Database["public"]["Tables"]["notification_recipients"]["Update"];
+
+const asNotificationRecipientUpdate = (value: Record<string, unknown>) =>
+  value as unknown as NotificationRecipientUpdate;
 
 export function extractMentionHandles(content: string): string[] {
   const mentions = new Set<string>();
@@ -118,8 +127,7 @@ async function fetchRecipientsByUserIds(
 ): Promise<Recipient[]> {
   if (userIds.length === 0) return [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (adminClient as any)
+  const { data, error } = await adminClient
     .from("users")
     .select("id,name,email,status")
     .in("id", userIds)
@@ -138,8 +146,7 @@ async function fetchRecipientsByProject(
   adminClient: ReturnType<typeof createAdminClient>,
   projectId: string,
 ): Promise<Recipient[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (adminClient as any)
+  const { data, error } = await adminClient
     .from("user_project")
     .select("user_id, users:user_id ( id, name, email, status )")
     .eq("project_id", projectId);
@@ -170,8 +177,7 @@ async function fetchRecipientsByProject(
 async function fetchAllActiveUsers(
   adminClient: ReturnType<typeof createAdminClient>,
 ): Promise<Recipient[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (adminClient as any)
+  const { data, error } = await adminClient
     .from("users")
     .select("id,name,email,status")
     .in("status", [...ACTIVE_USER_STATUSES]);
@@ -319,15 +325,15 @@ export async function dispatchNotification(
   let recipients: Recipient[] = [];
   let unresolvedHandles: string[] = [];
 
-  if (request.scope === "system") {
+  if (request.scope === NotificationScope.System) {
     recipients = await fetchAllActiveUsers(adminClient);
   }
 
-  if (request.scope === "project") {
+  if (request.scope === NotificationScope.Project) {
     recipients = await fetchRecipientsByProject(adminClient, request.projectId!);
   }
 
-  if (request.scope === "user") {
+  if (request.scope === NotificationScope.User) {
     const byIds = await fetchRecipientsByUserIds(adminClient, targetIds);
     const byHandles = await resolveHandles(adminClient, targetHandles);
     recipients = dedupeRecipients([...byIds, ...byHandles.recipients]);
@@ -353,8 +359,7 @@ export async function dispatchNotification(
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: insertedEvent, error: eventError } = await (adminClient as any)
+  const { data: insertedEvent, error: eventError } = await adminClient
     .from("notification_events")
     .insert({
       type: request.type,
@@ -368,7 +373,7 @@ export async function dispatchNotification(
       audience_scope: request.scope,
       project_id: request.projectId ?? null,
       target_user_id:
-        request.scope === "user" && recipients.length === 1
+        request.scope === NotificationScope.User && recipients.length === 1
           ? recipients[0].id
           : null,
       source_type: request.sourceType,
@@ -388,8 +393,7 @@ export async function dispatchNotification(
         ? "email"
         : "in_app";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: insertedRecipients, error: recipientsError } = await (adminClient as any)
+  const { data: insertedRecipients, error: recipientsError } = await adminClient
     .from("notification_recipients")
     .insert(
       recipients.map((recipient) => ({
@@ -435,27 +439,25 @@ export async function dispatchNotification(
 
     if (!recipient?.email) {
       emailResult.skipped += 1;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (adminClient as any)
+      await adminClient
         .from("notification_recipients")
-        .update({
+        .update(asNotificationRecipientUpdate({
           email_status: "skipped",
           email_error: "Target user has no email",
-        })
+        }))
         .eq("id", recipientId);
       continue;
     }
 
     if (!resendConfigured) {
       emailResult.skipped += 1;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (adminClient as any)
+      await adminClient
         .from("notification_recipients")
-        .update({
+        .update(asNotificationRecipientUpdate({
           email_status: "skipped",
           email_error:
             "Email delivery is not configured. Set RESEND_API_KEY and NOTIFICATION_EMAIL_FROM",
-        })
+        }))
         .eq("id", recipientId);
       continue;
     }
@@ -469,24 +471,22 @@ export async function dispatchNotification(
 
     if (sendResult.ok) {
       emailResult.sent += 1;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (adminClient as any)
+      await adminClient
         .from("notification_recipients")
-        .update({
+        .update(asNotificationRecipientUpdate({
           email_status: "sent",
           email_sent_at: new Date().toISOString(),
           email_error: null,
-        })
+        }))
         .eq("id", recipientId);
     } else {
       emailResult.failed += 1;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (adminClient as any)
+      await adminClient
         .from("notification_recipients")
-        .update({
+        .update(asNotificationRecipientUpdate({
           email_status: "failed",
           email_error: sendResult.error ?? "Unknown email delivery failure",
-        })
+        }))
         .eq("id", recipientId);
     }
   }

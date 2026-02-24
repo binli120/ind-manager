@@ -2,6 +2,14 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -11,6 +19,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  type DispatchNotificationRequest,
+  NotificationScope,
+  NotificationSourceType,
+  NotificationType,
+} from '@/lib/notifications/types';
+import { useAppDispatch, useAppSelector } from '@/lib/store';
+import { sendNotification } from '@/lib/store/slices/notificationsSlice';
 import {
   Building2,
   CheckCircle2,
@@ -22,6 +38,58 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
+
+type NotificationEventTemplate = {
+  id: string;
+  name: string;
+  title: string;
+  message: string;
+};
+
+type RecentNotification = {
+  id: number;
+  title: string;
+  audience: string;
+  date: string;
+  status: 'sent' | 'scheduled';
+  request?: DispatchNotificationRequest;
+};
+
+function mapPriorityToSeverity(priority: string): string {
+  if (priority === 'urgent') return 'critical';
+  return 'info';
+}
+
+const eventTemplates: NotificationEventTemplate[] = [
+  {
+    id: 'system-maintenance',
+    name: 'System Maintenance',
+    title: 'System Maintenance Scheduled',
+    message:
+      'We will perform scheduled maintenance on IND Manager this evening. You may experience short periods of downtime during the maintenance window.',
+  },
+  {
+    id: 'feature-release',
+    name: 'New Feature Release',
+    title: 'New Feature Available',
+    message:
+      'A new feature has been released. Visit the workspace to review what changed and start using the update today.',
+  },
+  {
+    id: 'deadline-reminder',
+    name: 'Submission Deadline Reminder',
+    title: 'Submission Deadline Approaching',
+    message:
+      'This is a reminder that a key submission deadline is approaching. Please review your outstanding tasks and complete required updates.',
+  },
+  {
+    id: 'policy-update',
+    name: 'Policy Update',
+    title: 'Policy and Compliance Update',
+    message:
+      'We updated platform policy and compliance requirements. Please review the latest guidance to ensure your project remains aligned.',
+  },
+];
 
 const tenantsList = [
   { id: 'acme', name: 'Acme Corporation' },
@@ -40,7 +108,7 @@ const projectsList = [
   { id: 'dermashield', name: 'DermaShield', tenant: 'BioMed Solutions' },
 ];
 
-const recentNotifications = [
+const recentNotifications: RecentNotification[] = [
   {
     id: 1,
     title: 'System Maintenance Scheduled',
@@ -72,12 +140,22 @@ const recentNotifications = [
 ];
 
 export function NotificationsPanel() {
+  const dispatch = useAppDispatch();
+  const currentUserId = useAppSelector((state) => state.auth.user?.id);
+  const [selectedEvent, setSelectedEvent] = useState('');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
-  const [audience, setAudience] = useState('');
-  const [priority, setPriority] = useState('');
+  const [audience, setAudience] = useState('all');
+  const [priority, setPriority] = useState('normal');
   const [selectedTenant, setSelectedTenant] = useState('');
   const [selectedProject, setSelectedProject] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [pendingActionId, setPendingActionId] = useState<number | null>(null);
+  const [isSendConfirmOpen, setIsSendConfirmOpen] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendSuccess, setSendSuccess] = useState<string | null>(null);
+  const [sentNotifications, setSentNotifications] = useState(recentNotifications);
 
   const filteredProjects = selectedTenant
     ? projectsList.filter(
@@ -88,11 +166,227 @@ export function NotificationsPanel() {
 
   const needsTenantSelect = audience === 'specific-tenant';
   const needsProjectSelect = audience === 'specific-project';
+  const hasAudienceTarget = (!needsTenantSelect || Boolean(selectedTenant)) &&
+    (!needsProjectSelect || Boolean(selectedProject));
+  const isSystemWideAudience = audience === 'all';
+  const isComposeValid = Boolean(title.trim()) &&
+    Boolean(message.trim()) &&
+    Boolean(audience) &&
+    Boolean(priority) &&
+    hasAudienceTarget;
+  const areActionsDisabled = !isComposeValid || isSending || isScheduling ||
+    !isSystemWideAudience;
 
   function handleAudienceChange(value: string) {
     setAudience(value);
     setSelectedTenant('');
     setSelectedProject('');
+  }
+
+  function handleEventChange(value: string) {
+    setSelectedEvent(value);
+    const selectedTemplate = eventTemplates.find((template) => template.id === value);
+    if (!selectedTemplate) return;
+
+    setMessage(selectedTemplate.message);
+    setTitle((currentTitle) =>
+      currentTitle.trim() ? currentTitle : selectedTemplate.title,
+    );
+  }
+
+  function handleMessageClick() {
+    if (!selectedEvent) return;
+    const selectedTemplate = eventTemplates.find(
+      (template) => template.id === selectedEvent,
+    );
+    if (!selectedTemplate) return;
+
+    setMessage(selectedTemplate.message);
+    setTitle((currentTitle) =>
+      currentTitle.trim() ? currentTitle : selectedTemplate.title,
+    );
+  }
+
+  function formatAudienceLabel(value: string) {
+    if (value === 'all') return 'All Users';
+    if (value === 'active-tenants') return 'All Active Tenants';
+    if (value === 'admins') return 'Admins Only';
+    if (value === 'specific-tenant') return 'Specific Tenant';
+    if (value === 'specific-project') return 'Specific Project';
+    return 'All Users';
+  }
+
+  function formatDisplayDate(date: Date) {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
+  function resetComposeForm() {
+    setSelectedEvent('');
+    setTitle('');
+    setMessage('');
+    setAudience('all');
+    setPriority('normal');
+    setSelectedTenant('');
+    setSelectedProject('');
+  }
+
+  function buildSystemRequest(): DispatchNotificationRequest {
+    return {
+      scope: NotificationScope.System,
+      sourceType: NotificationSourceType.Manual,
+      type: NotificationType.SystemAlert,
+      title: title.trim(),
+      body: message.trim(),
+      severity: mapPriorityToSeverity(priority),
+      channels: {
+        inApp: true,
+        email: false,
+      },
+      skipActor: false,
+    };
+  }
+
+  function toErrorMessage(error: unknown) {
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+    return 'Failed to send notification';
+  }
+
+  function pushRecentNotification(notification: RecentNotification) {
+    setSentNotifications((current) => [notification, ...current].slice(0, 12));
+  }
+
+  async function handleConfirmSendNow() {
+    setIsSendConfirmOpen(false);
+    setSendError(null);
+    setSendSuccess(null);
+
+    if (audience !== 'all') {
+      setSendError('Send Now currently supports "All Users" target audience only.');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const payload = await dispatch(
+        sendNotification({
+          refreshUserId: currentUserId,
+          request: buildSystemRequest(),
+        }),
+      ).unwrap();
+
+      pushRecentNotification({
+        id: Date.now(),
+        title: title.trim(),
+        audience: formatAudienceLabel(audience),
+        date: formatDisplayDate(new Date()),
+        status: 'sent',
+      });
+      setSendSuccess(
+        `System notification sent to ${payload.recipients ?? 0} recipient(s).`,
+      );
+      resetComposeForm();
+    } catch (error) {
+      setSendError(toErrorMessage(error));
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  function handleSendNowClick() {
+    setSendError(null);
+    setSendSuccess(null);
+
+    if (audience !== 'all') {
+      setSendError('Send Now currently supports "All Users" target audience only.');
+      return;
+    }
+
+    setIsSendConfirmOpen(true);
+  }
+
+  function handleScheduleNotification() {
+    setSendError(null);
+    setSendSuccess(null);
+
+    if (audience !== 'all') {
+      setSendError(
+        'Schedule currently supports "All Users" target audience only.',
+      );
+      return;
+    }
+
+    setIsScheduling(true);
+    try {
+      pushRecentNotification({
+        id: Date.now(),
+        title: title.trim(),
+        audience: formatAudienceLabel(audience),
+        date: formatDisplayDate(new Date()),
+        status: 'scheduled',
+        request: buildSystemRequest(),
+      });
+      setSendSuccess(
+        'Notification scheduled. You can Send now or Cancel from Recent Notifications.',
+      );
+      resetComposeForm();
+    } finally {
+      setIsScheduling(false);
+    }
+  }
+
+  async function handleScheduledSendNow(notificationId: number) {
+    const scheduledNotification = sentNotifications.find(
+      (item) => item.id === notificationId && item.status === 'scheduled',
+    );
+
+    if (!scheduledNotification?.request) {
+      return;
+    }
+
+    setSendError(null);
+    setSendSuccess(null);
+    setPendingActionId(notificationId);
+    try {
+      const payload = await dispatch(
+        sendNotification({
+          refreshUserId: currentUserId,
+          request: scheduledNotification.request,
+        }),
+      ).unwrap();
+
+      setSentNotifications((current) =>
+        current.map((item) =>
+          item.id === notificationId
+            ? {
+                ...item,
+                status: 'sent',
+                request: undefined,
+                date: formatDisplayDate(new Date()),
+              }
+            : item
+        ),
+      );
+      setSendSuccess(
+        `Scheduled notification sent to ${payload.recipients ?? 0} recipient(s).`,
+      );
+    } catch (error) {
+      setSendError(toErrorMessage(error));
+    } finally {
+      setPendingActionId(null);
+    }
+  }
+
+  function handleCancelScheduled(notificationId: number) {
+    setSentNotifications((current) =>
+      current.filter((item) => item.id !== notificationId),
+    );
+    setSendSuccess('Scheduled notification canceled.');
+    setSendError(null);
   }
 
   return (
@@ -116,6 +410,24 @@ export function NotificationsPanel() {
         <div className='flex flex-col gap-4'>
           <div>
             <label className='mb-1.5 block text-xs font-medium text-foreground'>
+              Event
+            </label>
+            <Select value={selectedEvent} onValueChange={handleEventChange}>
+              <SelectTrigger className='w-full bg-background'>
+                <SelectValue placeholder='Select event template' />
+              </SelectTrigger>
+              <SelectContent>
+                {eventTemplates.map((eventTemplate) => (
+                  <SelectItem key={eventTemplate.id} value={eventTemplate.id}>
+                    {eventTemplate.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className='mb-1.5 block text-xs font-medium text-foreground'>
               Title
             </label>
             <Input
@@ -134,6 +446,7 @@ export function NotificationsPanel() {
               placeholder='Write your notification message...'
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onClick={handleMessageClick}
               className='min-h-28 resize-none bg-background'
             />
           </div>
@@ -311,18 +624,37 @@ export function NotificationsPanel() {
           )}
 
           <div className='flex items-center justify-end gap-2 pt-2'>
-            <Button variant='outline' size='sm'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleScheduleNotification}
+              disabled={areActionsDisabled}
+            >
               <Clock className='mr-1.5 size-3.5' />
-              Schedule
+              {isScheduling ? 'Scheduling...' : 'Schedule'}
             </Button>
             <Button
               size='sm'
               className='bg-primary text-primary-foreground hover:bg-primary/90'
+              onClick={handleSendNowClick}
+              disabled={areActionsDisabled}
             >
               <Send className='mr-1.5 size-3.5' />
-              Send Now
+              {isSending ? 'Sending...' : 'Send Now'}
             </Button>
           </div>
+          {sendError && (
+            <p className='text-xs font-medium text-destructive'>{sendError}</p>
+          )}
+          {sendSuccess && (
+            <p className='text-xs font-medium text-emerald-700'>{sendSuccess}</p>
+          )}
+          {!isSystemWideAudience && (
+            <p className='text-xs text-muted-foreground'>
+              Switch target audience to All Users to send or schedule a
+              system-wide notification.
+            </p>
+          )}
         </div>
       </div>
 
@@ -332,7 +664,7 @@ export function NotificationsPanel() {
           Recent Notifications
         </h3>
         <div className='flex flex-col gap-3'>
-          {recentNotifications.map((n) => (
+          {sentNotifications.map((n) => (
             <div
               key={n.id}
               className='rounded-md border border-border bg-background p-3'
@@ -343,9 +675,17 @@ export function NotificationsPanel() {
                 </p>
                 <Badge
                   variant='secondary'
-                  className='shrink-0 bg-emerald-50 text-emerald-700 border-emerald-200'
+                  className={`shrink-0 ${
+                    n.status === 'scheduled'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}
                 >
-                  <CheckCircle2 className='mr-1 size-3' />
+                  {n.status === 'scheduled' ? (
+                    <Clock className='mr-1 size-3' />
+                  ) : (
+                    <CheckCircle2 className='mr-1 size-3' />
+                  )}
                   {n.status}
                 </Badge>
               </div>
@@ -356,10 +696,52 @@ export function NotificationsPanel() {
                 </span>
                 <span>{n.date}</span>
               </div>
+              {n.status === 'scheduled' && (
+                <div className='mt-2 flex items-center gap-2'>
+                  <Button
+                    size='sm'
+                    variant='secondary'
+                    onClick={() => handleScheduledSendNow(n.id)}
+                    disabled={pendingActionId === n.id}
+                  >
+                    {pendingActionId === n.id ? 'Sending...' : 'Send now'}
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='ghost'
+                    onClick={() => handleCancelScheduled(n.id)}
+                    disabled={pendingActionId === n.id}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
       </div>
+
+      <Dialog open={isSendConfirmOpen} onOpenChange={setIsSendConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Notification Now?</DialogTitle>
+            <DialogDescription>
+              This will send a system-wide notification to all users.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() => setIsSendConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmSendNow} disabled={isSending}>
+              {isSending ? 'Sending...' : 'Confirm Send'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -59,8 +59,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unsupported action" }, { status: 400 });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("notification_recipients")
     .update(updates)
     .eq("id", recipientId)

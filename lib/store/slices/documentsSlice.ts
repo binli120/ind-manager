@@ -3,6 +3,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
 import { createBrowserClient } from "@/lib/supabase"
 import { createClient } from "@/lib/supabase/client"
+import type { Database } from "@/lib/supabase/schema"
 import {
   mapSupabaseCommentRowToDocumentComment,
   mapSupabaseDocumentRowToDocument,
@@ -123,14 +124,19 @@ const getErrorMessage = (error: unknown) => {
   return "Unknown error"
 }
 
+const asDocumentCommentInsert = (value: Record<string, unknown>) =>
+  value as unknown as Database["public"]["Tables"]["document_comments"]["Insert"]
+
+const asDocumentCommentUpdate = (value: Record<string, unknown>) =>
+  value as unknown as Database["public"]["Tables"]["document_comments"]["Update"]
+
 // Async thunks
 export const fetchDocuments = createAsyncThunk(
   "documents/fetchDocuments",
   async (projectId: string | undefined, { rejectWithValue }) => {
     try {
       const supabase = createBrowserClient()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query = (supabase as any).from("documents").select(`
+      let query = supabase.from("documents").select(`
         *,
         profiles!documents_owner_id_fkey ( name )
       `)
@@ -150,8 +156,7 @@ export const fetchDocumentDetails = createAsyncThunk(
   async (documentId: string, { rejectWithValue }) => {
     try {
       const supabase = createClient()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("documents")
         .select(`
           *,
@@ -221,15 +226,14 @@ export const addComment = createAsyncThunk(
 
       if (!userId) throw new Error("User not authenticated")
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("document_comments")
-        .insert({
+        .insert(asDocumentCommentInsert({
           section_id: sectionId,
           user_id: userId,
           content,
           position,
-        })
+        }))
         .select(`
           *,
           profiles (
@@ -285,8 +289,10 @@ export const resolveComment = createAsyncThunk(
     try {
       const supabase = createClient()
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from("document_comments").update({ is_resolved: true }).eq("id", commentId)
+      const { error } = await supabase
+        .from("document_comments")
+        .update(asDocumentCommentUpdate({ is_resolved: true }))
+        .eq("id", commentId)
 
       if (error) throw error
 
@@ -303,8 +309,7 @@ export const fetchUserDocuments = createAsyncThunk(
     try {
       const supabase = createClient()
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: documents, error } = await (supabase as any)
+      const { data: documents, error } = await supabase
         .from("documents")
         .select(`
           *,

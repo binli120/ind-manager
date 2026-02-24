@@ -1,12 +1,15 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { isAdminUser } from "@/lib/auth/is-admin-user";
-import { createClient } from "@/lib/supabase/server";
-import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers";
 import {
   dispatchNotification,
   type DispatchNotificationResult,
 } from "@/lib/notifications/server";
-import { dispatchNotificationRequestSchema } from "@/lib/notifications/types";
+import {
+  dispatchNotificationRequestSchema,
+  NotificationScope,
+} from "@/lib/notifications/types";
+import { checkRateLimit } from "@/lib/rate-limit/rate-limit-helpers";
+import { createClient } from "@/lib/supabase/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 async function isProjectMember(args: {
   supabase: Awaited<ReturnType<typeof createClient>>;
@@ -35,7 +38,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const rateLimited = checkRateLimit({ tier: "write", request, userId: user.id });
+  const rateLimited = checkRateLimit({
+    tier: "write",
+    request,
+    userId: user.id,
+  });
   if (rateLimited) return rateLimited;
 
   const body = await request.json();
@@ -61,7 +68,7 @@ export async function POST(request: NextRequest) {
     role,
   });
 
-  if (input.scope === "system") {
+  if (input.scope === NotificationScope.System) {
     if (!isAdmin) {
       return NextResponse.json(
         { error: "Only admins can send system-wide notifications" },
@@ -70,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  if (input.scope === "project" && !isAdmin) {
+  if (input.scope === NotificationScope.Project && !isAdmin) {
     const member = await isProjectMember({
       supabase,
       userId: user.id,
@@ -88,7 +95,9 @@ export async function POST(request: NextRequest) {
   try {
     result = await dispatchNotification(user.id, input);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to send notification";
+    const message = error instanceof Error
+      ? error.message
+      : "Failed to send notification";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 

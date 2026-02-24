@@ -1,7 +1,10 @@
 // Author: Bin Lee
 // Email: binlee120@gmail.com
 
-import { NotificationRecipientAction } from "@/lib/notifications/types";
+import {
+  NotificationRecipientAction,
+  type DispatchNotificationRequest,
+} from "@/lib/notifications/types";
 import {
   countUnreadNotifications,
   mapNotificationRecipientsToItems,
@@ -33,6 +36,22 @@ export type NotificationItem = {
   created_at: NotificationEvent["created_at"];
 };
 
+export type SendNotificationArgs = {
+  request: DispatchNotificationRequest;
+  refreshUserId?: string;
+};
+
+export type SendNotificationResult = {
+  eventId: string | null;
+  recipients: number;
+  email: {
+    sent: number;
+    failed: number;
+    skipped: number;
+  };
+  unresolvedHandles: string[];
+};
+
 interface NotificationsState {
   items: NotificationItem[];
   unread: number;
@@ -55,8 +74,7 @@ export const fetchNotifications = createAsyncThunk<
   { rejectValue: string }
 >("notifications/fetchAll", async ({ userId }, { rejectWithValue }) => {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("notification_recipients")
     .select(
       `
@@ -156,14 +174,63 @@ export const markAllAsRead = createAsyncThunk<
   { rejectValue: string }
 >("notifications/markAllAsRead", async ({ userId }, { rejectWithValue }) => {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("notification_recipients")
     .update({ is_read: true, read_at: new Date().toISOString() })
     .match({ user_id: userId, is_read: false });
 
   if (error) return rejectWithValue(error.message);
 });
+
+export const sendNotification = createAsyncThunk<
+  SendNotificationResult,
+  SendNotificationArgs,
+  { rejectValue: string }
+>(
+  "notifications/send",
+  async ({ request, refreshUserId }, { dispatch, rejectWithValue }) => {
+    const response = await fetch("/api/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as {
+      eventId?: string | null;
+      recipients?: number;
+      unresolvedHandles?: string[];
+      email?: {
+        sent?: number;
+        failed?: number;
+        skipped?: number;
+      };
+      error?: string;
+    };
+
+    if (!response.ok) {
+      return rejectWithValue(payload.error ?? "Failed to send notification");
+    }
+
+    if (refreshUserId) {
+      void dispatch(fetchNotifications({ userId: refreshUserId }));
+    }
+
+    return {
+      eventId: payload.eventId ?? null,
+      recipients: payload.recipients ?? 0,
+      email: {
+        sent: payload.email?.sent ?? 0,
+        failed: payload.email?.failed ?? 0,
+        skipped: payload.email?.skipped ?? 0,
+      },
+      unresolvedHandles: Array.isArray(payload.unresolvedHandles)
+        ? payload.unresolvedHandles
+        : [],
+    };
+  },
+);
 
 const notificationsSlice = createSlice({
   name: "notifications",
@@ -242,6 +309,11 @@ const notificationsSlice = createSlice({
       s.error = (typeof a.payload === "string" ? a.payload : null) ??
         a.error.message ??
         "Failed to dismiss notification";
+    });
+    param.addCase(sendNotification.rejected, (s, a) => {
+      s.error = (typeof a.payload === "string" ? a.payload : null) ??
+        a.error.message ??
+        "Failed to send notification";
     });
   },
 });
