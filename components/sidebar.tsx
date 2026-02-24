@@ -2,10 +2,10 @@
 // Email: binlee120@gmail.com
 'use client';
 
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ROUTES } from '@/lib/common/routes';
+import type { UserPrivilege } from '@/lib/users/types';
 import { cn } from '@/lib/utils';
 import {
   AlertTriangle,
@@ -22,9 +22,10 @@ import {
   Search,
   Upload,
   UserIcon,
+  WrenchIcon,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import type { UserPrivilege } from '@/lib/users/types';
+import React from 'react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -41,7 +42,11 @@ interface MenuItem {
   allowedRoles?: string[];
 }
 
-export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps) {
+export function Sidebar({
+  isOpen,
+  onToggle,
+  currentUserPrivilege,
+}: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -107,12 +112,29 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
       icon: UserIcon,
       label: 'users',
       path: '/admin/users',
-      allowedRoles: ['system_admin', 'user_manager', 'admin', 'system_administrator'],
+      allowedRoles: [
+        'system_admin',
+        'user_manager',
+        'admin',
+        'system_administrator',
+      ],
+    },
+    {
+      title: 'Utilities',
+      icon: WrenchIcon,
+      label: 'utilities',
+      path: '/admin/utilities',
+      allowedRoles: [
+        'system_admin',
+        'template_manager',
+        'admin',
+        'system_administrator',
+      ],
     },
   ];
 
   const filteredAdminItems = adminItems.filter((item) =>
-    item.allowedRoles.includes(currentUserPrivilege as string)
+    item.allowedRoles.includes(currentUserPrivilege as string),
   );
 
   const analysisItems = [
@@ -135,7 +157,7 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
     <div
       className={cn(
         'bg-sidebar border-r border-sidebar-border transition-all duration-300 flex flex-col',
-        isOpen ? 'w-64' : 'w-16'
+        isOpen ? 'w-64' : 'w-16',
       )}
     >
       {/* Logo */}
@@ -204,7 +226,7 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
                   item.path === pathname &&
-                    'bg-sidebar-primary text-sidebar-primary-foreground'
+                    'bg-sidebar-primary text-sidebar-primary-foreground',
                 )}
               >
                 <item.icon className='w-4 h-4 flex-shrink-0' />
@@ -232,7 +254,7 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
                   item.path === pathname &&
-                    'bg-sidebar-primary text-sidebar-primary-foreground'
+                    'bg-sidebar-primary text-sidebar-primary-foreground',
                 )}
               >
                 <item.icon className='w-4 h-4 flex-shrink-0' />
@@ -264,7 +286,7 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
                     'w-full justify-start gap-3 h-10',
                     !isOpen && 'justify-center px-2',
                     item.path === pathname &&
-                      'bg-sidebar-primary text-sidebar-primary-foreground'
+                      'bg-sidebar-primary text-sidebar-primary-foreground',
                   )}
                 >
                   <item.icon className='w-4 h-4 flex-shrink-0' />
@@ -293,7 +315,7 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
                   item.path === pathname &&
-                    'bg-sidebar-primary text-sidebar-primary-foreground'
+                    'bg-sidebar-primary text-sidebar-primary-foreground',
                 )}
               >
                 <item.icon className='w-4 h-4 flex-shrink-0' />
@@ -322,7 +344,7 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
                   item.path === pathname &&
-                    'bg-sidebar-primary text-sidebar-primary-foreground'
+                    'bg-sidebar-primary text-sidebar-primary-foreground',
                 )}
               >
                 <item.icon className='w-4 h-4 flex-shrink-0' />
@@ -350,7 +372,7 @@ export function Sidebar({ isOpen, onToggle, currentUserPrivilege }: SidebarProps
                   'w-full justify-start gap-3 h-10',
                   !isOpen && 'justify-center px-2',
                   item.path === pathname &&
-                    'bg-sidebar-primary text-sidebar-primary-foreground'
+                    'bg-sidebar-primary text-sidebar-primary-foreground',
                 )}
               >
                 <item.icon className='w-4 h-4 flex-shrink-0' />

@@ -17,6 +17,7 @@ export const ROUTES = {
     admin: {
         tenant: "/admin/tenant",
         users: "/admin/users",
+        utilities: "/admin/utilities",
     },
     analysis: {
         gapScoring: "/analysis/gap_scoring",

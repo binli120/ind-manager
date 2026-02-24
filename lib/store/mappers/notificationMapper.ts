@@ -20,6 +20,7 @@ export type NotificationRecipient = {
   notification_id?: string | null;
   is_read: boolean;
   is_dismissed?: boolean;
+  is_acknowledged?: boolean;
   created_at?: string | null;
   read_at?: string | null;
   notification?: NotificationEvent | null;
@@ -52,6 +53,7 @@ export const notificationRecipientSchema: z.ZodType<NotificationRecipient> = z
     notification_id: z.string().nullable().optional(),
     is_read: z.boolean(),
     is_dismissed: z.boolean().optional(),
+    is_acknowledged: z.boolean().optional(),
     created_at: z.string().nullable().optional(),
     read_at: z.string().nullable().optional(),
     notification: notificationEventSchema.nullable().optional(),
@@ -74,6 +76,8 @@ export const mapNotificationRecipientToItem = (
   severity: row.notification?.severity ?? null,
   from: row.notification?.creator?.name ?? null,
   is_read: row.is_read,
+  is_dismissed: row.is_dismissed ?? false,
+  is_acknowledged: row.is_acknowledged ?? false,
   created_at:
     row.notification?.created_at ??
     row.created_at ??

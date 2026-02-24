@@ -6,6 +6,8 @@
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/store";
 import {
+  acknowledgeNotification,
+  dismissNotification,
   fetchNotifications,
   markAsRead,
   markAllAsRead,
@@ -23,6 +25,12 @@ export function useNotifications(userId?: string) {
   useEffect(() => {
     if (!userId) return;
     dispatch(fetchNotifications({ userId }));
+
+    const interval = window.setInterval(() => {
+      dispatch(fetchNotifications({ userId }));
+    }, 30_000);
+
+    return () => window.clearInterval(interval);
   }, [dispatch, userId]);
 
   const open = () => dispatch(setOpen(true));
@@ -30,6 +38,8 @@ export function useNotifications(userId?: string) {
   const toggle = () => dispatch(setOpen(!isOpen));
 
   const markOne = (id: string) => dispatch(markAsRead({ id }));
+  const confirmOne = (id: string) => dispatch(acknowledgeNotification({ id }));
+  const dismissOne = (id: string) => dispatch(dismissNotification({ id }));
   const markAll = () => userId && dispatch(markAllAsRead({ userId }));
 
   return {
@@ -42,6 +52,8 @@ export function useNotifications(userId?: string) {
     close,
     toggle,
     markOne,
+    confirmOne,
+    dismissOne,
     markAll,
   };
 }

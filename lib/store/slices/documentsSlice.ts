@@ -241,6 +241,35 @@ export const addComment = createAsyncThunk(
 
       if (error) throw error
 
+      // Fire-and-forget mention notifications.
+      // Comment creation should not fail if notification dispatch fails.
+      const normalizedContent = content.trim()
+      if (normalizedContent.includes("@")) {
+        void fetch("/api/notifications/mentions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: normalizedContent,
+            commentId: typeof data?.id === "string" ? data.id : undefined,
+            threadId: typeof data?.thread_id === "string" ? data.thread_id : undefined,
+            anchorId:
+              typeof data?.document_anchor_id === "string"
+                ? data.document_anchor_id
+                : undefined,
+            documentVersionId:
+              typeof data?.document_version_id === "string"
+                ? data.document_version_id
+                : undefined,
+            actionUrl:
+              typeof data?.thread_id === "string"
+                ? `/workspace/document_review?thread=${data.thread_id}`
+                : undefined,
+          }),
+        }).catch(() => {
+          // Best effort only.
+        })
+      }
+
       return mapSupabaseCommentRowToDocumentComment(
         parseSupabaseDocumentCommentRow(data),
       )

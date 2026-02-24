@@ -20,6 +20,7 @@ import type { HeaderView } from '@/lib/header/headerViewModel';
 
 import { NotificationsBell } from "@/components/notifications/NotificationsBell";
 import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
+import { SendNotificationDialog } from "@/components/notifications/SendNotificationDialog";
 
 
 //correct identity deployment vercel
@@ -136,6 +137,15 @@ export function Header({
           <Button variant='ghost' size='sm'>
             <Search className='w-4 h-4' />
           </Button>
+
+          <SendNotificationDialog
+            currentUser={user ?? null}
+            projects={effectiveProjects.map((project) => ({
+              id: project.id,
+              title: project.title,
+              code: project.code ?? null,
+            }))}
+          />
 
           <NotificationsBell userId={user?.id} />
 

@@ -9,6 +9,9 @@
 | `AWS_ACCESS_KEY_ID` | AWS creds for server-side S3 access (sections/asset APIs). | *(none)* | *(none)* |
 | `AWS_SECRET_ACCESS_KEY` | AWS creds for server-side S3 access. | *(none)* | *(none)* |
 | `DOC_REPOSITORY_BUCKET` | Server-side fallback bucket for sections/asset APIs. | `doc-repository-dev` | *(no default)* |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service-role key required for cross-user notification fan-out (system/project/user dispatch APIs). | *(none)* | *(required for notifications)* |
+| `RESEND_API_KEY` | Optional API key for email notification delivery. If omitted, notifications are still delivered in-app. | *(none)* | *(optional)* |
+| `NOTIFICATION_EMAIL_FROM` | Sender identity used for email notifications (e.g. `IND Manager <notify@company.com>`). | *(none)* | *(required for email delivery)* |
 
 Notes:
 - Preferred variable is `NEXT_PUBLIC_PDF_ANALYSIS_API_BASE_URL`.

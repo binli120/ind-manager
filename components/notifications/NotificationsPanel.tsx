@@ -40,7 +40,8 @@ export function NotificationsPanel({ userId, className }: Props) {
     error,
     isOpen,
     close,
-    markOne,
+    confirmOne,
+    dismissOne,
     markAll,
   } = useNotifications(userId);
   //Guard unread
@@ -167,10 +168,13 @@ export function NotificationsPanel({ userId, className }: Props) {
 
                   <div className="mt-2 flex items-center gap-2">
                     {!n.is_read && (
-                      <Button size="sm" variant="secondary" onClick={() => markOne(n.id)}>
-                        Mark read
+                      <Button size="sm" variant="secondary" onClick={() => confirmOne(n.id)}>
+                        Confirm received
                       </Button>
                     )}
+                    <Button size="sm" variant="ghost" onClick={() => dismissOne(n.id)}>
+                      Dismiss
+                    </Button>
                     {n.action_url && (
                       <Button asChild size="sm" variant="outline">
                         <a href={n.action_url}>Open</a>
